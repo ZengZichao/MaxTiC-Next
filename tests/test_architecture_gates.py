@@ -16,8 +16,14 @@ import ast
 import hashlib
 import os
 import re
-import tomllib
 from pathlib import Path
+
+# 本仓库承诺支持 Python 3.9+（CI 矩阵 3.9–3.14），而 tomllib 是 3.11 才进标准库的；
+# 缺它时整个模块会在收集阶段 ImportError，把 3.9/3.10 的全部用例一起打死。
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover — Python < 3.11
+    import tomli as tomllib
 
 import pytest
 

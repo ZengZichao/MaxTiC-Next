@@ -37,7 +37,15 @@ dependencies = []
 [project.optional-dependencies]
 # dev 提供覆盖率、lint 与类型门禁所需的工具链，全部属于开发期依赖，
 # 核心 `dependencies = []` 的零依赖承诺不受影响。
-dev = ["pytest>=8.0", "pytest-cov>=4.0", "coverage[toml]>=7.0", "ruff>=0.6", "mypy>=1.8"]
+# tomli 只在 Python < 3.11 上补齐标准库还没有的 tomllib（门禁测试要读 pyproject.toml）。
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "coverage[toml]>=7.0",
+    "ruff>=0.6",
+    "mypy>=1.8",
+    "tomli>=1.1.0; python_version < '3.11'",
+]
 report = ["jinja2>=3.0", "plotly>=5.0"]
 # 图形前端（PySide6 + matplotlib）位于独立仓库 MaxTiC-Next-Studio；
 # 核心包不提供任何 GUI extras，以保持 dependencies = [] 的零依赖承诺。

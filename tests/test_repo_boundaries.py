@@ -58,7 +58,10 @@ def test_this_repository_holds_no_gui_code_or_dependency():
     查的是 pyproject 的**实际字段**而不是全文 —— 注释里提到图形前端位于 Studio 仓库
     时出现 PySide6 字样是正确且有用的信息，不该被判为越界。
     """
-    import tomllib
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python < 3.11
+        import tomli as tomllib
 
     assert not (ROOT / "src" / "maxtic_next" / "gui").exists()
     assert not (ROOT / "packaging").exists()
