@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MaxTiC-Next 报告 - {{ constraint_file }}</title>
+  <style>
+    body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; margin: 24px; color: #222; }
+    h1 { border-bottom: 2px solid #4C72B0; padding-bottom: 6px; }
+    h3, h4 { color: #4C72B0; }
+    table.data { border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+    table.data th, table.data td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+    .muted { color: #888; }
+    .notice { background: #fff6e5; border: 1px solid #e6b800; padding: 8px 12px;
+              border-radius: 6px; }
+    .meta { background: #f5f7fa; padding: 10px 14px; border-radius: 6px; }
+    pre.newick { background: #f5f7fa; padding: 8px; overflow-x: auto; }
+    .card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>MaxTiC-Next 排序报告</h1>
+  {# ：依赖降级必须可见（plotly 缺失等） #}
+  {{ degradation_html | safe }}
+  {% include "partials/summary.j2" %}
+  <div class="card">
+    <h3>约束权重分布</h3>
+    {{ weight_histogram_html | safe }}
+    <p class="muted">样本数（每条约束权重计一次，被违反的约束不重复计入）：
+      {{ n_weight_samples }}</p>
+  </div>
+  <div class="card">
+    {% include "partials/robustness.j2" %}
+  </div>
+  {% if mcmc_diag %}
+  <div class="card">
+    {{ mcmc_html | safe }}
+  </div>
+  {% endif %}
+  <div class="card">
+    <h3>排序树可视化</h3>
+    {% include "partials/tree_view.j2" %}
+  </div>
+  <div class="card">
+    {# ：第 4 个输出文件 *.mt.random_dist.tsv 必须在报告中可见 #}
+    <h3>输出文件清单</h3>
+    {{ output_files_html | safe }}
+  </div>
+  <hr/>
+  <p class="muted">本报告为静态文件，无后端依赖，可双击打开。稳健性/敏感性摘要仅基于
+  局部搜索过程中访问到的解，反映各节点次序的稳健程度，不涉及概率推断。</p>
+</body>
+</html>

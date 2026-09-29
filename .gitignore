@@ -1,0 +1,64 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+release/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Generated outputs (keep directory, ignore produced files)
+# legacy 命名风格（与原版 MaxTiC 逐字节等价的长名）
+*_MT_output_filtered_list_of_weighted_informative_constraints
+*_MT_output_list_of_constraints_conflicting_with_best_order
+*_MT_output_partial_order
+*_distribution_random
+# short 命名风格（默认）
+*.mt.informative.tsv
+*.mt.conflicts.tsv
+*.mt.partial_order.tsv
+*.mt.random_dist.tsv
+
+# HTML reports (generated at runtime)
+*.html
+
+# ALE cache (per-family pickle cache, generated at runtime)
+ale_cache/
+
+# Snakemake / Nextflow runtime
+.snakemake/
+work/
+.nextflow/
+trace-*.txt
+timeline-*.html
+report_*.html
+dag_*.html
+
+# PyInstaller build artifacts
+*.spec.bak
+
+# OS files
+Thumbs.db
+desktop.ini

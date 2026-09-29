@@ -1,0 +1,90 @@
+name: CI
+
+# CI 分成 4 个 job：核心算法矩阵（含 numpy 维度）、静态检查、架构与文档门禁、
+# 以及打包校验。算法矩阵覆盖 Python 3.9–3.14，每个作业都跑同一套等价性基线。
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------- 核心算法
+  test:
+    name: core (${{ matrix.python-version }}${{ matrix.numpy && ' +numpy' || '' }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        # numpy 分支（ranking/reachability.py、tree/cache.py 的位集实现）在生产里更常见，
+        # 因此单加一维，用对照测试看守两条分支的输出等价性。
+        numpy: [false, true]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,report]"
+          if [ "${{ matrix.numpy }}" = "true" ]; then pip install "numpy>=1.26"; fi
+      - name: Run tests with coverage floor
+        # 图形前端在独立仓库 MaxTiC-Next-Studio，这里只度量核心层。
+        run: pytest tests/ -v --tb=short --cov=maxtic_next --cov-report=term-missing
+      - name: Enforce coverage floors
+        run: python tools/coverage_gate.py core
+      - name: Smoke test CLI
+        run: |
+          maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --no-html
+      - name: Smoke test CLI (legacy output style + seed path)
+        # 文本约束模式下 `-o/--constraints-out` 无效（它只服务适配器模式的两阶段流程，
+        # 误用会以退出码 4 中止）；指定输出位置用 `-p/--output-prefix`，其值是前缀而非文件名。
+        run: |
+          maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv \
+            --seed 42 --no-html --output-style legacy --output-prefix "$RUNNER_TEMP/legacy"
+
+  # ------------------------------------------------------------ 静态检查
+  lint:
+    name: lint & types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Ruff lint (blocking; 规则集见 pyproject [tool.ruff.lint])
+        # tools/ 与 benchmarks/ 也在范围内：coverage_gate.py 是门禁自身的一部分，
+        # run_benchmark.py 是对外交付的基准入口，二者都不该成为盲区。
+        run: ruff check src tests tools benchmarks
+      - name: Ruff format (blocking)
+        run: ruff format --check src tests tools benchmarks
+      - name: Mypy (核心算法为硬门禁，benchmarks 见 pyproject overrides)
+        run: mypy
+      - name: Architecture & doc gates
+        run: pytest tests/test_architecture_gates.py -v
+
+  # -------------------------------------------------- 打包与交付面自检
+  package:
+    name: sdist/wheel install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build and install artifacts
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+          python -m pip install dist/*.whl
+          maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --no-html
+          python -m pip uninstall -y MaxTiC-Next
+          python -m pip install dist/*.tar.gz
+          maxtic-next --version

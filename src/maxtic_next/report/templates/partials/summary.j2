@@ -1,0 +1,20 @@
+<div class="card">
+  <h3>运行元数据</h3>
+  <div class="meta">
+    <b>MaxTiC-Next 版本</b>：{{ version }}<br/>
+    <b>种子</b>：{{ seed }}<br/>
+    <b>参数</b>：{{ params }}<br/>
+    <b>约束文件</b>：{{ constraint_file }}<br/>
+    <b>内部节点数</b>：{{ internal_node_count }}<br/>
+    <b>约束总权重</b>：{{ total_weight }}<br/>
+    <b>最优序来源</b>：{{ best_source }}<br/>
+    <b>与输入树相似度</b>：{{ similarity_to_input }}<br/>
+    <b>冲突比例</b>：{{ "%.4f"|format(conflict_ratio) }}
+  </div>
+  <h3>目标值</h3>
+  <ul>
+    {% for k, v in values.items() %}
+    <li>{{ k }}：{{ v }}</li>
+    {% endfor %}
+  </ul>
+</div>

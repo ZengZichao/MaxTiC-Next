@@ -1,0 +1,26 @@
+------------ Reconciliation for Gene Tree 1 (rooted) -------------
+Species Tree:
+((CYAP8,CYAP0)59,((CYAA5,CYAP2)61,(NOSP7,ANAVT)62)65)69;
+
+Gene Tree:
+(((g1,g2),(g3,g4)),((g5,g6),(g7,g8)));
+
+Reconciliation:
+g1_0: Leaf Node
+g2_1: Leaf Node
+g3_2: Leaf Node
+g4_3: Leaf Node
+g5_4: Leaf Node
+g6_5: Leaf Node
+g7_6: Leaf Node
+g8_7: Leaf Node
+ = LCA[g1,g2]: Speciation, Mapping --> 59
+ = LCA[g3,g4]: Duplication, Mapping --> 61
+ = LCA[g1,g4]: Replacing Transfer, Mapping --> 61, Recipient --> 62
+ = LCA[g5,g6]: Speciation, Mapping --> 62
+ = LCA[g5,g8]: Additive Transfer, Mapping --> 62, Recipient --> 65
+ = LCA[g1,g8]: Speciation, Mapping --> 69
+
+The minimum reconciliation cost is: 65 (Duplications: 1, Transfers: 2, Losses: 0)
+Total number of optimal solutions: 24
+Total number of candidates for gene birth: 1

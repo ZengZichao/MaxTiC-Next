@@ -1,0 +1,3 @@
+# 核心算法只依赖 Python 3 标准库，因此本文件无需任何第三方包。
+# 可选功能（HTML 报告、可选 numpy 加速、剪裁适配层）见 pyproject.toml 的
+# [project.optional-dependencies]；开发期工具链见 requirements-dev.txt。

@@ -1,0 +1,61 @@
+# MaxTiC-Next 两阶段流程配置
+#
+# 阶段说明：
+#   Stage 1（可选，from_ale=true 时启用）：把 ALE .uml_rec 文件经适配器转为约束文件；
+#   Stage 2：对约束做 MaxTiC 排序，产出三输出文件 + 交互式 HTML 报告。
+#
+# 所有参数均透传给 `MaxTiC-Next` CLI（参数名与 CLI 一致）。
+
+# 物种树（Newick，内部节点标签在 bootstrap 字段）
+species_tree: "examples/minitree.tree"
+
+# 约束文件：
+#   * from_ale=false 时为文本约束路径（空格 / 逗号双格式）；
+#   * from_ale=true 时被忽略，改用下方 ale.rec_files。
+#   也支持直接给 .uml_rec 列表（与 ale.rec_files 等价）。
+constraints: "examples/Cyano_CUTConstraints.tsv"
+
+# 随机种子（驱动 mix 平局与局部搜索）
+# 默认路径（local_search: 0）下固定种子即完全可复现；
+# local_search > 0 且未设迭代上限时以墙钟为停止条件，迭代次数依机器负载而变，
+# 固定种子**不保证跨机器复现**（CLI 对应 --local-search-max-iters，本封装未透传）。
+seed: 42
+
+# 是否使用 ALE 适配器模式（Stage 1 生成约束）
+from_ale: false
+
+# 局部搜索时长（秒），0 = 关闭
+local_search: 0
+
+# 最小转移距离阈值（按 phylogenetic distance 列过滤）
+min_transfer_distance: 0
+
+# 约束权重阈值比例（取值域 [0, 1]，CLI 层强制校验）
+threshold_constraints: 0
+
+# 随机树采样数量（0 = 关闭；>0 时额外产出第 4 个文件 *.mt.random_dist.tsv）
+random_trees: 0
+
+# 输出文件命名风格（short = 简洁带 .tsv 后缀，CLI 默认；legacy = 与原版同名）
+output_style: "short"
+
+# 是否把 workflows/envs/maxtic_next.yaml 挂到规则的 conda: 指令上。
+# 默认 false：未安装 micromamba/conda 的用户可直接运行；
+# 置 true 时 Snakemake 会为每条规则创建该环境（环境内已含 jinja2/plotly，
+# 否则 HTML 报告静默降级为基础模板）。
+use_conda: false
+
+# 输出目录（三文件 + HTML 写入此处；路径以**仓库根**为基准解析）
+outdir: "maxtic_next_out"
+
+# ALE 适配器专属配置（仅 from_ale=true 时使用）
+ale:
+  # 一个或多个 ALE .uml_rec 文件（examples/adapters/ale/ 内含配套物种树
+  # species.tree：ALE 模式下请把上方 species_tree 切换为该文件）
+  rec_files:
+    - "examples/adapters/ale/rec.uml_rec"
+  # 基因家族文件级缓存目录（断点续传；缓存键含物种树拓扑指纹）
+  ale_cache_dir: "ale_cache"
+  # 约束来源：trf=转移事件（**默认**，ALE 官方 MaxTiC 集成口径，parent(donor) 早于
+  # receptor 的子节点）；rec=调和事件。两者产出的约束集规模与权重量级**不同**。
+  ale_source: "trf"

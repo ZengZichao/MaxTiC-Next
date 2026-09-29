@@ -1,0 +1,3 @@
+# 默认 sdist 只带 LICENSE / README；引用元数据需显式登记，
+# 否则源码分发里读不到 ORCID 与署名信息。
+include CITATION.cff

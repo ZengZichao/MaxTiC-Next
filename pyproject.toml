@@ -1,0 +1,106 @@
+[build-system]
+# setuptools>=77：`license` 采用 PEP 639 的 SPDX 表达式字符串，且许可 classifiers 已弃用。
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MaxTiC-Next"
+version = "0.1.0"
+description = "Python 3 rewrite of MaxTiC: ranking species-tree internal nodes by Maximum Time Consistency (MTC) with lateral gene transfer constraints."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "CECILL-2.1"
+authors = [
+    # 原版 MaxTiC 作者：CeCILL 2.1 要求保留原作者署名。
+    { name = "Eric Tannier (original MaxTiC)", email = "eric.tannier@inria.fr" },
+    # Python 3 重写与维护者（ORCID 0000-0001-6553-970X，见 CITATION.cff）。
+    { name = "Zichao Zeng (曾子超)", email = "zengzichao@sjtu.edu.cn" },
+]
+keywords = ["phylogenetics", "HGT", "MaxTiC", "time-consistency", "ranking"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: OS Independent",
+]
+# Core algorithm uses only the Python standard library.
+# HTML reporting requires optional extras: pip install "MaxTiC-Next[report]"
+dependencies = []
+
+[project.optional-dependencies]
+# dev 提供覆盖率、lint 与类型门禁所需的工具链，全部属于开发期依赖，
+# 核心 `dependencies = []` 的零依赖承诺不受影响。
+dev = ["pytest>=8.0", "pytest-cov>=4.0", "coverage[toml]>=7.0", "ruff>=0.6", "mypy>=1.8"]
+report = ["jinja2>=3.0", "plotly>=5.0"]
+# 图形前端（PySide6 + matplotlib）位于独立仓库 MaxTiC-Next-Studio；
+# 核心包不提供任何 GUI extras，以保持 dependencies = [] 的零依赖承诺。
+
+[project.scripts]
+maxtic-next = "maxtic_next.cli:main"
+# maxtic-studio 由 Studio 仓库自己注册，不在这里。
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Jinja2 模板必须随包分发，否则 wheel/sdist 里取不到模板。
+[tool.setuptools.package-data]
+maxtic_next = ["report/templates/*.j2", "report/templates/partials/*.j2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+# ---------------------------------------------------------------------------
+# 质量门禁
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/maxtic_next"]
+
+[tool.coverage.report]
+show_missing = true
+# 覆盖率地板由 tools/coverage_gate.py 判定（core ≥85）。
+# 这里刻意不设 omit 与 fail_under：一处配置，作业读同一份 .coverage。
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# 只启用能抓真 bug 的规则族：pycodestyle 的严重项（E4/E7/E9）、编译期错误（F）、
+# bugbear（B）与自我比较（PLR0124）；纯风格项交给格式化器，不进门禁。
+select = ["E4", "E7", "E9", "F", "B", "PLR0124"]
+
+[tool.ruff.lint.per-file-ignores]
+# 包顶层 __init__ 的 re-export 是公开 API 的一部分（急切导出）。
+"src/maxtic_next/**/__init__.py" = ["F401"]
+# 移植自原版 MaxTiC.py 的循环变量名（l/i/j）刻意保持同形，便于逐行对照。
+"src/maxtic_next/ranking/*.py" = ["E741", "B007"]
+"tests/*" = ["E741", "B011", "B905"]
+
+[tool.mypy]
+# 用 3.12 语义检查：numpy 2.5 的类型存根用到 3.12 的 `type` 语句，
+# 把 python_version 钉在 3.9 会让 mypy 在解析存根时直接报错而放弃检查。
+# "3.9 语法兼容性"由 CI 矩阵里真实运行的 3.9 作业负责，不靠 mypy。
+python_version = "3.12"
+files = ["src/maxtic_next"]
+ignore_missing_imports = true
+# 算法与数据契约走硬门禁；benchmarks/report 的类型缺口主要来自可选依赖，
+# 由下方 overrides 处理。
+warn_unused_ignores = false
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+# 可选依赖在没有安装它们的环境里不可能有类型信息。
+module = ["plotly.*", "jinja2.*", "numpy.*"]
+ignore_missing_imports = true

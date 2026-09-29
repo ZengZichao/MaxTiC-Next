@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: 如果 MaxTiC-Next 用于你的研究，请同时引用本软件与原始 MaxTiC 论文。
+title: "MaxTiC-Next: a Python 3 rewrite of MaxTiC with reproducible rankings, multi-format ALE adapters, robustness analysis and HTML reporting"
+authors:
+  - name: "MaxTiC-Next rewrite team"
+  - given-names: Zichao
+    family-names: Zeng
+    email: zengzichao@sjtu.edu.cn
+    orcid: https://orcid.org/0000-0001-6553-970X
+  - given-names: Eric
+    family-names: Tannier
+    email: eric.tannier@inria.fr
+repository-code: https://github.com/ZengZichao/MaxTiC-Next
+url: https://github.com/ZengZichao/MaxTiC-Next
+version: 0.1.0
+date-released: 2026-09-29
+license: CECILL-2.1
+keywords:
+  - phylogenetics
+  - horizontal-gene-transfer
+  - time-consistency
+  - tree-ranking
+preferred-citation:
+  type: article
+  authors:
+    - given-names: Eric
+      family-names: Tannier
+  title: "MaxTiC: Fast ranking of a phylogenetic tree by Maximum Time Consistency with lateral gene transfers"
+  identifiers:
+    - type: doi
+      value: 10.1101/127548
+  url: https://doi.org/10.1101/127548

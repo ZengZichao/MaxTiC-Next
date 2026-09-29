@@ -1,0 +1,55 @@
+# MaxTiC-Next 镜像构建上下文排除清单（审阅 M18）
+#
+# Dockerfile 用 `COPY . /app` 把构建上下文整体拷入镜像。没有本文件时，
+# `.git`（含全部历史）、`tests/`、`__pycache__/`、`.pytest_cache/`、
+# `.DS_Store`、`benchmarks/datasets/` 与整棵 `docs/` 都会被带进镜像层，
+# 既放大体积、又把仓库元数据泄漏到分发产物里。
+#
+# 注意：**不能**排除 `pyproject.toml`、`src/`、`examples/`、`requirements*.txt`，
+# 否则 `pip install .` 与镜像内冒烟测试会失败（`CMD` 默认用 examples 里的样例）。
+# 被排除的目录对镜像运行期没有任何影响：安装期只需要 `pyproject.toml` + `src/`，
+# 运行期只需要已安装的 `maxtic-next` 入口点。
+
+# --- 版本控制 / CI ---
+.git
+.gitignore
+.github
+
+# --- Python 与测试产物 ---
+__pycache__
+**/__pycache__
+*.py[cod]
+*.egg-info
+.eggs
+build
+dist
+.pytest_cache
+.coverage
+htmlcov
+.mypy_cache
+.ruff_cache
+
+# --- 测试与基准（镜像内不运行测试） ---
+tests
+benchmarks/datasets
+
+# --- 文档（README 由 LICENSE/镜像标签溯源；docs/ 体积最大） ---
+docs
+
+# --- 编辑器 / 操作系统垃圾 ---
+.DS_Store
+**/.DS_Store
+.idea
+.vscode
+*.swp
+
+# --- 本地容器/环境残留 ---
+.dockerignore
+Dockerfile
+Singularity.def
+*.sif
+
+# --- 流程封装（由宿主机调度器使用，不需要进镜像） ---
+# 修复（架构质量评审 R-15）：此行原先被注释掉，导致 workflows/ 仍被复制进镜像，
+# 与本文件头部声明的排除意图相反。若需在镜像内调试 Nextflow/Snakemake，再注释掉它。
+workflows

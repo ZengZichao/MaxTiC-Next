@@ -1,0 +1,30 @@
+# MaxTiC-Next 运行环境
+#
+# 供 Snakemake 的 conda 指令复用。本仓库的 workflows/Snakefile 已按
+# config.yaml 的 `use_conda` 开关挂上该文件（默认 false）：
+#   # workflows/config.yaml
+#   use_conda: true
+# 等价于手写：
+#   rule rank:
+#       conda: "envs/maxtic_next.yaml"     # 路径相对 Snakefile
+#
+# 注意：MaxTiC-Next 尚未发布到 PyPI，`pip: MaxTiC-Next` 会失败。本环境只
+# 声明解释器与第三方依赖；创建环境后请在仓库根目录安装本包（核心零第三方依赖）：
+#   micromamba env create -f workflows/envs/maxtic_next.yaml
+#   micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
+#
+# 创建后两阶段流程中的 `maxtic-next` 命令即可用（见 pyproject
+# [project.scripts]，控制台命令为 maxtic-next，不是显示名 MaxTiC-Next）。
+#
+# jinja2 / plotly 必须在此声明：交互式 HTML 报告依赖它们，
+# 缺了不会报错，只会**静默降级**为基础模板（report/html.py 的 _fallback_render），
+# 于是流程"跑通了但没有报告"——必须显式声明这两个依赖。
+name: MaxTiC-Next
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.9
+  - pip
+  # HTML 报告（可选 extras：pip install "MaxTiC-Next[report]"）所需的等价声明
+  - jinja2 >=3.0
+  - plotly >=5.0

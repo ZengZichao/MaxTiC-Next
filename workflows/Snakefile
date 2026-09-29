@@ -1,0 +1,169 @@
+# MaxTiC-Next 两阶段 Snakemake 封装（P2-WF / T16）
+#
+# 阶段：
+#   Stage 1 (可选, from_ale=true)：maxtic-next {species} {rec_files} --from ale \
+#           --ale-cache-dir {cache} -o {constraints_out}
+#           把 ALE .uml_rec 转为约束文件（5 列 ALE 逗号格式，可被文本解析器读回）。
+#   Stage 2：maxtic-next {species} {constraints} --seed {seed} \
+#           [--local-search {ls}] [--min-transfer-distance {d}] [--threshold-constraints {ts}]
+#           产出三输出文件 + HTML 报告（写入 outdir）。
+#
+# 两种等价的运行方式（本文件已做到 CWD 无关，见下方"路径解析"）：
+#   在仓库根目录：snakemake -s workflows/Snakefile --configfile workflows/config.yaml
+#   在 workflows/ 内：cd workflows && snakemake --configfile config.yaml
+#
+# 本文件相对旧版的修正（审阅 M18）：
+#   1. 旧版对 config.yaml 里的相对路径用 os.path.abspath()，其基准是**当前工作
+#      目录**，于是"cd workflows 内运行"（07 章原文推荐）会去找
+#      workflows/examples/minitree.tree 而失败。现统一以**仓库根**（本文件所在
+#      目录的父目录）为基准解析，两种 CWD 都能跑通；
+#   2. 旧版从不引用 workflows/envs/maxtic_next.yaml，"conda 环境文件"形同虚设。
+#      现由 config.yaml 的 use_conda 开关按需挂到两条规则的 conda: 指令上
+#      （默认 false，避免未装 micromamba 的用户直接报错）；
+#   3. 两条规则补 --force：CLI 自审阅 M17 起默认以退出码 3 拒绝覆盖既有产物，
+#      而 outdir 归流程管理器所有，重跑时必须能覆盖；
+#   4. 输出名与 src/maxtic_next/config.py 的 OUTPUT_SUFFIXES 对齐（含
+#      --random-trees 的第 4 个产物 random_dist，仅在 >0 时纳入 rule all）。
+#
+# 注：本文件仅描述流程，snakemake 引擎未随仓库安装，本次修改**未经实际运行验证**。
+
+import os
+
+configfile: "config.yaml"
+
+# ---------------------------------------------------------------------------
+# 路径解析：一律以**仓库根**为基准（审阅 M18 第 1 点）
+# ---------------------------------------------------------------------------
+SNAKEFILE_DIR = os.path.dirname(os.path.abspath(__file__))   # .../workflows
+REPO_ROOT = os.path.dirname(SNAKEFILE_DIR)
+
+
+def _rp(path):
+    """把 config.yaml 中的相对路径按**仓库根**解析为绝对路径。
+
+    config.yaml 里的示例路径（examples/... 等）都是相对仓库根书写的，
+    因此绝不能以 CWD 为基准 —— 否则 `cd workflows && snakemake` 会全线失败。
+    绝对路径原样返回。
+    """
+    return path if os.path.isabs(path) else os.path.join(REPO_ROOT, path)
+
+
+# ---------------------------------------------------------------------------
+# 解析配置（与 config.yaml 字段一一对应）
+# ---------------------------------------------------------------------------
+SPECIES      = _rp(config["species_tree"])
+SEED         = config.get("seed", 42)
+FROM_ALE     = config.get("from_ale", False)
+OUTDIR       = _rp(config.get("outdir", "maxtic_next_out"))
+LOCAL_SEARCH = config.get("local_search", 0)
+MIN_TD       = config.get("min_transfer_distance", 0)
+THRESHOLD    = config.get("threshold_constraints", 0)
+RANDOM_TREES = config.get("random_trees", 0)
+OUTPUT_STYLE = config.get("output_style", "short")
+USE_CONDA    = config.get("use_conda", False)
+# conda 环境文件路径：相对 Snakefile，故 Snakemake 从任意 CWD 都能定位
+CONDA_ENV = "envs/maxtic_next.yaml" if USE_CONDA else None
+
+ALE          = config.get("ale", {})
+REC_FILES    = [_rp(r) for r in ALE.get("rec_files", [])]
+ALE_CACHE    = _rp(ALE.get("ale_cache_dir", "ale_cache"))
+ALE_SOURCE   = ALE.get("ale_source", "trf")   # trf=ALE 官方 MaxTiC 集成口径（默认）
+REC_FILES_STR = " ".join(REC_FILES)
+
+# 约束输入：from_ale=true 时为 Stage 1 产物，否则直接取文本约束
+if FROM_ALE:
+    CONSTRAINTS_IN = os.path.join(OUTDIR, "ale_constraints.tsv")
+else:
+    CONSTRAINTS_IN = _rp(config["constraints"])
+
+# 输出文件命名（与 src/maxtic_next/config.py 的 OUTPUT_SUFFIXES 保持一致）
+# 工具以约束文件的完整文件名（含扩展名）为前缀，故先 cp 进 OUTDIR 再在其中运行。
+CONST_BASENAME = os.path.basename(CONSTRAINTS_IN)
+if OUTPUT_STYLE == "legacy":
+    _SUF = ("_MT_output_filtered_list_of_weighted_informative_constraints",
+            "_MT_output_list_of_constraints_conflicting_with_best_order",
+            "_MT_output_partial_order",
+            "_distribution_random")
+else:
+    _SUF = (".mt.informative.tsv", ".mt.conflicts.tsv",
+            ".mt.partial_order.tsv", ".mt.random_dist.tsv")
+
+INFORMATIVE  = os.path.join(OUTDIR, CONST_BASENAME + _SUF[0])
+CONFLICTING  = os.path.join(OUTDIR, CONST_BASENAME + _SUF[1])
+PARTIAL      = os.path.join(OUTDIR, CONST_BASENAME + _SUF[2])
+RANDOM_DIST  = os.path.join(OUTDIR, CONST_BASENAME + _SUF[3])
+HTML         = os.path.join(OUTDIR, f"{CONST_BASENAME}.html")
+
+# rule all 的目标集合（第 4 个产物仅在 --random-trees > 0 时存在）
+_TARGETS = [PARTIAL, INFORMATIVE, CONFLICTING, HTML]
+if RANDOM_TREES and int(RANDOM_TREES) > 0:
+    _TARGETS.append(RANDOM_DIST)
+
+
+rule all:
+    input:
+        _TARGETS,
+
+
+if FROM_ALE:
+    rule generate_constraints:
+        """Stage 1 (可选)：ALE .uml_rec -> 约束文件。"""
+        output:
+            constr=CONSTRAINTS_IN,
+        params:
+            species=SPECIES,
+            recs=REC_FILES_STR,
+            cache=ALE_CACHE,
+            outdir=OUTDIR,
+            ale_source=ALE_SOURCE,
+        conda:
+            CONDA_ENV
+        shell:
+            """
+            mkdir -p {params.outdir:q} {params.cache:q}
+            maxtic-next {params.species:q} {params.recs} --from ale \
+                --ale-cache-dir {params.cache:q} --ale-source {params.ale_source:q} \
+                --force -o {output.constr:q}
+            """
+
+
+rule rank:
+    """Stage 2：正式排序，产出三输出文件 + HTML 报告。"""
+    input:
+        constr=CONSTRAINTS_IN,
+    output:
+        partial=PARTIAL,
+        informative=INFORMATIVE,
+        conflicting=CONFLICTING,
+        html=HTML,
+    params:
+        species=SPECIES,
+        seed=SEED,
+        ls=LOCAL_SEARCH,
+        d=MIN_TD,
+        ts=THRESHOLD,
+        rd=RANDOM_TREES,
+        outdir=OUTDIR,
+        basename=CONST_BASENAME,
+        dst=os.path.join(OUTDIR, CONST_BASENAME),
+        style=OUTPUT_STYLE,
+    conda:
+        CONDA_ENV
+    shell:
+        """
+        mkdir -p {params.outdir:q}
+        # from_ale=true 时 Stage 1 产物已在 outdir 内（src == dst），跳过自拷贝
+        if [ {input.constr:q} != {params.dst:q} ]; then
+            cp {input.constr:q} {params.dst:q}
+        fi
+        cd {params.outdir:q}
+        # --force：OUTDIR 归本流程所有，重跑时必须能覆盖上次产物
+        # （CLI 默认以退出码 3 拒绝覆盖，见审阅 M17）
+        maxtic-next {params.species:q} {params.basename:q} --seed {params.seed} \
+            --local-search {params.ls} \
+            --min-transfer-distance {params.d} \
+            --threshold-constraints {params.ts} \
+            --random-trees {params.rd} \
+            --output-style {params.style} \
+            --force
+        """

@@ -1,0 +1,17 @@
+Reconciliation for Gene Tree 1:
+g1_0: Leaf Node
+g2_1: Leaf Node
+g3_2: Leaf Node
+g4_3: Leaf Node
+g5_4: Leaf Node
+g6_5: Leaf Node
+g7_6: Leaf Node
+g8_7: Leaf Node
+m1 = LCA[g1, g2]: Speciation, Mapping --> 59, Parent = 61
+m2 = LCA[g3, g4]: Duplication, Mapping --> 45, Parent = 61
+m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
+m4 = LCA[g5, g6]: Speciation, Mapping --> 46, Parent = 62
+m5 = LCA[g5, g8]: Transfer, Mapping --> 62, Edge, Parent = 65, Recipient --> 67
+m6 = LCA[g1, g8]: Speciation, Mapping --> 69, Parent = None
+
+The minimum reconciliation cost is: 5 (Duplications: 1, Transfers: 2, Losses: 0)

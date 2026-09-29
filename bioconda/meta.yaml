@@ -1,0 +1,66 @@
+{% set name = "maxtic-next" %}
+{% set version = "0.1.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/ZengZichao/MaxTiC-Next/archive/v{{ version }}.tar.gz
+  # sha256 will be filled in after first release tarball is available
+  # sha256: placeholder
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python >=3.9
+    - pip
+    - setuptools >=61.0
+  run:
+    - python >=3.9
+    # 交互式 HTML 报告所需（对应 pyproject 的 extras: report = jinja2>=3.0, plotly>=5.0）。
+    # 不装不会报错，只会静默降级为基础模板，故随包声明。
+    - jinja2 >=3.0
+    - plotly >=5.0
+
+test:
+  imports:
+    - maxtic_next
+    - maxtic_next.api
+    - maxtic_next.cli
+    - maxtic_next.constraints
+    - maxtic_next.constraints.adapters.ale
+    - maxtic_next.ranking
+    - maxtic_next.tree
+  commands:
+    - maxtic-next --help
+    - maxtic-next --version
+
+about:
+  home: https://github.com/ZengZichao/MaxTiC-Next
+  license: CeCILL-2.1
+  license_family: Other
+  license_file: LICENSE
+  summary: "Python 3 rewrite of MaxTiC: ranking phylogenetic tree internal nodes by Maximum Time Consistency with horizontal gene transfer constraints."
+  description: |
+    MaxTiC-Next is a Python 3 rewrite of MaxTiC, a tool for ranking internal
+    nodes of a species phylogenetic tree by Maximum Time Consistency (MTC),
+    taking into account weighted time constraints derived from Horizontal
+    Gene Transfer (HGT) events. It reads ALE_undated output (.uml_rec) as
+    constraint input -- by default via transfer events (ale_source=trf, the
+    convention of ALE's own MaxTiC integration) -- and also adapters for
+    RANGER-DTLx, ecceTERA, ARTra and AleRax. Extras: process-level parallel
+    parsing, interactive HTML reports, local-search robustness/sensitivity
+    summaries, and an optional Metropolis-Hastings sampler over linear
+    extensions (preliminary: convergence diagnostics are not validated, so
+    its samples must not be read as posterior samples).
+  dev_url: https://github.com/ZengZichao/MaxTiC-Next
+  doc_url: https://github.com/ZengZichao/MaxTiC-Next#readme
+
+extra:
+  recipe-maintainers:
+    - MaxTiC-Next

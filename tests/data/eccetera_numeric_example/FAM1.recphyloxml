@@ -1,0 +1,43 @@
+<recPhylo>
+<spTree>
+<phylogeny>
+<clade><name>H69</name>
+<clade><name>H59</name><clade><name>CYAP8</name></clade><clade><name>CYAP0</name></clade></clade>
+<clade><name>H65</name>
+<clade><name>H61</name><clade><name>CYAA5</name></clade><clade><name>CYAP2</name></clade></clade>
+<clade><name>H62</name><clade><name>NOSP7</name></clade><clade><name>ANAVT</name></clade></clade>
+</clade>
+</clade>
+</phylogeny>
+</spTree>
+<recGeneTree>
+<phylogeny rooted="true">
+<clade>
+<name>0</name>
+<eventsRec><speciation speciesLocation="10"></speciation></eventsRec>
+<clade>
+<name>1</name>
+<eventsRec><branchingOut speciesLocation="7"></branchingOut></eventsRec>
+<clade><name>2</name><eventsRec><leaf speciesLocation="1" geneName="g1"></leaf></eventsRec></clade>
+<clade>
+<name>3</name>
+<eventsRec><transferBack destinationSpecies="6"></transferBack><speciation speciesLocation="6"></speciation></eventsRec>
+<clade><name>4</name><eventsRec><leaf speciesLocation="6" geneName="g2"></leaf></eventsRec></clade>
+<clade><name>5</name><eventsRec><leaf speciesLocation="5" geneName="g3"></leaf></eventsRec></clade>
+</clade>
+</clade>
+<clade>
+<name>6</name>
+<eventsRec><speciation speciesLocation="9"></speciation></eventsRec>
+<clade><name>7</name><eventsRec><leaf speciesLocation="0" geneName="g4"></leaf></eventsRec></clade>
+<clade>
+<name>8</name>
+<eventsRec><branchingOut speciesLocation="9"></branchingOut></eventsRec>
+<clade><name>9</name><eventsRec><leaf speciesLocation="3" geneName="g5"></leaf></eventsRec></clade>
+<clade><name>10</name><eventsRec><transferBack destinationSpecies="8"></transferBack><leaf speciesLocation="8" geneName="g6"></leaf></eventsRec></clade>
+</clade>
+</clade>
+</clade>
+</phylogeny>
+</recGeneTree>
+</recPhylo>
