@@ -1,5 +1,7 @@
 # MaxTiC-Next
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053051.svg)](https://doi.org/10.5281/zenodo.23053051)
+
 > 🇨🇳 中文版：[README.md](README.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
 
 `MaxTiC-Next` is a Python 3 rewrite and engineering extension of **MaxTiC**

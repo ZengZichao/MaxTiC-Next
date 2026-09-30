@@ -15,6 +15,9 @@ url: https://github.com/ZengZichao/MaxTiC-Next
 version: 0.1.0
 date-released: 2026-09-29
 license: CECILL-2.1
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.23053051
 keywords:
   - phylogenetics
   - horizontal-gene-transfer

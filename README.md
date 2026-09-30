@@ -1,5 +1,7 @@
 # MaxTiC-Next
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053051.svg)](https://doi.org/10.5281/zenodo.23053051)
+
 > 🌐 English version: [README.en.md](README.en.md) ｜ 📖 完整多级手册（中英双语）：[docs/manual/README.md](docs/manual/README.md)
 
 `MaxTiC-Next` 是 Python 2 年代发生学工具 **MaxTiC**（Eric Tannier, Inria）的 Python 3 重写与工程化扩展。
