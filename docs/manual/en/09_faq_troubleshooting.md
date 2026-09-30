@@ -217,7 +217,7 @@ Messages the program emits in Chinese are annotated with a translation.
 - [ ] Record the full command and parameters (both the HTML report and
       `run_metadata["params"]` carry the run metadata)
 - [ ] Avoid `--random-type 1/2` (they change the data itself)
-- [ ] Containerize and **pin the image tag** (`maxtic-next:0.1.0`, not `:latest`)
+- [ ] Containerize and **pin the image tag** (`maxtic-next:0.1.1`, not `:latest`)
 - [ ] When reporting p-values, state the `--random-trees` N and the "(k+1)/(n+1) correction"
 - [ ] When reporting a robustness/sensitivity summary, state the effective
       `--near-optimal-top-k` (default 50) — it is the cap on the support set those frequencies

@@ -29,7 +29,7 @@ Verify:
 
 ```bash
 maxtic-next --help
-python -c "import maxtic_next; print(maxtic_next.__version__)"   # 0.1.0
+python -c "import maxtic_next; print(maxtic_next.__version__)"   # 0.1.1
 ```
 
 ## 1.3 Option B: no install (PYTHONPATH)
@@ -63,8 +63,8 @@ micromamba run -n python-3.11 maxtic-next examples/minitree.tree \
 See [07 · Workflows & deployment](07_workflows_deployment.md). Base image `python:3.11-slim`:
 
 ```bash
-docker build -t maxtic-next:0.1.0 .
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
+docker build -t maxtic-next:0.1.1 .
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 ```
 

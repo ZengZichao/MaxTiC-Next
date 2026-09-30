@@ -25,7 +25,7 @@ def bench(func, n=5, **kwargs):
 
 
 print("=" * 70)
-print("MaxTiC-Next Benchmark Suite v0.1.0")
+print("MaxTiC-Next Benchmark Suite v0.1.1")
 print("=" * 70)
 print(f"Python {sys.version.split()[0]}")
 print()

@@ -2,7 +2,7 @@ Bootstrap: docker
 From: python:3.11-slim
 
 # MaxTiC-Next Singularity/Apptainer 镜像。
-# 产物名与标签：maxtic-next_0.1.0.sif，与 Docker 镜像 maxtic-next:0.1.0
+# 产物名与标签：maxtic-next_0.1.1.sif，与 Docker 镜像 maxtic-next:0.1.1
 # （见仓库根 Dockerfile）、workflows/nextflow.config 以及
 # docs/manual/{zh,en}/01、07 章的示例保持同一名字与版本号。
 #
@@ -36,26 +36,26 @@ From: python:3.11-slim
 %labels
     Author MaxTiC-Next rewrite team (MaxTiC original: Eric Tannier, Inria)
     Description MaxTiC Python 3 rewrite — maximum time consistency ranking
-    Version 0.1.0
+    Version 0.1.1
     License CeCILL 2.1
 
 %help
     MaxTiC-Next Singularity 容器。
 
     构建（在本定义文件所在目录，即仓库根）：
-        sudo singularity build maxtic-next_0.1.0.sif Singularity.def
+        sudo singularity build maxtic-next_0.1.1.sif Singularity.def
 
     冒烟测试（镜像内自带 examples/，直接可用）：
-        singularity run maxtic-next_0.1.0.sif \
+        singularity run maxtic-next_0.1.1.sif \
             examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --no-html
 
     真实数据（把宿主目录挂进容器；注意 CLI 默认拒绝覆盖既有产物，
     被挂载目录里已有上次运行结果时会以退出码 3 中止，需加 -f/--force）：
-        singularity run -B "$PWD/data":/data maxtic-next_0.1.0.sif \
+        singularity run -B "$PWD/data":/data maxtic-next_0.1.1.sif \
             /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 
     开启 MCMC 采样（初步实现，收敛诊断未经验证；样本不得当作后验样本使用）：
-        singularity run maxtic-next_0.1.0.sif \
+        singularity run maxtic-next_0.1.1.sif \
             examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 \
             --mcmc --mcmc-iters 2000
 

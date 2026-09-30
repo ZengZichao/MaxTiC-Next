@@ -171,7 +171,7 @@ AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按
 - [ ] 使用同一 Newick 解析路径（本包自带 Tree）
 - [ ] 记录完整命令与参数（HTML 报告与 `run_metadata["params"]` 均含运行元数据）
 - [ ] 避免 `--random-type 1/2`（会改变数据本身）
-- [ ] 容器化并**固定镜像标签**（`maxtic-next:0.1.0`，不要 `:latest`）
+- [ ] 容器化并**固定镜像标签**（`maxtic-next:0.1.1`，不要 `:latest`）
 - [ ] 报告 p 值时写明 `--random-trees` 的 N 与“(k+1)/(n+1) 校正”
 - [ ] 报告稳健性/敏感性摘要时写明 `--near-optimal-top-k` 的生效值（默认 50）——
       它是这些频率的支持集上限，见 03 章 3.6b

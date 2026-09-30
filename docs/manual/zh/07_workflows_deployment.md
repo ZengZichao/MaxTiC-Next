@@ -32,14 +32,14 @@ MaxTiC-Next 面向现代生信流水线，提供容器镜像与两大工作流�
 
 ```bash
 # 构建（在仓库根目录；名字/标签与 nextflow.config、Singularity、01 章保持一致）
-docker build -t maxtic-next:0.1.0 .
+docker build -t maxtic-next:0.1.1 .
 
 # 基本运行（挂载数据目录）
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 
 # 开启 MCMC（初步实现，收敛诊断未经验证；样本不得当作后验样本）
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42 \
     --mcmc --mcmc-iters 2000
 ```
@@ -47,7 +47,7 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
 要点：
 
 - **镜像名必须全小写**：`docker build -t MaxTiC-Next .` 会直接报
-  `invalid reference format`。统一用 `maxtic-next:0.1.0`。
+  `invalid reference format`。统一用 `maxtic-next:0.1.1`。
 - 镜像内已安装 `jinja2` + `plotly`，HTML 报告开箱可用。
 - **`.dockerignore`**（新增）：`Dockerfile` 用 `COPY . /app` 拷入构建上下文，
   `.dockerignore` 已排除 `.git`、`tests`、`__pycache__`、`.pytest_cache`、`.DS_Store`、
@@ -56,7 +56,7 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
   因此上面的构建/运行命令不变，只是镜像更小、不带仓库元数据。
 - **挂载目录写产物**：若上次运行已在挂载目录留下产物，CLI 会以**退出码 3** 拒绝覆盖
   。请加 `-f/--force`，或用 `-p /data/run2` 换前缀。
-- 冒烟测试：`docker run --rm maxtic-next:0.1.0 --version` → `MaxTiC-Next 0.1.0`。
+- 冒烟测试：`docker run --rm maxtic-next:0.1.1 --version` → `MaxTiC-Next 0.1.1`。
 
 ## 7.3 Singularity / Apptainer
 
@@ -64,15 +64,15 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
 
 ```bash
 # 在仓库根目录构建
-sudo singularity build maxtic-next_0.1.0.sif Singularity.def
-# 或 apptainer build maxtic-next_0.1.0.sif Singularity.def
+sudo singularity build maxtic-next_0.1.1.sif Singularity.def
+# 或 apptainer build maxtic-next_0.1.1.sif Singularity.def
 
 # 镜像内自带 examples/，可直接冒烟
-singularity run maxtic-next_0.1.0.sif \
+singularity run maxtic-next_0.1.1.sif \
     examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --no-html
 
 # 真实数据：挂载宿主目录
-singularity run -B "$PWD/data":/data maxtic-next_0.1.0.sif \
+singularity run -B "$PWD/data":/data maxtic-next_0.1.1.sif \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 ```
 
@@ -160,8 +160,8 @@ nextflow -C workflows/nextflow.config run workflows/main.nf \
 - `RANK` 的产物声明含**可选的第 4 个文件**（`--random-trees > 0` 时才有），用
   `optional: true` 表达，因此 `--random_trees 0` 不会让流程失败。
 - 也带 `--force`（理由同上）。
-- 用 Docker 跑：先 `docker build -t maxtic-next:0.1.0 .`，再在 `nextflow.config` 里把
-  `docker.enabled` 置 true 并取消 `image = 'maxtic-next:0.1.0'` 的注释。
+- 用 Docker 跑：先 `docker build -t maxtic-next:0.1.1 .`，再在 `nextflow.config` 里把
+  `docker.enabled` 置 true 并取消 `image = 'maxtic-next:0.1.1'` 的注释。
 
 DSL2 结构要点：
 
@@ -194,7 +194,7 @@ micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
 | 反复调排序参数 | 固化 Stage 1 产物 `constraints.tsv`，只重跑 Stage 2 |
 | 长局部搜索 | 增量打分已默认开启（加速 3.1–8.2×）+ `--checkpoint` 防中断丢失（见 08 章） |
 | 需要跨机器**完全一致**的搜索结果 | `--local-search-max-iters N`（墙钟时长本身不可移植） |
-| 集群可复现 | 固定 `--seed`，锁 Python/依赖版本，容器化并**固定镜像标签**（`:0.1.0` 而非 `:latest`） |
+| 集群可复现 | 固定 `--seed`，锁 Python/依赖版本，容器化并**固定镜像标签**（`:0.1.1` 而非 `:latest`） |
 | 上游输出可疑时 | 先看 `--dry-run`（适配器模式会**真正解析**上游输出，零约束/命中率/解析失败都报 error 并退出 1），再看 stderr 的 `[tool] …` 诊断行 |
 | 上游示例是压缩包 | `.gz` / gzip 流 / 单成员归档**透明解压**；上游官方 `.tgz`（如 ALE 的 `reconciliations.tgz`）可整包喂给 `CONSTRAINTS`，会自动展开为成员输入并记入 `run_metadata["archives_expanded"]`（见 05 章 5.7） |
 | 需要更宽的近优邻域 | `--near-optimal-top-k K`（默认 50）放大稳健性/敏感性摘要的支持集；内存与 summary 计算随 K·n² 增长（见 03 章 3.6b） |
@@ -210,13 +210,13 @@ micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
 
 ```bash
 # 1) 镜像可构建、入口可用、退出码传播
-docker build -t maxtic-next:0.1.0 .
-docker run --rm maxtic-next:0.1.0 --version
-docker run --rm maxtic-next:0.1.0 examples/minitree.tree \
+docker build -t maxtic-next:0.1.1 .
+docker run --rm maxtic-next:0.1.1 --version
+docker run --rm maxtic-next:0.1.1 examples/minitree.tree \
     examples/Cyano_CUTConstraints.tsv --seed 42 --no-html; echo "exit=$?"
 
 # 2) 镜像里确实没有 .git / tests / docs
-docker run --rm --entrypoint sh maxtic-next:0.1.0 -c 'ls /app'
+docker run --rm --entrypoint sh maxtic-next:0.1.1 -c 'ls /app'
 
 # 3) Nextflow 语法（不真跑也要过 lint）
 nextflow lint -C workflows/nextflow.config workflows/main.nf

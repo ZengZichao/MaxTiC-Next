@@ -16,7 +16,7 @@ with lateral gene transfers, Biorxiv doi.org/10.1101/127548
 许可证：CeCILL 2.1（继承自原版）
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Zichao Zeng (曾子超, ORCID 0000-0001-6553-970X) — Python 3 rewrite; Eric Tannier — original MaxTiC"
 __license__ = "CECILL-2.1"
 __original_doi__ = "doi.org/10.1101/127548"

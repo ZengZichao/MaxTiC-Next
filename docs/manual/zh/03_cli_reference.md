@@ -19,7 +19,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 
 | 参数 | 说明 |
 |------|------|
-| `--version` | 打印 `MaxTiC-Next <版本>` 后退出 0（当前 `MaxTiC-Next 0.1.0`） |
+| `--version` | 打印 `MaxTiC-Next <版本>` 后退出 0（当前 `MaxTiC-Next 0.1.1`） |
 | `-h`, `--help` | 打印完整参数列表 |
 
 ## 3.1 核心排序参数（等价原版）

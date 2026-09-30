@@ -29,7 +29,7 @@ _LOCAL_PATH_MARKERS = (
 
 FRONT_END_DOCS = (
     "README.md",
-    "README.en.md",
+    "README.zh.md",
     "docs/manual/zh/00_index.md",
     "docs/manual/zh/03_cli_reference.md",
     "docs/manual/zh/07_workflows_deployment.md",
@@ -47,7 +47,7 @@ def test_docs_never_point_at_a_local_folder(rel):
 
 
 def test_readme_links_the_desktop_repository():
-    for rel in ("README.md", "README.en.md"):
+    for rel in ("README.md", "README.zh.md"):
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert STUDIO_REPO_URL in text, f"{rel} 没给出桌面端仓库地址"
 

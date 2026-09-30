@@ -23,7 +23,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 
 | Option | Notes |
 |--------|-------|
-| `--version` | Prints `MaxTiC-Next <version>` and exits 0 (currently `MaxTiC-Next 0.1.0`) |
+| `--version` | Prints `MaxTiC-Next <version>` and exits 0 (currently `MaxTiC-Next 0.1.1`) |
 | `-h`, `--help` | Full option list |
 
 ## 3.1 Core ranking options (equivalent to the original)

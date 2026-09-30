@@ -3,23 +3,23 @@
 # 基于 python:3.11-slim，安装本包及运行所需的第三方库（Jinja2 / Plotly）。
 # 入口为 `maxtic-next` 命令行；CLI 的退出码即容器退出码（错误时非零，退出码清晰传播）。
 #
-# 镜像命名：统一为 **小写** `maxtic-next`、标签 `0.1.0`，与
+# 镜像命名：统一为 **小写** `maxtic-next`、标签 `0.1.1`，与
 # `Singularity.def` 的产物名、`workflows/nextflow.config` 的 `docker.image` 以及
 # `docs/manual/{zh,en}/01_installation.md`、`07_workflows_deployment.md` 中的示例
 # 逐字一致。Docker 仓库名必须全小写，大写形式会报 `invalid reference format`。
 #
 # 构建（在仓库根目录；`docs/`、`tests/`、`.git` 等已由 .dockerignore 排除）：
-#   docker build -t maxtic-next:0.1.0 .
+#   docker build -t maxtic-next:0.1.1 .
 #
 # 运行（基本用法）：
-#   docker run --rm -v "$PWD/out":/data maxtic-next:0.1.0 \
+#   docker run --rm -v "$PWD/out":/data maxtic-next:0.1.1 \
 #       /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 #   （先把 examples/ 里的两个输入拷进 ./out，或直接把宿主 examples 挂到 /data：
-#     docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
+#     docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
 #         /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42）
 #
 # 开启 MCMC 采样（初步实现，收敛诊断未经验证；样本不得当作后验样本使用）：
-#   docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.0 \
+#   docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
 #       /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42 \
 #       --mcmc --mcmc-iters 2000
 #
@@ -32,7 +32,7 @@
 # 版本与基础镜像参数化：
 # tag 必须可校验——`docker inspect` 读得到 LABEL，
 # 且 tests/test_architecture_gates.py 会断言它与 pyproject / __init__ / 配方一致。
-ARG MAXTIC_VERSION=0.1.0
+ARG MAXTIC_VERSION=0.1.1
 ARG PYTHON_IMAGE=python:3.11-slim
 
 FROM ${PYTHON_IMAGE}
