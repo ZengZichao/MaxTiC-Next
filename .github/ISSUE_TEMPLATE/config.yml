@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation / 用户文档
+    url: https://github.com/ZengZichao/MaxTiC-Next/tree/main/docs
+    about: >
+      User manual, CLI reference, and adapter specifications before filing an
+      issue. 提问前请先查阅用户手册、CLI 参考与适配器规范。
