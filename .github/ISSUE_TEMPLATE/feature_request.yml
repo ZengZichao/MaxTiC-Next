@@ -1,0 +1,30 @@
+name: Feature request / 功能建议
+description: Suggest an idea for MaxTiC-Next / 为 MaxTiC-Next 提出新功能建议
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 想解决的问题
+      description: >
+        What are you trying to accomplish, and what is missing? 你想完成什么，
+        目前缺什么？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution / 期望方案
+      description: What would you like to happen? 你希望的行为是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / 备选方案
+      description: Other workarounds or tools you have considered. 你考虑过的其他办法。
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / 补充信息
+      description: Related papers, formats, or upstream tools. 相关文献、格式或上游工具。

@@ -1,0 +1,61 @@
+name: Bug report / 问题报告
+description: Report a problem with MaxTiC-Next / 报告 MaxTiC-Next 的问题
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. English or Chinese is fine —
+        感谢反馈，中英文描述均可。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / 发生了什么？
+      description: Expected vs. actual behavior. 期望行为与实际行为的差异。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction / 最小复现
+      description: >
+        The exact command, and (if possible) a minimal input tree and
+        constraints file. 完整命令行与最小输入文件（树种、约束文件）。
+      placeholder: |
+        maxtic-next tree.tree constraints.tsv --seed 42 --no-html
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MaxTiC-Next version / MaxTiC-Next 版本
+      description: Output of `maxtic-next --version`
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version / Python 版本
+      placeholder: "3.12.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method / 安装方式
+      options:
+        - pip (wheel / sdist)
+        - Docker
+        - Singularity / Apptainer
+        - Nextflow
+        - Snakemake
+        - From source / 源码安装
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / 补充信息
+      description: Logs, stack traces, screenshots, or related issues. 日志、报错栈、截图等。
