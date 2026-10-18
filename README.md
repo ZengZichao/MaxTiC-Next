@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
 [![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
-[![Python](https://img.shields.io/pypi/pyversions/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
+[![Python](https://img.shields.io/badge/python-3.9%20%E2%80%93%203.14-3776AB?logo=python&logoColor=white)](https://pypi.org/project/MaxTiC-Next/)
 
 > 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
 
