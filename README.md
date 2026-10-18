@@ -1,6 +1,8 @@
 # MaxTiC-Next
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
+[![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
+[![Python](https://img.shields.io/pypi/pyversions/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
 
 > 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
 
@@ -69,9 +71,18 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
 
 ## Installation
 
+**From PyPI** (every GitHub release is synced automatically, with PEP 740 provenance):
+
 ```bash
-pip install -e .            # basic install (core functionality, standard library only)
-pip install -e ".[report]"  # full install (adds jinja2/plotly for the interactive HTML report)
+pip install MaxTiC-Next            # basic install (core functionality, standard library only)
+pip install "MaxTiC-Next[report]"  # full install (adds jinja2/plotly for the interactive HTML report)
+```
+
+From a source checkout (development):
+
+```bash
+pip install -e .            # basic editable install
+pip install -e ".[report]"  # editable install with the HTML report extras
 ```
 
 > The console command is lowercase `maxtic-next` (see `[project.scripts]` in pyproject).
@@ -85,7 +96,7 @@ a separate repository, **[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/Ma
 and release cycle:
 
 ```bash
-pip install .                # this repo (core algorithm)
+pip install MaxTiC-Next        # core algorithm, from PyPI
 pip install "git+https://github.com/ZengZichao/MaxTiC-Next-Studio.git"  # Studio, which provides maxtic-studio
 maxtic-studio
 ```

@@ -1,6 +1,8 @@
 # MaxTiC-Next
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
+[![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
+[![Python](https://img.shields.io/pypi/pyversions/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
 
 > 🌐 English version: [README.md](README.md) ｜ 📖 完整多级手册（中英双语）：[docs/manual/README.md](docs/manual/README.md)
 
@@ -53,9 +55,18 @@
 
 ## 安装
 
+**从 PyPI 安装**（每个 GitHub Release 自动同步发布，附 PEP 740 来源证明）：
+
 ```bash
-pip install -e .            # 基本安装（核心功能，仅依赖标准库）
-pip install -e ".[report]"  # 完整安装（含交互式 HTML 报告所需的 jinja2/plotly）
+pip install MaxTiC-Next            # 基本安装（核心功能，仅依赖标准库）
+pip install "MaxTiC-Next[report]"  # 完整安装（含交互式 HTML 报告所需的 jinja2/plotly）
+```
+
+从源码检出安装（开发用）：
+
+```bash
+pip install -e .            # 基本安装（可编辑）
+pip install -e ".[report]"  # 可编辑安装 + HTML 报告扩展
 ```
 
 > 控制台命令名为小写的 `maxtic-next`（见 pyproject `[project.scripts]`）。
@@ -67,7 +78,7 @@ pip install -e ".[report]"  # 完整安装（含交互式 HTML 报告所需的 j
 **[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio)**，独立安装、独立打包、独立发版：
 
 ```bash
-pip install .                # 本仓库（核心算法）
+pip install MaxTiC-Next        # 核心算法，来自 PyPI
 pip install "git+https://github.com/ZengZichao/MaxTiC-Next-Studio.git"  # Studio，提供 maxtic-studio 命令
 maxtic-studio
 ```
