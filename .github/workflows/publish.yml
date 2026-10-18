@@ -26,6 +26,8 @@ jobs:
     permissions:
       # Trusted Publishing 要求 workflow 持有 OIDC id-token 权限。
       id-token: write
+      # action 默认生成 PEP 740 attestations，需要 attestations 写权限。
+      attestations: write
       contents: read
     steps:
       - uses: actions/checkout@v4
