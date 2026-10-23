@@ -5,6 +5,7 @@
 [![License: CeCILL-2.1](https://img.shields.io/badge/License-CeCILL--2.1-blue.svg)](LICENSE)
 [![ORCID](https://img.shields.io/badge/ORCID-0000--0001--6553--970X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0000-0001-6553-970X)
 [![Python](https://img.shields.io/badge/python-3.9%20%E2%80%93%203.14-3776AB?logo=python&logoColor=white)](https://pypi.org/project/MaxTiC-Next/)
+[![CI](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml)
 
 > 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
 
