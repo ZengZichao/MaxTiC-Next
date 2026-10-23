@@ -2,6 +2,8 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
 [![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
+[![License: CeCILL-2.1](https://img.shields.io/badge/License-CeCILL--2.1-blue.svg)](LICENSE)
+[![ORCID](https://img.shields.io/badge/ORCID-0000--0001--6553--970X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0000-0001-6553-970X)
 [![Python](https://img.shields.io/badge/python-3.9%20%E2%80%93%203.14-3776AB?logo=python&logoColor=white)](https://pypi.org/project/MaxTiC-Next/)
 
 > 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
