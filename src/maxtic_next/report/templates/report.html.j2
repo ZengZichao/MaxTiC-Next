@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="{{ t.html_lang }}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>MaxTiC-Next 报告 - {{ constraint_file }}</title>
+  <title>{{ t.page_title_pre }}{{ constraint_file }}</title>
   <style>
     body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; margin: 24px; color: #222; }
     h1 { border-bottom: 2px solid #4C72B0; padding-bottom: 6px; }
@@ -19,14 +19,14 @@
   </style>
 </head>
 <body>
-  <h1>MaxTiC-Next 排序报告</h1>
+  <h1>{{ t.h1 }}</h1>
   {# ：依赖降级必须可见（plotly 缺失等） #}
   {{ degradation_html | safe }}
   {% include "partials/summary.j2" %}
   <div class="card">
-    <h3>约束权重分布</h3>
+    <h3>{{ t.h_weights }}</h3>
     {{ weight_histogram_html | safe }}
-    <p class="muted">样本数（每条约束权重计一次，被违反的约束不重复计入）：
+    <p class="muted">{{ t.weights_note }}
       {{ n_weight_samples }}</p>
   </div>
   <div class="card">
@@ -38,16 +38,15 @@
   </div>
   {% endif %}
   <div class="card">
-    <h3>排序树可视化</h3>
+    <h3>{{ t.h_tree }}</h3>
     {% include "partials/tree_view.j2" %}
   </div>
   <div class="card">
     {# ：第 4 个输出文件 *.mt.random_dist.tsv 必须在报告中可见 #}
-    <h3>输出文件清单</h3>
+    <h3>{{ t.h_files }}</h3>
     {{ output_files_html | safe }}
   </div>
   <hr/>
-  <p class="muted">本报告为静态文件，无后端依赖，可双击打开。稳健性/敏感性摘要仅基于
-  局部搜索过程中访问到的解，反映各节点次序的稳健程度，不涉及概率推断。</p>
+  <p class="muted">{{ t.footer }}</p>
 </body>
 </html>

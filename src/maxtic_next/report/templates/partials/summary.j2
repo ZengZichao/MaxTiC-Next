@@ -1,20 +1,22 @@
 <div class="card">
-  <h3>运行元数据</h3>
+  <h3>{{ t.h_meta }}</h3>
   <div class="meta">
-    <b>MaxTiC-Next 版本</b>：{{ version }}<br/>
-    <b>种子</b>：{{ seed }}<br/>
-    <b>参数</b>：{{ params }}<br/>
-    <b>约束文件</b>：{{ constraint_file }}<br/>
-    <b>内部节点数</b>：{{ internal_node_count }}<br/>
-    <b>约束总权重</b>：{{ total_weight }}<br/>
-    <b>最优序来源</b>：{{ best_source }}<br/>
-    <b>与输入树相似度</b>：{{ similarity_to_input }}<br/>
-    <b>冲突比例</b>：{{ "%.4f"|format(conflict_ratio) }}
+    <b>{{ t.meta_version }}</b>{{ t.sep }}{{ version }}<br/>
+    <b>{{ t.meta_seed }}</b>{{ t.sep }}{{ seed }}<br/>
+    <b>{{ t.meta_params }}</b>{{ t.sep }}{{ params }}<br/>
+    <b>{{ t.meta_constraints }}</b>{{ t.sep }}{{ constraint_file }}<br/>
+    <b>{{ t.meta_nodes }}</b>{{ t.sep }}{{ internal_node_count }}<br/>
+    <b>{{ t.meta_weight }}</b>{{ t.sep }}{{ total_weight }}<br/>
+    <b>{{ t.meta_source }}</b>{{ t.sep }}{{ best_source }}<br/>
+    <b>{{ t.meta_similarity }}</b>{{ t.sep }}{{ similarity_to_input }}<br/>
+    <b>{{ t.meta_conflict }}</b>{{ t.sep }}{{ "%.4f"|format(conflict_ratio) }}
   </div>
-  <h3>目标值</h3>
+  <h3>{{ t.h_values }}</h3>
   <ul>
     {% for k, v in values.items() %}
-    <li>{{ k }}：{{ v }}</li>
+    <li>{{ k }}{{ t.sep }}{{ v }}</li>
     {% endfor %}
   </ul>
 </div>
+{{ robustness_html | safe }}
+{{ tree_view_html | safe }}
