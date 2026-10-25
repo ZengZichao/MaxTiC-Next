@@ -59,6 +59,7 @@ def _template_dir() -> str:
             return cand
     return candidates[0]
 
+
 #: 报告页面骨架文案（标题 / 章节标题 / 页脚说明），中 / 英双语。
 #: 术语铁律同样约束英文页脚：不出现 posterior / confidence 等用语。
 _PAGE: Dict[str, Dict[str, str]] = {
@@ -70,9 +71,7 @@ _PAGE: Dict[str, Dict[str, str]] = {
         "h_meta": "运行元数据",
         "h_values": "目标值",
         "h_weights": "约束权重分布",
-        "weights_note": (
-            "样本数（每条约束权重计一次，被违反的约束不重复计入）："
-        ),
+        "weights_note": ("样本数（每条约束权重计一次，被违反的约束不重复计入）："),
         "h_tree": "排序树可视化",
         "h_files": "输出文件清单",
         "footer": (
@@ -240,9 +239,7 @@ def _output_files_html(result, lang: str = "zh") -> str:
     random_stats = getattr(result, "random_stats", None) or {}
     files.append(
         (
-            t["of_random_pre"].format(
-                OUTPUT_SUFFIXES["short"][3], OUTPUT_SUFFIXES["legacy"][3]
-            ),
+            t["of_random_pre"].format(OUTPUT_SUFFIXES["short"][3], OUTPUT_SUFFIXES["legacy"][3]),
             random_stats.get("distribution_file", "") if random_stats else "",
         )
     )
@@ -326,9 +323,7 @@ def render_html_report(
 
     优先 Jinja2；缺失则降级为内置字符串模板（内容等价）。
     """
-    ctx = build_context(
-        result, sensitivity_summary=sensitivity_summary, weights=weights, lang=lang
-    )
+    ctx = build_context(result, sensitivity_summary=sensitivity_summary, weights=weights, lang=lang)
     try:
         from jinja2 import Environment, FileSystemLoader, select_autoescape
 

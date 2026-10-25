@@ -50,9 +50,7 @@ _LABELS: Dict[str, Dict[str, str]] = {
         "li_accesses_total": "局部搜索累计访问（含被容量裁剪淘汰者）：{}",
         "li_unique_total": "累计见过的不同排序：{}{}",
         "lb_lower_bound": "（下界）",
-        "li_top_k": (
-            "保留上限 top_k：{}（本次报告使用 {}）"
-        ),
+        "li_top_k": ("保留上限 top_k：{}（本次报告使用 {}）"),
         "li_best_value": "最优目标值：{}",
         "basis_fmt": (
             "口径：统计在“目标值最小的前 {k} 个去重近优排序”上进行，按每个序被局部"
@@ -148,14 +146,10 @@ _LABELS: Dict[str, Dict[str, str]] = {
         "li_orders_dedup": "Deduplicated near-optimal orders (counted): <b>{}</b>",
         "li_orders_retained": "Deduplicated near-optimal orders retained: <b>{}</b>",
         "li_accesses_retained": "Total <b>actual visits</b> of the retained orders: {}",
-        "li_accesses_total": (
-            "Total local-search visits (including capacity-evicted ones): {}"
-        ),
+        "li_accesses_total": ("Total local-search visits (including capacity-evicted ones): {}"),
         "li_unique_total": "Distinct orders ever seen: {}{}",
         "lb_lower_bound": "(lower bound)",
-        "li_top_k": (
-            "Retention cap top_k: {} (this report uses {})"
-        ),
+        "li_top_k": ("Retention cap top_k: {} (this report uses {})"),
         "li_best_value": "Best objective value: {}",
         "basis_fmt": (
             "Basis: statistics are computed over the {k} deduplicated near-optimal "
@@ -335,7 +329,9 @@ def weight_histogram(weights: List[float], bins: int = 12, lang: str = "zh") -> 
     return _weight_histogram_svg(weights, bins, t)
 
 
-def _weight_histogram_svg(weights: List[float], bins: int = 12, t: Optional[Dict[str, str]] = None) -> str:
+def _weight_histogram_svg(
+    weights: List[float], bins: int = 12, t: Optional[Dict[str, str]] = None
+) -> str:
     """权重分布的内联 SVG 直方图（Plotly 缺失时的降级实现）。"""
     if t is None:
         t = _t("zh")
@@ -498,9 +494,7 @@ def robustness_html(
         )
         ranked = sorted(informative.items(), key=lambda kv: kv[1], reverse=True)[:max_pairs]
         if not ranked:
-            parts.append(
-                f"<tr><td colspan='4' class='muted'>{_esc(t['pair_empty'])}</td></tr>"
-            )
+            parts.append(f"<tr><td colspan='4' class='muted'>{_esc(t['pair_empty'])}</td></tr>")
         for (a, b), cnt in ranked:
             prop = (
                 (cnt / denom)
