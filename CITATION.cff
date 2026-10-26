@@ -8,8 +8,8 @@ authors:
     orcid: https://orcid.org/0000-0001-6553-970X
 repository-code: https://github.com/ZengZichao/MaxTiC-Next
 url: https://github.com/ZengZichao/MaxTiC-Next
-version: 0.1.1
-date-released: 2026-09-30
+version: 0.2.0
+date-released: 2026-10-26
 license: CECILL-2.1
 identifiers:
   - type: doi
