@@ -7,9 +7,8 @@ package:
 
 source:
   url: https://github.com/ZengZichao/MaxTiC-Next/archive/v{{ version }}.tar.gz
-  # TEMPLATE: the v{{ version }} tag must be pushed and the archive hashed before
-  # this recipe can be used.  Do not submit it with a placeholder checksum.
-  # sha256: <fill with `sha256sum MaxTiC-Next-{{ version }}.tar.gz`>
+  # SHA256 of the GitHub v0.2.1 archive (tag pushed 2026-11-10).
+  sha256: 6ddc2b1088585232c0802f435821c3e11e74323b450e46928c2a306df8ae5200
 
 build:
   number: 0
