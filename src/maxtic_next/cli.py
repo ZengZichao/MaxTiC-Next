@@ -337,7 +337,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # ---- HTML 报告----
+    parser.add_argument(
+        "--help-en",
+        action="store_true",
+        help="show an English summary of the options and exit（英文选项摘要）",
+    )
     parser.add_argument("--no-html", action="store_true", help="关闭默认开启的交互式 HTML 报告")
+    parser.add_argument(
+        "--lang",
+        choices=["zh", "en"],
+        default="zh",
+        help="HTML 报告语言：zh（默认，中文）或 en（English）。只影响报告文案，"
+        "不影响任何计算、输出表或数值。",
+    )
 
     # ---- 线性扩展上的 Metropolis-Hastings 采样（默认关闭）----
     parser.add_argument(
@@ -465,6 +477,47 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+ENGLISH_HELP = """\
+MaxTiC-Next: Maximum Time Consistency ranking of species-tree internal nodes.
+
+Usage:
+  maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
+
+Core options (defaults in parentheses):
+  --seed INT (42)                         seed for mixing ties and local search
+  --local-search, --ls SECONDS (0)        wall-clock local-search budget; 0 disables
+  --local-search-max-iters N (0)          iteration cap; makes --ls reproducible
+  --temperature, --t FLOAT (0.001)        Metropolis temperature of the local search
+  --random-type, --r {0,1,2} (0)          data randomization for control runs
+  --min-transfer-distance, --d FLOAT (0)  keep distance > threshold
+  --threshold-constraints, --ts FLOAT (0) drop the lowest-weight edges up to this share
+  --random-trees, --rd N (0)              random orders for the permutation test
+  --near-optimal-top-k N (50)             collector capacity for the robustness summary
+  --from {ale,ranger,eccetera,artra,alerax,auto}
+  --from-auto                             detect the upstream format automatically
+  --ale-min-support FLOAT (0.05)          in-family support threshold
+  --ale-min-family-size N (5)             minimum family size in leaves
+  --ale-source {rec,trf} (trf)            ALE constraint convention
+  --artra-transfer-kind {all,replacing,additive} (all)
+  --dry-run                               validate inputs and exit
+  --no-html                               suppress the interactive HTML report
+  --lang {zh,en} (zh)                     HTML report language
+  --mcmc / --mcmc-iters N (1000)          optional, preliminary MH sampler
+  --mcmc-temperature auto|FLOAT            Boltzmann temperature (auto = total/100)
+  --incremental / --no-incremental        incremental scoring (on by default)
+  --checkpoint FILE / --checkpoint-interval SECONDS
+  -p, --output-prefix PREFIX              output prefix (default: first constraint file)
+  -f, --force                             overwrite existing outputs
+  --output-style {short,legacy} (short)   output file naming
+  -o, --constraints-out FILE              adapter mode: write unified constraints only
+
+Exit codes: 0 success; 1 --dry-run error; 2 invalid option value;
+            3 output exists and --force was not given; 4 runtime error.
+
+Full reference: docs/manual/en/03_cli_reference.md
+"""
+
+
 def main(argv: Optional[List[str]] = None) -> None:
     """CLI 主函数。
 
@@ -476,7 +529,13 @@ def main(argv: Optional[List[str]] = None) -> None:
     * ``3`` —— 输出文件已存在且未加 ``--force``；
     * ``4`` —— 运行时异常（输入不满足算法前置条件等）。
     """
-    args = build_parser().parse_args(argv)
+    args_list = list(sys.argv[1:] if argv is None else argv)
+    # --help-en must work without the required positionals; handle it before
+    # argparse so `maxtic-next --help-en` is a valid standalone invocation.
+    if "--help-en" in args_list:
+        print(ENGLISH_HELP)
+        return
+    args = build_parser().parse_args(args_list)
     try:
         result = api.rank(
             species_tree_path=args.species_tree,
@@ -496,6 +555,7 @@ def main(argv: Optional[List[str]] = None) -> None:
             ancestor_map=args.target_clade_ancestor_map,
             dry_run=args.dry_run,
             html_report=not args.no_html,
+            lang=args.lang,
             ale_min_support=args.ale_min_support,
             ale_min_family_size=args.ale_min_family_size,
             ale_cache_dir=args.ale_cache_dir,

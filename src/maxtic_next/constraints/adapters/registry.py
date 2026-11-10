@@ -390,6 +390,18 @@ def convert(tool: str, species_tree: Tree, inputs: List[str], **kwargs) -> Const
         统一 ``ConstraintSet``。
     """
     entry = REGISTRY.get(tool)
+    # AleRax is the only adapter whose upstream output is a directory tree
+    # (reconciliations/summaries/).  The other four consume report files; passing
+    # a directory used to surface as a raw IsADirectoryError traceback.
+    if tool != "alerax":
+        dirs = [p for p in inputs if os.path.isdir(p)]
+        if dirs:
+            raise ValueError(
+                f"{tool} adapter expects report files, not directories: {dirs}. "
+                "Pass the individual report files (for example *.dtl, *.recphyloxml, "
+                "*.txt or *.uml_rec), or use --from alerax for an AleRax output "
+                "directory."
+            )
     cset = entry.convert(species_tree, inputs, **kwargs)
     diag = getattr(cset, "diagnostics", None)
     if diag is None:

@@ -27,6 +27,8 @@ ECCE = os.path.join(DATA, "eccetera_example", "FAM1.recphyloxml")
 ARTRA = os.path.join(DATA, "artra_example", "FAM1.txt")
 ALERAX_RUN = os.path.join(DATA, "alerax_example", "run")
 ALE = os.path.join(DATA, "ale_example", "rec.uml_rec")
+ARTRA_REAL_SP = os.path.join(DATA, "artra_real", "species.nwk")
+ARTRA_REAL = os.path.join(DATA, "artra_real", "output.txt")
 
 
 def _tree(path):
@@ -50,6 +52,22 @@ class TestRegistry:
         sp = _tree(RANGER_SP)
         via_reg = registry.convert("ranger", sp, [RANGER], min_family_size=0)
         assert via_reg.informative_edges()["61,62"] == pytest.approx(1.0)
+
+    def test_directory_input_raises_clean_error(self, tmp_path):
+        """非 AleRax 适配器收到目录时应给出可读错误，而不是 IsADirectoryError。"""
+        sp = _tree(RANGER_SP)
+        with pytest.raises(ValueError, match="expects report files, not directories"):
+            registry.convert("ranger", sp, [str(tmp_path)])
+
+    def test_artra_real_report_parses_all_transfers(self):
+        """Real ARTra reconciliation report (199 taxa): all 13 transfers resolve."""
+        sp = _tree(ARTRA_REAL_SP)
+        cset = registry.convert("artra", sp, [ARTRA_REAL], min_support=0.0, min_family_size=0)
+        diag = cset.diagnostics
+        assert diag["transfers_seen"] == 13
+        assert diag["transfers_resolved"] == 13
+        assert diag["endpoint_hit_rate"] == pytest.approx(1.0)
+        assert len(cset.constraints) == 13
 
 
 class TestDetection:

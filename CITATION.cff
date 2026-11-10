@@ -1,17 +1,22 @@
 cff-version: 1.2.0
 message: 如果 MaxTiC-Next 用于你的研究，请同时引用本软件与原始 MaxTiC 论文。
-title: "MaxTiC-Next: a Python 3 rewrite of MaxTiC with reproducible rankings, multi-format ALE adapters, robustness analysis and HTML reporting"
+title: "MaxTiC-Next: a Python 3 software package for Maximum Time Consistency ranking of species-tree nodes from horizontal gene transfer"
 authors:
   - given-names: Zichao
     family-names: Zeng
     email: zengzichao@sjtu.edu.cn
     orcid: https://orcid.org/0000-0001-6553-970X
+  - given-names: Yinzhao
+    family-names: Wang
+    email: wyz@sjtu.edu.cn
+    orcid: https://orcid.org/0000-0001-8715-1386
 repository-code: https://github.com/ZengZichao/MaxTiC-Next
 url: https://github.com/ZengZichao/MaxTiC-Next
-version: 0.2.0
-date-released: 2026-10-26
+version: 0.2.1
+# date-released 在 v0.2.1 归档并取得版本 DOI 后再补；当前不写，避免把 0.2.0 的发布日期当成 0.2.1。
 license: CECILL-2.1
 identifiers:
+  # concept DOI：当前解析到最新已归档版本 v0.2.0；v0.2.1 归档后补充版本 DOI。
   - type: doi
     value: 10.5281/zenodo.23053050
 keywords:

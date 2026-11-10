@@ -23,7 +23,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 
 | Option | Notes |
 |--------|-------|
-| `--version` | Prints `MaxTiC-Next <version>` and exits 0 (currently `MaxTiC-Next 0.1.1`) |
+| `--version` | Prints `MaxTiC-Next <version>` and exits 0 (currently `MaxTiC-Next 0.2.1`) |
 | `-h`, `--help` | Full option list |
 
 ## 3.1 Core ranking options (equivalent to the original)
@@ -217,6 +217,8 @@ original 'to itself' statistic"*.) In other words, whether `to itself` is non-ze
 | Option | Values | Default | Notes |
 |--------|--------|---------|-------|
 | `--no-html` | — | off (HTML **is** produced by default) | Disable the interactive HTML report |
+| `--help-en` | — | off | Print an English summary of the options and exit; does not require the positional arguments |
+| `--lang` | `zh`/`en` | `zh` | HTML report language. Affects report text only; calculations, tables and numbers are unchanged |
 | `--output-style` | `short`/`legacy` | `short` | Output naming style; `legacy` gives the original long names. **Contents are byte-for-byte identical** under both styles |
 | `-p` | `--output-prefix` | none | Output prefix; defaults to the path of the **first** constraint file (see below) |
 | `-f` | `--force` | off | Allow overwriting existing output files. By default overwrites are **refused** with exit code **3** |

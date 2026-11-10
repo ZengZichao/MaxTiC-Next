@@ -38,14 +38,14 @@ becomes the container exit code).
 
 ```bash
 # build (at the repository root; name/tag identical to nextflow.config, Singularity and ch.01)
-docker build -t maxtic-next:0.1.1 .
+docker build -t maxtic-next:0.2.1 .
 
 # basic run (mount a data directory)
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 
 # enable MCMC (preliminary; convergence diagnostics not validated — samples are not posteriors)
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42 \
     --mcmc --mcmc-iters 2000
 ```
@@ -54,7 +54,7 @@ Notes:
 
 - **Image names must be lowercase**: `docker build -t MaxTiC-Next .` fails outright with
   `invalid reference format`. Use
-  `maxtic-next:0.1.1` consistently.
+  `maxtic-next:0.2.1` consistently.
 - `jinja2` + `plotly` are installed in the image, so the HTML report works out of the box.
 - **`.dockerignore`**: the `Dockerfile` uses `COPY . /app`, so `.dockerignore`
   excludes `.git`, `tests`, `__pycache__`, `.pytest_cache`, `.DS_Store`,
@@ -65,7 +65,7 @@ Notes:
 - **Writing into a mounted directory**: if a previous run left products there, the CLI refuses
   to overwrite and exits with code **3**. Add `-f/--force`, or change the prefix
   with `-p /data/run2`.
-- Smoke test: `docker run --rm maxtic-next:0.1.1 --version` → `MaxTiC-Next 0.1.1`.
+- Smoke test: `docker run --rm maxtic-next:0.2.1 --version` → `MaxTiC-Next 0.2.1`.
 
 ## 7.3 Singularity / Apptainer
 
@@ -74,15 +74,15 @@ For HPC clusters (rootless). The build context is the directory containing
 
 ```bash
 # build at the repository root
-sudo singularity build maxtic-next_0.1.1.sif Singularity.def
-# or: apptainer build maxtic-next_0.1.1.sif Singularity.def
+sudo singularity build maxtic-next_0.2.1.sif Singularity.def
+# or: apptainer build maxtic-next_0.2.1.sif Singularity.def
 
 # the image ships examples/, so this works as-is
-singularity run maxtic-next_0.1.1.sif \
+singularity run maxtic-next_0.2.1.sif \
     examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --no-html
 
 # real data: bind-mount a host directory
-singularity run -B "$PWD/data":/data maxtic-next_0.1.1.sif \
+singularity run -B "$PWD/data":/data maxtic-next_0.2.1.sif \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 ```
 
@@ -177,8 +177,8 @@ nextflow -C workflows/nextflow.config run workflows/main.nf \
   `--random-trees > 0`), expressed with `optional: true`, so `--random_trees 0` does not fail
   the pipeline.
 - Also passes `--force` (same reason as above).
-- To run via Docker: `docker build -t maxtic-next:0.1.1 .` first, then set `docker.enabled` to
-  true in `nextflow.config` and uncomment `image = 'maxtic-next:0.1.1'`.
+- To run via Docker: `docker build -t maxtic-next:0.2.1 .` first, then set `docker.enabled` to
+  true in `nextflow.config` and uncomment `image = 'maxtic-next:0.2.1'`.
 
 DSL2 structure:
 
@@ -195,12 +195,15 @@ DSL2 structure:
 ## 7.6 Environment definition (conda)
 
 `workflows/envs/maxtic_next.yaml` defines the conda environment (named `MaxTiC-Next`), for
-Snakemake's `conda:` directive (`use_conda: true`) or manual creation. The package is not yet on
-PyPI, so it must still be installed after creating the environment (the core needs no
-third-party dependency):
+Snakemake's `conda:` directive (`use_conda: true`) or manual creation. PyPI currently provides
+0.1.1 and 0.2.0; 0.2.1 will be published after acceptance. The environment only declares the
+interpreter and third-party dependencies, so install the package separately:
 
 ```bash
 micromamba env create -f workflows/envs/maxtic_next.yaml
+# PyPI release:
+micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.0
+# or the v0.2.1 revision from a source checkout:
 micromamba run -n MaxTiC-Next pip install -e <repository root>
 ```
 
@@ -215,7 +218,7 @@ The environment already declares `jinja2 >=3.0` and `plotly >=5.0`
 | Retuning ranking parameters | Freeze the Stage 1 product `constraints.tsv` and rerun only Stage 2 |
 | Long local search | incremental scoring is on by default (3.1–8.2× faster) + `--checkpoint` against interruption (see chapter 08) |
 | Search results that must match across machines | `--local-search-max-iters N` (a wall-clock budget is not portable) |
-| Cluster reproducibility | Fix `--seed`, pin the Python/dependency versions, containerize and **pin the image tag** (`:0.1.1`, not `:latest`) |
+| Cluster reproducibility | Fix `--seed`, pin the Python/dependency versions, containerize and **pin the image tag** (`:0.2.1`, not `:latest`) |
 | Suspicious upstream output | Run `--dry-run` first (in adapter mode it genuinely parses the output, so zero-constraint, hit-rate **and parse-failure** cases all come out as errors and exit 1), then read the `[tool] …` diagnostic line on stderr |
 | Upstream examples arrive as archives | `.gz` / gzip streams / single-member archives decompress **transparently**; an official `.tgz` bundle (e.g. ALE's `reconciliations.tgz`) can be fed whole in the constraint position — it is expanded into its members and recorded in `run_metadata["archives_expanded"]` (see 05 §5.7) |
 | Wider near-optimal neighbourhood needed | `--near-optimal-top-k K` (default 50) enlarges the support set of the robustness/sensitivity summary; memory and summary cost grow like K·n² (see 03 §3.6b) |
@@ -232,13 +235,13 @@ After editing the wrappers on a machine without the engines, verify as follows:
 
 ```bash
 # 1) image builds, entrypoint works, exit code propagates
-docker build -t maxtic-next:0.1.1 .
-docker run --rm maxtic-next:0.1.1 --version
-docker run --rm maxtic-next:0.1.1 examples/minitree.tree \
+docker build -t maxtic-next:0.2.1 .
+docker run --rm maxtic-next:0.2.1 --version
+docker run --rm maxtic-next:0.2.1 examples/minitree.tree \
     examples/Cyano_CUTConstraints.tsv --seed 42 --no-html; echo "exit=$?"
 
 # 2) the image really has no .git / tests / docs
-docker run --rm --entrypoint sh maxtic-next:0.1.1 -c 'ls /app'
+docker run --rm --entrypoint sh maxtic-next:0.2.1 -c 'ls /app'
 
 # 3) Nextflow syntax (lint even if you do not run it)
 nextflow lint -C workflows/nextflow.config workflows/main.nf

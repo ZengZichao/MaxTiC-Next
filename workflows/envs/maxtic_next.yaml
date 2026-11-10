@@ -8,9 +8,11 @@
 #   rule rank:
 #       conda: "envs/maxtic_next.yaml"     # 路径相对 Snakefile
 #
-# 注意：MaxTiC-Next 尚未发布到 PyPI，`pip: MaxTiC-Next` 会失败。本环境只
-# 声明解释器与第三方依赖；创建环境后请在仓库根目录安装本包（核心零第三方依赖）：
+# 注意：PyPI 目前提供 MaxTiC-Next 0.1.1 与 0.2.0；0.2.1 将在接收后发布。
+# 本环境只声明解释器与第三方依赖，包需另行安装：
 #   micromamba env create -f workflows/envs/maxtic_next.yaml
+#   micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.0
+#   # 或使用本仓库 v0.2.1 源码：
 #   micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
 #
 # 创建后两阶段流程中的 `maxtic-next` 命令即可用（见 pyproject

@@ -389,6 +389,7 @@ class Ranker:
         checkpoint_interval: float = 60.0,
         output_style: str = DEFAULT_OUTPUT_STYLE,
         force: bool = False,
+        lang: str = "zh",
         constraint_files_merged: Optional[List[str]] = None,
         local_search_max_iterations: int = 0,
     ) -> None:
@@ -432,6 +433,10 @@ class Ranker:
         self.checkpoint_interval = checkpoint_interval
         # 是否允许覆盖既有产物（，对应 CLI --force）
         self.force = force
+        # HTML 报告语言（只影响报告文案，不影响计算/输出表/数值）
+        if lang not in ("zh", "en"):
+            raise ValueError(f"lang 只能是 'zh' 或 'en'，收到 {lang!r}。")
+        self.lang = lang
         # 局部搜索迭代上限（0 = 仅受墙钟约束；> 0 使固定 seed 路径确定）
         self.local_search_max_iterations = local_search_max_iterations
         # 本次运行合并了哪些约束文件（产物前缀只体现第一个文件，须显式记录）
@@ -1356,6 +1361,7 @@ class Ranker:
                     result,
                     sensitivity_summary=sensitivity_summary,
                     force=self.force,
+                    lang=self.lang,
                 )
             except Exception as exc:  # noqa: BLE001 - 报告为可选特性，失败不阻断
                 # 降级不阻断主流程，但不能只落在 stdout 上 ——

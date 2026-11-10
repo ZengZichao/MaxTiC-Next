@@ -111,6 +111,7 @@ def rank(
     ancestor_map: bool = False,
     dry_run: bool = False,
     html_report: bool = True,
+    lang: str = "zh",
     ale_min_support: float = 0.05,
     ale_min_family_size: int = 5,
     ale_cache_dir: Optional[str] = None,
@@ -162,6 +163,8 @@ def rank(
             以**结构化字段**判定退出码。适配器模式下 ``dry_run`` 不再只是
             "文件可读"检查：会真正解析上游输出并报告端点命中率 / 零约束问题。
         html_report: 是否生成交互式 HTML 报告（默认 True；``--no-html`` 对应 False）。
+        lang: HTML 报告语言，``"zh"``（默认）或 ``"en"``。只影响报告文案，
+            不影响任何计算、输出表或数值。
         ale_min_support: ALE 适配器单家族内最小支持度阈值。
         ale_min_family_size: ALE 适配器最小基因家族规模。
         ale_cache_dir: ALE 适配器文件级缓存目录（断点续传）。
@@ -455,6 +458,7 @@ def rank(
         checkpoint_interval=checkpoint_interval,
         output_style=output_style,
         force=force,
+        lang=lang,
         constraint_files_merged=constraint_files_merged,
         local_search_max_iterations=local_search_max_iterations,
     )

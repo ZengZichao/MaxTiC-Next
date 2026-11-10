@@ -20,7 +20,7 @@ def rank(species_tree_path, constraints_path,
          output_prefix=None, print_summary=True,
          *, from_ale=False, from_tool=None,
          target_clade=None, ancestor_map=False, dry_run=False,
-         html_report=True, ale_min_support=0.05,
+         html_report=True, lang="zh", ale_min_support=0.05,
          ale_min_family_size=5, ale_cache_dir=None,
          ale_source="trf", ale_parallel="process",
          artra_transfer_kind="all",
@@ -38,6 +38,8 @@ def rank(species_tree_path, constraints_path,
   **first** file. In the multi-file case stdout is unchanged, **stderr** carries one NOTE, and
   `result.run_metadata["multi_file_prefix_note"]` records it.
 - Everything after the 10th positional parameter (from `from_ale` on) is **keyword-only**.
+- `lang` selects the HTML report language (`"zh"` default or `"en"`); it affects report text only,
+  not calculations, output tables or numbers.
 - `mcmc_temperature=0.0` is the **`auto` sentinel** (`max(total weight,1)/100`), not "zero
   temperature"; passing `0.0` equals CLI `--mcmc-temperature auto`. Non-positive explicit
   temperatures are rejected.

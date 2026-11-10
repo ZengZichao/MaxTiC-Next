@@ -1,0 +1,207 @@
+
+
+ ------------ Reconciliation for Gene Tree 1 (rooted) -------------
+Species Tree:
+((((((H0,(H1,H2)H3)H4,H5)H6,H7)H8,(H9,H10)H11)H12,((H13,H14)H15,((((H16,(((H17,((H18,H19)H20,H21)H22)H23,(((((((H24,H25)H26,H27)H28,H29)H30,(H31,((H32,H33)H34,(H35,(H36,H37)H38)H39)H40)H41)H42,((H43,H44)H45,(H46,H47)H48)H49)H50,H51)H52,(H53,((H54,(H55,H56)H57)H58,H59)H60)H61)H62)H63,((H64,((H65,(H66,H67)H68)H69,H70)H71)H72,(H73,H74)H75)H76)H77)H78,(((H79,H80)H81,((H82,H83)H84,(H85,H86)H87)H88)H89,((H90,((H91,H92)H93,(H94,(H95,H96)H97)H98)H99)H100,((H101,(H102,H103)H104)H105,(H106,H107)H108)H109)H110)H111)H112,(H113,H114)H115)H116,(((H117,((H118,H119)H120,H121)H122)H123,H124)H125,((((H126,H127)H128,(H129,H130)H131)H132,(H133,(H134,H135)H136)H137)H138,((H139,((((H140,H141)H142,H143)H144,H145)H146,H147)H148)H149,(((H150,H151)H152,(H153,(H154,H155)H156)H157)H158,((H159,H160)H161,((H162,(H163,H164)H165)H166,H167)H168)H169)H170)H171)H172)H173)H174)H175)H176,(((H177,H178)H179,H180)H181,(((H182,(H183,H184)H185)H186,(H187,(H188,H189)H190)H191)H192,(H193,H194)H195)H196)H197)H198;
+
+Gene Tree:
+(((((H117,(H119,H121)m7)m5,H124)m4,(H13,H14)m11)m3,((((((H159,H17)m19,(((H18,H19)m24,H21)m23,((H18,H19)m29,H21)m28)m22)m18,(((((H65,(H66,H67)m39)m37,H70)m36,((((H24,H25)m46,H27)m45,H29)m44,(H31,((H32,H33)m54,(H35,(H36,H37)m59)m57)m53)m51)m43)m35,((H43,H44)m63,(H46,H47)m66)m62)m34,(H53,((H54,(H55,H56)m74)m72,H59)m71)m69)m33)m17,(H64,H74)m78)m16,(((H82,(H83,H83)m85)m83,(H85,H86)m88)m82,(((H10,H90)m93,((H91,H92)m97,(H94,(H95,H96)m102)m100)m96)m92,((H101,(H102,H103)m108)m106,(H106,H107)m111)m105)m91)m81)m15,((H126,H127)m115,((((H126,H127)m121,(H129,H130)m124)m120,(H133,(H134,H135)m129)m127)m119,((H139,((((H140,H141)m138,H143)m137,H145)m136,H147)m135)m133,(((H151,((H153,(H154,H155)m151)m149,((H134,H135)m155,((H134,H135)m159,H163)m158)m154)m148)m146,(((H5,H124)m165,(H150,H151)m168)m164,H153)m163)m145,((H103,(H106,H107)m175)m173,H160)m172)m144)m132)m118)m114)m14)m2,((H178,H193)m180,((H0,(H1,H2)m186)m184,(H9,(H10,H150)m191)m189)m183)m179)m1;
+
+Reconciliation:
+H117_0: Leaf Node
+H119_1: Leaf Node
+H121_2: Leaf Node
+m7 = LCA[H119,H121]: Speciation, Mapping --> H122
+m5 = LCA[H117,H121]: Speciation, Mapping --> H123
+H124_5: Leaf Node
+m4 = LCA[H117,H124]: Speciation, Mapping --> H125
+H13_7: Leaf Node
+H14_8: Leaf Node
+m11 = LCA[H13,H14]: Speciation, Mapping --> H15
+m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+H159_11: Leaf Node
+H17_12: Leaf Node
+m19 = LCA[H159,H17]: Replacing Transfer, Mapping --> H17, Recipient --> H159
+H18_14: Leaf Node
+H19_15: Leaf Node
+m24 = LCA[H18,H19]: Speciation, Mapping --> H20
+H21_17: Leaf Node
+m23 = LCA[H18,H21]: Speciation, Mapping --> H22
+H18_19: Leaf Node
+H19_20: Leaf Node
+m29 = LCA[H18,H19]: Speciation, Mapping --> H20
+H21_22: Leaf Node
+m28 = LCA[H18,H21]: Speciation, Mapping --> H22
+m22 = LCA[H18,H21]: Duplication, Mapping --> H22
+m18 = LCA[H159,H21]: Speciation, Mapping --> H23
+H65_26: Leaf Node
+H66_27: Leaf Node
+H67_28: Leaf Node
+m39 = LCA[H66,H67]: Speciation, Mapping --> H68
+m37 = LCA[H65,H67]: Speciation, Mapping --> H69
+H70_31: Leaf Node
+m36 = LCA[H65,H70]: Speciation, Mapping --> H71
+H24_33: Leaf Node
+H25_34: Leaf Node
+m46 = LCA[H24,H25]: Speciation, Mapping --> H26
+H27_36: Leaf Node
+m45 = LCA[H24,H27]: Speciation, Mapping --> H28
+H29_38: Leaf Node
+m44 = LCA[H24,H29]: Speciation, Mapping --> H30
+H31_40: Leaf Node
+H32_41: Leaf Node
+H33_42: Leaf Node
+m54 = LCA[H32,H33]: Speciation, Mapping --> H34
+H35_44: Leaf Node
+H36_45: Leaf Node
+H37_46: Leaf Node
+m59 = LCA[H36,H37]: Speciation, Mapping --> H38
+m57 = LCA[H35,H37]: Speciation, Mapping --> H39
+m53 = LCA[H32,H37]: Speciation, Mapping --> H40
+m51 = LCA[H31,H37]: Speciation, Mapping --> H41
+m43 = LCA[H24,H37]: Speciation, Mapping --> H42
+m35 = LCA[H65,H37]: Replacing Transfer, Mapping --> H42, Recipient --> H71
+H43_53: Leaf Node
+H44_54: Leaf Node
+m63 = LCA[H43,H44]: Speciation, Mapping --> H45
+H46_56: Leaf Node
+H47_57: Leaf Node
+m66 = LCA[H46,H47]: Speciation, Mapping --> H48
+m62 = LCA[H43,H47]: Speciation, Mapping --> H49
+m34 = LCA[H65,H47]: Speciation, Mapping --> H50
+H53_61: Leaf Node
+H54_62: Leaf Node
+H55_63: Leaf Node
+H56_64: Leaf Node
+m74 = LCA[H55,H56]: Speciation, Mapping --> H57
+m72 = LCA[H54,H56]: Speciation, Mapping --> H58
+H59_67: Leaf Node
+m71 = LCA[H54,H59]: Speciation, Mapping --> H60
+m69 = LCA[H53,H59]: Speciation, Mapping --> H61
+m33 = LCA[H65,H59]: Speciation, Mapping --> H62
+m17 = LCA[H159,H59]: Speciation, Mapping --> H63
+H64_72: Leaf Node
+H74_73: Leaf Node
+m78 = LCA[H64,H74]: Speciation, Mapping --> H76
+m16 = LCA[H159,H74]: Speciation, Mapping --> H77
+H82_76: Leaf Node
+H83_77: Leaf Node
+H83_78: Leaf Node
+m85 = LCA[H83,H83]: Duplication, Mapping --> H83
+m83 = LCA[H82,H83]: Speciation, Mapping --> H84
+H85_81: Leaf Node
+H86_82: Leaf Node
+m88 = LCA[H85,H86]: Speciation, Mapping --> H87
+m82 = LCA[H82,H86]: Speciation, Mapping --> H88
+H10_85: Leaf Node
+H90_86: Leaf Node
+m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
+H91_88: Leaf Node
+H92_89: Leaf Node
+m97 = LCA[H91,H92]: Speciation, Mapping --> H93
+H94_91: Leaf Node
+H95_92: Leaf Node
+H96_93: Leaf Node
+m102 = LCA[H95,H96]: Speciation, Mapping --> H97
+m100 = LCA[H94,H96]: Speciation, Mapping --> H98
+m96 = LCA[H91,H96]: Speciation, Mapping --> H99
+m92 = LCA[H10,H96]: Speciation, Mapping --> H100
+H101_98: Leaf Node
+H102_99: Leaf Node
+H103_100: Leaf Node
+m108 = LCA[H102,H103]: Speciation, Mapping --> H104
+m106 = LCA[H101,H103]: Speciation, Mapping --> H105
+H106_103: Leaf Node
+H107_104: Leaf Node
+m111 = LCA[H106,H107]: Speciation, Mapping --> H108
+m105 = LCA[H101,H107]: Speciation, Mapping --> H109
+m91 = LCA[H10,H107]: Speciation, Mapping --> H110
+m81 = LCA[H82,H107]: Speciation, Mapping --> H111
+m15 = LCA[H159,H107]: Speciation, Mapping --> H112
+H126_110: Leaf Node
+H127_111: Leaf Node
+m115 = LCA[H126,H127]: Speciation, Mapping --> H128
+H126_113: Leaf Node
+H127_114: Leaf Node
+m121 = LCA[H126,H127]: Speciation, Mapping --> H128
+H129_116: Leaf Node
+H130_117: Leaf Node
+m124 = LCA[H129,H130]: Speciation, Mapping --> H131
+m120 = LCA[H126,H130]: Speciation, Mapping --> H132
+H133_120: Leaf Node
+H134_121: Leaf Node
+H135_122: Leaf Node
+m129 = LCA[H134,H135]: Speciation, Mapping --> H136
+m127 = LCA[H133,H135]: Speciation, Mapping --> H137
+m119 = LCA[H126,H135]: Speciation, Mapping --> H138
+H139_126: Leaf Node
+H140_127: Leaf Node
+H141_128: Leaf Node
+m138 = LCA[H140,H141]: Speciation, Mapping --> H142
+H143_130: Leaf Node
+m137 = LCA[H140,H143]: Speciation, Mapping --> H144
+H145_132: Leaf Node
+m136 = LCA[H140,H145]: Speciation, Mapping --> H146
+H147_134: Leaf Node
+m135 = LCA[H140,H147]: Speciation, Mapping --> H148
+m133 = LCA[H139,H147]: Speciation, Mapping --> H149
+H151_137: Leaf Node
+H153_138: Leaf Node
+H154_139: Leaf Node
+H155_140: Leaf Node
+m151 = LCA[H154,H155]: Speciation, Mapping --> H156
+m149 = LCA[H153,H155]: Speciation, Mapping --> H157
+H134_143: Leaf Node
+H135_144: Leaf Node
+m155 = LCA[H134,H135]: Speciation, Mapping --> H136
+H134_146: Leaf Node
+H135_147: Leaf Node
+m159 = LCA[H134,H135]: Speciation, Mapping --> H136
+H163_149: Leaf Node
+m158 = LCA[H134,H163]: Additive Transfer, Mapping --> H136, Recipient --> H163
+m154 = LCA[H134,H163]: Duplication, Mapping --> H136
+m148 = LCA[H153,H163]: Additive Transfer, Mapping --> H157, Recipient --> H136
+m146 = LCA[H151,H163]: Speciation, Mapping --> H158
+H5_154: Leaf Node
+H124_155: Leaf Node
+m165 = LCA[H5,H124]: Replacing Transfer, Mapping --> H124, Recipient --> H5
+H150_157: Leaf Node
+H151_158: Leaf Node
+m168 = LCA[H150,H151]: Speciation, Mapping --> H152
+m164 = LCA[H5,H151]: Replacing Transfer, Mapping --> H152, Recipient --> H124
+H153_161: Leaf Node
+m163 = LCA[H5,H153]: Speciation, Mapping --> H158
+m145 = LCA[H151,H153]: Duplication, Mapping --> H158
+H103_164: Leaf Node
+H106_165: Leaf Node
+H107_166: Leaf Node
+m175 = LCA[H106,H107]: Speciation, Mapping --> H108
+m173 = LCA[H103,H107]: Speciation, Mapping --> H109
+H160_169: Leaf Node
+m172 = LCA[H103,H160]: Additive Transfer, Mapping --> H169, Recipient --> H109
+m144 = LCA[H151,H160]: Speciation, Mapping --> H170
+m132 = LCA[H139,H160]: Speciation, Mapping --> H171
+m118 = LCA[H126,H160]: Additive Transfer, Mapping --> H171, Recipient --> H138
+m114 = LCA[H126,H160]: Speciation, Mapping --> H172
+m14 = LCA[H159,H160]: Speciation, Mapping --> H174
+m2 = LCA[H117,H160]: Speciation, Mapping --> H175
+H178_177: Leaf Node
+H193_178: Leaf Node
+m180 = LCA[H178,H193]: Additive Transfer, Mapping --> H193, Recipient --> H178
+H0_180: Leaf Node
+H1_181: Leaf Node
+H2_182: Leaf Node
+m186 = LCA[H1,H2]: Speciation, Mapping --> H3
+m184 = LCA[H0,H2]: Speciation, Mapping --> H4
+H9_185: Leaf Node
+H10_186: Leaf Node
+H150_187: Leaf Node
+m191 = LCA[H10,H150]: Replacing Transfer, Mapping --> H10, Recipient --> H150
+m189 = LCA[H9,H150]: Speciation, Mapping --> H11
+m183 = LCA[H0,H150]: Speciation, Mapping --> H12
+m179 = LCA[H178,H150]: Additive Transfer, Mapping --> H12, Recipient --> H193
+m1 = LCA[H117,H150]: Speciation, Mapping --> H176
+
+The minimum reconciliation cost is: 65 (Duplications: 4, Transfers: 13, Losses: 18)
+Total number of optimal solutions: 24
+Total number of candidates for gene birth: 1

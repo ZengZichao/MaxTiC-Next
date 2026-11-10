@@ -1,5 +1,5 @@
 {% set name = "maxtic-next" %}
-{% set version = "0.2.0" %}
+{% set version = "0.2.1" %}
 
 package:
   name: {{ name|lower }}
@@ -7,8 +7,9 @@ package:
 
 source:
   url: https://github.com/ZengZichao/MaxTiC-Next/archive/v{{ version }}.tar.gz
-  # sha256 will be filled in after first release tarball is available
-  # sha256: placeholder
+  # TEMPLATE: the v{{ version }} tag must be pushed and the archive hashed before
+  # this recipe can be used.  Do not submit it with a placeholder checksum.
+  # sha256: <fill with `sha256sum MaxTiC-Next-{{ version }}.tar.gz`>
 
 build:
   number: 0

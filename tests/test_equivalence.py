@@ -100,15 +100,22 @@ def _read(path):
 
 
 def _check_or_create(name, content):
-    """首次运行创建基线；之后精确比对。
+    """精确比对基线；缺失时默认**失败**，只有显式更新开关才允许写入。
 
-    比对前将项目根目录的绝对路径归一化为 ``<PROJECT_ROOT>`` 占位符，
-    使基线对目录重命名 / 迁移不敏感（仅算法输出进入比对）。
+    旧行为是"缺基线就静默写一份并返回"，这会让一次意外删除文件或首次在
+    新环境运行看起来像"通过"。现在默认把缺失基线当作错误；需要重建时显式
+    设置 ``MAXTIC_UPDATE_BASELINES=1``，使更新动作可见、可审查。
     """
     path = os.path.join(BASELINE_DIR, name)
     os.makedirs(BASELINE_DIR, exist_ok=True)
     content = _normalize_floats(_normalize(content))
     if not os.path.exists(path):
+        if os.environ.get("MAXTIC_UPDATE_BASELINES") != "1":
+            raise AssertionError(
+                f"基线缺失：{name}。为避免静默地把当前输出当成'正确'，本测试默认"
+                "不生成基线。确认当前输出无误后，设置 MAXTIC_UPDATE_BASELINES=1 "
+                "重新运行以重建基线。"
+            )
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(content)
         return
