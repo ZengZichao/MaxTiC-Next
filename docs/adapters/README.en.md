@@ -175,8 +175,10 @@ compatibility).
    detected as ale): `.uml_rec` → ale;
    `_transfers.txt` / `_meanTransfers.txt` → alerax (both case-insensitive);
    `.recphyloxml` → eccetera;
-3. **Content sniffing** (on **decompressed** text, scanned in 64 KB chunks up to 4 MB in
-   total, with a 64-byte overlap between chunks): contains `<recPhylo`/`<recGeneTree` → eccetera;
+3. **Content sniffing** (on **decompressed** text, scanned in chunks of 65,536
+   **characters** up to 4,194,304 characters in total, keeping the last 64 characters of
+   the previous chunk as overlap; these upstream outputs are ASCII, so character counts
+   equal byte counts): contains `<recPhylo`/`<recGeneTree` → eccetera;
    contains `T@` and `reconciled`/`D@` → ale; contains `Recipient` and `-->` plus
    `Replacing/Additive Transfer` → artra; contains only `Recipient` and `-->` → ranger;
 4. No match → `None` (treated as generic text constraints and parsed by the native path).

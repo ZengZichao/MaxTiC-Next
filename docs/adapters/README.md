@@ -146,7 +146,8 @@ maxtic-next species.tree FAM1.dtl --from ranger -o constraints.tsv
 2. **扩展名**（先剥压缩后缀，故 `x.uml_rec.gz` 仍判为 ale）：`.uml_rec` → ale；
    `_transfers.txt` / `_meanTransfers.txt` → alerax（两者均大小写不敏感）；
    `.recphyloxml` → eccetera；
-3. **内容嗅探**（读**解压后**文本，按 64 KB 分块扫描、最多 4 MB，块间重叠 64 字节）：
+3. **内容嗅探**（读**解压后**文本，按 65,536 个**字符**分块扫描、累计上限 4,194,304 个字符，
+   块间保留上一块尾部 64 个字符；这些上游输出均为 ASCII，故字符数即字节数）：
    含 `<recPhylo`/`<recGeneTree` → eccetera；含 `T@` 且
    `reconciled`/`D@` → ale；含 `Recipient` 与 `-->` 且 `Replacing/Additive Transfer` → artra；
    仅含 `Recipient` 与 `-->` → ranger；
