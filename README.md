@@ -69,8 +69,12 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
      original and is therefore *not* a deviation). Newick parsing
      is out of its scope (that file reuses this project's `Tree`, as noted in it).
    - The "run the original and compare" case in `tests/test_equivalence_stats.py` needs both
-     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent and
-     the differential test above stays active as the fallback.
+     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent.
+   - `tests/test_original_py3_equivalence.py` runs a vendored 2to3 translation of the original
+     `MaxTiC.py` / `script_tree.py` side by side with this package on the main synthetic and
+     cyanobacterial instances and asserts byte-identical output tables and identical objective
+     values. It is a stronger fallback than the independent reference implementation but is not a
+     substitute for a real Python 2.7 run.
 
 ## Installation
 
@@ -80,6 +84,10 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
 pip install MaxTiC-Next            # basic install (core functionality, standard library only)
 pip install "MaxTiC-Next[report]"  # full install (adds jinja2/plotly for the interactive HTML report)
 ```
+
+> **Revision note (v0.2.1).** PyPI currently serves 0.1.1 and 0.2.0. Version 0.2.1 is the
+> revision under review and will be published after acceptance; until then install it from the
+> source archive supplied with the manuscript or from a checkout of this revision.
 
 From a source checkout (development):
 
@@ -119,7 +127,7 @@ Offline / without installing, from the repository root:
 ```bash
 export PYTHONPATH=src
 python -m maxtic_next --help
-python -m maxtic_next --version   # MaxTiC-Next 0.1.1
+python -m maxtic_next --version   # MaxTiC-Next 0.2.1
 ```
 
 ## Usage
@@ -147,6 +155,8 @@ maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42
 | `--threshold-constraints` / `--ts` | Constraint weight threshold fraction, domain [0, 1] | `0.0` |
 | `--random-trees` / `--rd` | Random-tree sample count (p-values use the (k+1)/(n+1) correction) | `0` |
 | `--near-optimal-top-k` | Near-optimal collector capacity: how many **deduplicated** near-optimal orders the robustness/sensitivity summary may consider (API `top_k`; must be ≥ 1; only meaningful with `--ls > 0`) | `50` |
+| `--help-en` | Print an English summary of the options and exit (does not require the positionals) | off |
+| `--lang` | HTML report language: `zh` (default) or `en`; affects report text only | `zh` |
 | `-f` / `--force` | Allow overwriting existing products (default: refuse, exit code 3) | off |
 
 > For the complete set (upstream adaptation via `--from` and `--min-endpoint-hit-rate`, clade
@@ -322,10 +332,10 @@ Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier an
   faster; `--no-incremental` keeps the original full-recompute semantics as an escape hatch and
   the equivalence is guarded long-term by `tests/test_output_equivalence.py`.
 - **Faster default path** (no change to summation order): prefix membership tests in the `mix`
-  dynamic program use incrementally maintained sets instead of list slices, cutting the
-  synthetic benchmark point (n=3199, |E|=12796) from a 21.7–32.9 s median to **3.7–7.6 s** per run
-  (medians of two rounds on this host; round-to-round noise on the same input is up to ~2x. The
-  input is a deterministic synthetic tree, not a real biological dataset).
+  dynamic program use incrementally maintained sets instead of list slices. The end-to-end
+  deterministic path at n=3199, |E|=12796 is **25.461 s CPU** on the review host (AF2
+  `scaling_large.csv`; n=1000/|E|=6000: 2.506 s); absolute timings remain host-dependent. The
+  input is a deterministic synthetic tree, not a real biological dataset.
 - **Optional switches**: `--checkpoint` (resumption covering the `--local-search` stage only), and
   ALE's `--ale-cache-dir` (per-family cache for the parsing stage).
 - `PathCache` in `tree/cache.py` is a legacy implementation **never wired into the ranking hot

@@ -23,7 +23,7 @@ import subprocess
 import sys
 import tempfile
 
-CORE_FLOOR = 85.0  # 改前实测 85.7%（ data/coverage-summary.md）
+CORE_FLOOR = 85.0  # 首次实测 85.7%
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)

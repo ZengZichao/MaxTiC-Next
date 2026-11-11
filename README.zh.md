@@ -48,10 +48,13 @@
      `ReachabilityMatrix` / `EdgeBuilder` / `order_from_graph` / `mix` / `opt` / `value` /
      `RandomWrapper`），在真实蓝细菌示例上**逐字段差分比对**。核心算法或统计口径一漂移它即失败。
      它同时**显式断言**已裁定的偏离（ uninformative 分母、 偏序哨兵、 阈值后总权重、
-      哨兵边不可删；并记录  与原版一致、故不算偏离）。
+      哨兵边不可删；并记录零权重边从 informative 文件中排除的做法与原版一致、故不算偏离）。
      Newick 解析层不在其覆盖范围内（该文件复用本项目的 `Tree`，文件内已注明）。
    - `tests/test_equivalence_stats.py` 里那条“跑原版做对比”的用例需要环境中有 `python2`
      与原版 `MaxTiC.py`；本环境没有则跳过，上面的差分测试照常运行作为兜底。
+   - `tests/test_original_py3_equivalence.py` 用 2to3 直译的原版 `MaxTiC.py` / `script_tree.py`
+     与本品在主合成实例和蓝细菌实例上并排运行，断言输出表逐字节相同、目标值一致；它比独立
+     参考实现更强，但仍不能替代真实的 Python 2.7 运行。
 
 ## 安装
 
@@ -61,6 +64,9 @@
 pip install MaxTiC-Next            # 基本安装（核心功能，仅依赖标准库）
 pip install "MaxTiC-Next[report]"  # 完整安装（含交互式 HTML 报告所需的 jinja2/plotly）
 ```
+
+> **v0.2.1 修订说明。** PyPI 目前提供 0.1.1 与 0.2.0；v0.2.1 是本次修订版，将在接收后发布。
+> 在此之前，请使用随稿提供的源码归档（`Additional file 6.zip`）或本修订版的源码检出。
 
 从源码检出安装（开发用）：
 
@@ -96,7 +102,7 @@ Studio 的任何东西，因此两个仓库放在哪里、本地目录叫什么�
 ```bash
 export PYTHONPATH=src
 python -m maxtic_next --help
-python -m maxtic_next --version   # MaxTiC-Next 0.1.1
+python -m maxtic_next --version   # MaxTiC-Next 0.2.1
 ```
 
 ## 用法
@@ -124,6 +130,8 @@ maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42
 | `--threshold-constraints` / `--ts` | 约束权重阈值比例，取值域 [0, 1] | `0.0` |
 | `--random-trees` / `--rd` | 随机树采样数量（p 值用 (k+1)/(n+1) 校正） | `0` |
 | `--near-optimal-top-k` | 近优解收集容量：稳健性/敏感性摘要最多考察多少个**去重**近优排序（API `top_k`；须 ≥ 1，仅 `--ls > 0` 时有意义） | `50` |
+| `--help-en` | 打印英文选项摘要并退出（不需要位置参数） | 关 |
+| `--lang` | HTML 报告语言：`zh`（默认）或 `en`；只影响报告文案 | `zh` |
 | `-f` / `--force` | 允许覆盖既有产物（默认拒绝并以退出码 3 中止） | 关 |
 
 > 完整参数（上游适配 `--from` 与 `--min-endpoint-hit-rate`、类群剪裁、`--dry-run`、`--mcmc*`
@@ -277,8 +285,8 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
   3.1–8.2 倍；`--no-incremental` 保留原版全量口径作为逃生门，等价性由
   `tests/test_output_equivalence.py` 长期看守。
 - **默认路径提速**（不改任何数值顺序）：`mix` 动态规划里的前缀成员判定由列表切片改为增量维护的
-  集合，n=3199 / |E|=12796 的合成基准点单次排序中位耗时从 21.7–32.9 s 降到 **3.7–7.6 s**
-  （同一输入两轮各取中位数，本机轮间噪声约 ±2 倍；口径为确定性合成树，不是真实生物数据集）。
+  集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（AF2 `scaling_large.csv`；
+  n=1000 / |E|=6000 为 2.506 s）；绝对耗时仍依赖主机。口径为确定性合成树，不是真实生物数据集。
 - **可选开关**：`--checkpoint`（仅覆盖 `--local-search` 阶段的续跑）、
   ALE 的 `--ale-cache-dir`（解析阶段按家族缓存）。
 - `tree/cache.py` 的 `PathCache` **不在排序热路径上**（保留导出是为了让公开 import 面

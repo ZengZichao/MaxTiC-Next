@@ -18,7 +18,7 @@ def rank(species_tree_path, constraints_path,
          output_prefix=None, print_summary=True,
          *, from_ale=False, from_tool=None,
          target_clade=None, ancestor_map=False, dry_run=False,
-         html_report=True, ale_min_support=0.05,
+         html_report=True, lang="zh", ale_min_support=0.05,
          ale_min_family_size=5, ale_cache_dir=None,
          ale_source="trf", ale_parallel="process",
          artra_transfer_kind="all",
@@ -35,6 +35,7 @@ def rank(species_tree_path, constraints_path,
   产物前缀取**第一个**文件（多文件时 stdout 不变、**stderr** 打一条 NOTE，并写入
   `result.run_metadata["multi_file_prefix_note"]`）。
 - 第 10 个位置参数之后（`from_ale` 起）全部是**关键字专用**参数。
+- `lang` 选择 HTML 报告语言（默认 `"zh"`，可设 `"en"`）；只影响报告文案，不改变计算、输出表或数值。
 - `mcmc_temperature=0.0` 是 **`auto` 哨兵**（`max(总权重,1)/100`），不是“零温度”；传 `0.0`
   与 CLI 传 `--mcmc-temperature auto` 等价。传负数或非正数会报错。
 - `top_k=50` 是**近优解收集容量**（CLI `--near-optimal-top-k`）：稳健性/敏感性摘要最多考察多少个

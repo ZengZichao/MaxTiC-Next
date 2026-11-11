@@ -356,3 +356,21 @@ def test_output_file_list_marks_missing_products(tmp_path):
     )
     body = open(r.html_report_file, encoding="utf-8").read()
     assert "本次未生成" in body  # 未跑 --rd 时第 4 个产物如实标注
+
+
+def test_html_report_english_language(tmp_path):
+    """``lang="en"`` 生成英文报告骨架；计算与数值不变。"""
+    pytest.importorskip("jinja2")
+    pytest.importorskip("plotly")
+    r = api.rank(
+        TREE,
+        CONS,
+        seed=42,
+        print_summary=False,
+        html_report=True,
+        lang="en",
+        output_prefix=str(tmp_path / "en"),
+    )
+    body = open(r.html_report_file, encoding="utf-8").read()
+    assert '<html lang="en">' in body
+    assert "MaxTiC-Next Ranking Report" in body

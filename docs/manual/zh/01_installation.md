@@ -28,7 +28,7 @@ pip install -e ".[report]"
 
 ```bash
 maxtic-next --help
-python -c "import maxtic_next; print(maxtic_next.__version__)"   # 0.1.1
+python -c "import maxtic_next; print(maxtic_next.__version__)"   # 0.2.1
 ```
 
 ## 1.3 方式二：免安装（PYTHONPATH）
@@ -61,8 +61,8 @@ micromamba run -n python-3.11 maxtic-next examples/minitree.tree \
 见 [07 · 流程封装与部署](07_workflows_deployment.md)。基础镜像 `python:3.11-slim`：
 
 ```bash
-docker build -t maxtic-next:0.1.1 .
-docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
+docker build -t maxtic-next:0.2.1 .
+docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
     /data/minitree.tree /data/Cyano_CUTConstraints.tsv --seed 42
 ```
 
@@ -74,8 +74,8 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.1.1 \
 
 ```bash
 python -m pytest tests/ -q
-# 期望：全部通过（当前 486 passed, 1 skipped；覆盖适配器、参考实现差分、
-#       边界、CLI 开关等；唯一的 skip 需要 python2 与原版 MaxTiC.py 才执行）
+# 期望：全部通过（安装 [dev,report] 后当前 492 passed, 1 skipped；覆盖适配器、
+#       参考实现差分、边界、CLI 开关等；唯一的 skip 需要 python2 与原版 MaxTiC.py）
 ```
 
 ## 1.7 卸载

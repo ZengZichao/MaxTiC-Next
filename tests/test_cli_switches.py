@@ -9,6 +9,7 @@ Python 2.7 环境进行（本机无 Py2.7），此处仅做可复现的合理性
 
 import os
 
+from maxtic_next import cli
 from maxtic_next.api import rank
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -28,6 +29,15 @@ def _write_space_constraints(path):
         fh.write("61 62 10.0 5.0\n")
         fh.write("61 67 20.0 0.5\n")
         fh.write("62 45 30.0\n")
+
+
+def test_help_en_prints_english_summary(capsys):
+    """``--help-en`` 必须能在没有位置参数时独立运行并输出英文摘要。"""
+    cli.main(["--help-en"])
+    out = capsys.readouterr().out
+    assert "MaxTiC-Next" in out
+    assert "--seed" in out
+    assert "Exit codes" in out
 
 
 def test_output_style_default_short_then_legacy(tmp_path):

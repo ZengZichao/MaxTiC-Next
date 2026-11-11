@@ -1,5 +1,5 @@
 {% set name = "maxtic-next" %}
-{% set version = "0.2.0" %}
+{% set version = "0.2.1" %}
 
 package:
   name: {{ name|lower }}
@@ -7,8 +7,8 @@ package:
 
 source:
   url: https://github.com/ZengZichao/MaxTiC-Next/archive/v{{ version }}.tar.gz
-  # sha256 will be filled in after first release tarball is available
-  # sha256: placeholder
+  # SHA256 of the GitHub v0.2.1 archive (tag pushed 2026-11-10).
+  sha256: 6ddc2b1088585232c0802f435821c3e11e74323b450e46928c2a306df8ae5200
 
 build:
   number: 0

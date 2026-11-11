@@ -25,6 +25,8 @@ env/
 .idea/
 .vscode/
 .DS_Store
+# Agent/tool session state (not part of the project)
+.mimosa/
 *.swp
 *.swo
 *~

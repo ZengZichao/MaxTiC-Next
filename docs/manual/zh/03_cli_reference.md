@@ -19,7 +19,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 
 | 参数 | 说明 |
 |------|------|
-| `--version` | 打印 `MaxTiC-Next <版本>` 后退出 0（当前 `MaxTiC-Next 0.1.1`） |
+| `--version` | 打印 `MaxTiC-Next <版本>` 后退出 0（当前 `MaxTiC-Next 0.2.1`） |
 | `-h`, `--help` | 打印完整参数列表 |
 
 ## 3.1 核心排序参数（等价原版）
@@ -183,6 +183,8 @@ NOTE: 上述丢弃中有 1 条是**自环约束**（donor == receptor，其拓�
 | 参数 | 取值 | 默认 | 说明 |
 |------|------|------|------|
 | `--no-html` | — | 关（即默认**生成** HTML） | 关闭交互式 HTML 报告 |
+| `--help-en` | — | 关 | 打印英文选项摘要并退出；不需要位置参数 |
+| `--lang` | `zh`/`en` | `zh` | HTML 报告语言。只影响报告文案，不改变计算、输出表或数值 |
 | `--output-style` | `short`/`legacy` | `short` | 输出文件命名风格；`legacy` 为原版长名。**两种风格内容逐字节一致** |
 | `-p` | `--output-prefix` | 无 | 输出前缀；默认取**第一个**约束文件路径（见下） |
 | `-f` | `--force` | 关 | 允许覆盖已存在的输出文件。默认**拒绝覆盖**并以**退出码 3** 中止 |

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MaxTiC-Next"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python 3 rewrite of MaxTiC: ranking species-tree internal nodes by Maximum Time Consistency (MTC) with lateral gene transfer constraints."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -15,6 +15,8 @@ authors = [
     { name = "Eric Tannier (original MaxTiC)", email = "eric.tannier@inria.fr" },
     # Python 3 重写与维护者（ORCID 0000-0001-6553-970X，见 CITATION.cff）。
     { name = "Zichao Zeng (曾子超)", email = "zengzichao@sjtu.edu.cn" },
+    # 通讯作者（ORCID 0000-0001-8715-1386）。
+    { name = "Yinzhao Wang", email = "wyz@sjtu.edu.cn" },
 ]
 keywords = ["phylogenetics", "HGT", "MaxTiC", "time-consistency", "ranking"]
 classifiers = [
@@ -83,6 +85,9 @@ source = ["src", "*/site-packages"]
 line-length = 100
 target-version = "py39"
 src = ["src", "tests"]
+# tests/data/original_maxitc/ 是原版 MaxTiC.py / script_tree.py 的 2to3 直译副本，
+# 用于跨版本对照；它不是本项目的源码，不能套用本项目的 lint/format 规则。
+extend-exclude = ["tests/data/original_maxitc"]
 
 [tool.ruff.lint]
 # 只启用能抓真 bug 的规则族：pycodestyle 的严重项（E4/E7/E9）、编译期错误（F）、

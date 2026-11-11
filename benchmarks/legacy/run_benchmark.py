@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""MaxTiC-Next 基准测试脚本。"""
+"""Legacy ad-hoc benchmark (2026-09).
 
-import time
-import sys
+Retained for historical comparison only. The maintained benchmark entry point is
+``python -m maxtic_next.benchmarks.suite``. This script uses relative ``examples/``
+paths, so run it from the repository root.
+"""
+
+import atexit
 import os
 import random
+import shutil
 import statistics
+import sys
 import tempfile
+import time
 
-sys.path.insert(0, "src")
+sys.path.insert(
+    0,
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir, "src"),
+)
 from maxtic_next import rank
 from maxtic_next.tree.tree import Tree
 from maxtic_next.constraints.adapters import registry
@@ -25,7 +35,7 @@ def bench(func, n=5, **kwargs):
 
 
 print("=" * 70)
-print("MaxTiC-Next Benchmark Suite v0.1.1")
+print("MaxTiC-Next Benchmark Suite v0.2.1")
 print("=" * 70)
 print(f"Python {sys.version.split()[0]}")
 print()
@@ -121,6 +131,7 @@ print()
 # ---- Benchmark 4: Two-stage vs one-shot ----
 print("=== B4: Two-stage vs One-shot ===")
 tmpdir = tempfile.mkdtemp()
+atexit.register(shutil.rmtree, tmpdir, ignore_errors=True)
 cons_out = os.path.join(tmpdir, "cons.tsv")
 
 t0 = time.perf_counter()
