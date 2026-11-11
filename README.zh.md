@@ -65,8 +65,9 @@ pip install MaxTiC-Next            # 基本安装（核心功能，仅依赖标�
 pip install "MaxTiC-Next[report]"  # 完整安装（含交互式 HTML 报告所需的 jinja2/plotly）
 ```
 
-> **v0.2.1 修订说明。** PyPI 目前提供 0.1.1 与 0.2.0；v0.2.1 是本次修订版，将在接收后发布。
-> 在此之前，请使用随稿提供的源码归档（`Additional file 6.zip`）或本修订版的源码检出。
+> **v0.2.1 修订说明。** PyPI 提供 0.1.1、0.2.0 与 0.2.1；安装被评估版本请用
+> `pip install MaxTiC-Next==0.2.1`。随稿仍提供源码归档（`Additional file 6.zip`），
+> v0.2.1 已归档到 Zenodo（DOI `10.5281/zenodo.24133728`）。
 
 从源码检出安装（开发用）：
 

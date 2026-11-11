@@ -85,9 +85,9 @@ pip install MaxTiC-Next            # basic install (core functionality, standard
 pip install "MaxTiC-Next[report]"  # full install (adds jinja2/plotly for the interactive HTML report)
 ```
 
-> **Revision note (v0.2.1).** PyPI currently serves 0.1.1 and 0.2.0. Version 0.2.1 is the
-> revision under review and will be published after acceptance; until then install it from the
-> source archive supplied with the manuscript or from a checkout of this revision.
+> **Revision note (v0.2.1).** PyPI serves 0.1.1, 0.2.0 and 0.2.1. Install the evaluated revision
+> with `pip install MaxTiC-Next==0.2.1`; the source archive is also supplied with the manuscript,
+> and v0.2.1 is archived on Zenodo (DOI 10.5281/zenodo.24133728).
 
 From a source checkout (development):
 

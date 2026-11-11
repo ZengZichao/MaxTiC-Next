@@ -176,13 +176,13 @@ DSL2 结构要点：
 ## 7.6 环境定义（conda）
 
 `workflows/envs/maxtic_next.yaml` 提供 conda 环境定义（名字 `MaxTiC-Next`），供 Snakemake
-的 `conda:` 指令（`use_conda: true`）或手动创建。PyPI 目前提供 0.1.1 与 0.2.0；0.2.1 将在
-接收后发布。环境本身只声明解释器与第三方依赖，包需要另行安装：
+的 `conda:` 指令（`use_conda: true`）或手动创建。PyPI 提供 0.1.1、0.2.0 与 0.2.1。
+环境本身只声明解释器与第三方依赖，包需要另行安装：
 
 ```bash
 micromamba env create -f workflows/envs/maxtic_next.yaml
-# PyPI 发行版：
-micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.0
+# PyPI 发行版（被评估版本）：
+micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.1
 # 或使用源码检出中的 v0.2.1 修订版：
 micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
 ```
