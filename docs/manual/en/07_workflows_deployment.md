@@ -195,14 +195,14 @@ DSL2 structure:
 ## 7.6 Environment definition (conda)
 
 `workflows/envs/maxtic_next.yaml` defines the conda environment (named `MaxTiC-Next`), for
-Snakemake's `conda:` directive (`use_conda: true`) or manual creation. PyPI currently provides
-0.1.1 and 0.2.0; 0.2.1 will be published after acceptance. The environment only declares the
-interpreter and third-party dependencies, so install the package separately:
+Snakemake's `conda:` directive (`use_conda: true`) or manual creation. PyPI provides 0.1.1,
+0.2.0 and 0.2.1. The environment only declares the interpreter and third-party dependencies,
+so install the package separately:
 
 ```bash
 micromamba env create -f workflows/envs/maxtic_next.yaml
-# PyPI release:
-micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.0
+# PyPI release (evaluated revision):
+micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.1
 # or the v0.2.1 revision from a source checkout:
 micromamba run -n MaxTiC-Next pip install -e <repository root>
 ```

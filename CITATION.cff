@@ -13,12 +13,12 @@ authors:
 repository-code: https://github.com/ZengZichao/MaxTiC-Next
 url: https://github.com/ZengZichao/MaxTiC-Next
 version: 0.2.1
-# date-released 在 v0.2.1 归档并取得版本 DOI 后再补；当前不写，避免把 0.2.0 的发布日期当成 0.2.1。
+date-released: 2026-11-11
 license: CECILL-2.1
 identifiers:
-  # concept DOI：当前解析到最新已归档版本 v0.2.0；v0.2.1 归档后补充版本 DOI。
+  # v0.2.1 版本 DOI；concept DOI 10.5281/zenodo.23053050 始终解析到最新归档版本。
   - type: doi
-    value: 10.5281/zenodo.23053050
+    value: 10.5281/zenodo.24133728
 keywords:
   - phylogenetics
   - horizontal-gene-transfer
