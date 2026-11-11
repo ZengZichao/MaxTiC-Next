@@ -16,14 +16,27 @@ jobs:
   # ---------------------------------------------------------------- 核心算法
   test:
     name: core (${{ matrix.python-version }}${{ matrix.numpy && ' +numpy' || '' }})
-    runs-on: ubuntu-latest
+    # Python 3.9 已 EOL，ubuntu-latest（26.04）的 setup-python 不再提供 3.9；
+    # 把 3.9 固定到仍受支持的 ubuntu-22.04，其余版本继续跑 latest。
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         # numpy 分支（ranking/reachability.py、tree/cache.py 的位集实现）在生产里更常见，
         # 因此单加一维，用对照测试看守两条分支的输出等价性。
         numpy: [false, true]
+        exclude:
+          - os: ubuntu-latest
+            python-version: "3.9"
+        include:
+          - os: ubuntu-22.04
+            python-version: "3.9"
+            numpy: false
+          - os: ubuntu-22.04
+            python-version: "3.9"
+            numpy: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
