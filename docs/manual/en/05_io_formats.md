@@ -82,7 +82,7 @@ detects a 3-column comma line (exit code 4). If you meant space format, use spac
 - lines starting with `#` are skipped; **inline `#` comments are supported**
   (`61 67 15.48 # note`) — the `#` must be at line start or preceded by whitespace, so that
   lineage names containing `#` are not truncated;
-- lines containing `FRQ` are skipped (compatibility with ALE summary lines);
+- lines whose **first field** is `FRQ` are skipped (compatibility with ALE summary lines);
 - **weights and distances must be finite reals, and weights must be ≥ 0**: `nan` / `inf` /
   negative weights are rejected **at the parsing layer**, with the **file name and line
   number** in the message (the original carried them straight into the
@@ -180,8 +180,8 @@ Percentage conventions (deviations from the original, documented deliberately):
   and a visualization of the ranked tree.
 - Disable with `--no-html`.
 - Without `jinja2` / `plotly` installed (`pip install "MaxTiC-Next[report]"`) it does **not**
-  fail: it degrades to a basic template — no interactive plots, and the fallback template
-  does **not** HTML-escape. Install the extras for the full report.
+  fail: it degrades to a basic template — no interactive plots, but the fallback path escapes
+  every interpolated value just like the Jinja one. Install the extras for the full report.
 
 ## 5.6 Output: the robustness/sensitivity summary (when local search is on)
 

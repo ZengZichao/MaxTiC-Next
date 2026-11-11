@@ -49,13 +49,13 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
 - **镜像名必须全小写**：`docker build -t MaxTiC-Next .` 会直接报
   `invalid reference format`。统一用 `maxtic-next:0.2.1`。
 - 镜像内已安装 `jinja2` + `plotly`，HTML 报告开箱可用。
-- **`.dockerignore`**（新增）：`Dockerfile` 用 `COPY . /app` 拷入构建上下文，
+- **`.dockerignore`**：`Dockerfile` 用 `COPY . /app` 拷入构建上下文，
   `.dockerignore` 已排除 `.git`、`tests`、`__pycache__`、`.pytest_cache`、`.DS_Store`、
   `benchmarks/datasets`、`docs`。保留的是 `pip install .` 与镜像内冒烟测试真正需要的东西：
   `pyproject.toml`、`src/`、`examples/`、`requirements*.txt`、`LICENSE`、`README.md`。
   因此上面的构建/运行命令不变，只是镜像更小、不带仓库元数据。
-- **挂载目录写产物**：若上次运行已在挂载目录留下产物，CLI 会以**退出码 3** 拒绝覆盖
-  。请加 `-f/--force`，或用 `-p /data/run2` 换前缀。
+- **挂载目录写产物**：若上次运行已在挂载目录留下产物，CLI 会以**退出码 3** 拒绝覆盖。
+  请加 `-f/--force`，或用 `-p /data/run2` 换前缀。
 - 冒烟测试：`docker run --rm maxtic-next:0.2.1 --version` → `MaxTiC-Next 0.2.1`。
 
 ## 7.3 Singularity / Apptainer
@@ -125,8 +125,8 @@ cd workflows && snakemake --configfile config.yaml --cores 4
 - 两条规则都带 `--force`：`outdir` 归流程管理器所有，重跑必须能覆盖上次产物
   （否则 CLI 的覆盖保护会以退出码 3 让任务失败）。
 - `use_conda: true` 时 Snakemake 为每条规则创建 `envs/maxtic_next.yaml` 环境。该环境
-  **现已包含 `jinja2` / `plotly`**——过去只装解释器，于是 HTML 报告静默降级、
-  “流程跑通了但没有报告”。
+  **包含 `jinja2` / `plotly`**，而不只是解释器，因此 HTML 报告在流程内产出，
+  而不是静默降级成“流程跑通了但没有报告”。
 
 > 注：仓库不随附 snakemake 引擎，需自行 `pip install snakemake`。
 
@@ -168,8 +168,8 @@ DSL2 结构要点：
 - 两个 `process` 都声明在**顶层**，`workflow` 里只用 `if (params.from_ale)` 决定是否调用
   Stage 1。`process` 不能写在 `if` 块里，否则 DSL2 拒绝解析。
 - `GENERATE_CONSTRAINTS` 的输入是 `tuple path(species), path(rec)`，调用处
-  `GENERATE_CONSTRAINTS(species_ch, rec_ch)` **同序传参**：声明为
-  `path species; each path(rec)`，实参一旦对调，任务起步即失败。
+  `GENERATE_CONSTRAINTS(species_ch, rec_ch)` **同序传参**：旧实现声明为
+  `path species; each path(rec)` 却反序传参，实参一旦对调，任务起步即失败。
 - 物种树被两个 Stage 共用，故用 `Channel.value(...)`（可重复订阅并自动广播）而不是
   只能订阅一次的 `Channel.fromPath` 热通道。
 

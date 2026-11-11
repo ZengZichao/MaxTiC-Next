@@ -37,8 +37,10 @@ denominator** (support = count / N).
 ## 2. Field Extraction and Semantic Mapping
 
 - **Transfer events (trf, default)**: `T@donor->receptor` → constraint
-  `(donor, receptor)`; the donor is taken as the parent of the node in the species tree
-  (`donnor_search` walks up the parent chain to the first non-T@/D@ event). This is
+  `(donor, receptor)`; the donor is taken as the **direct parent** of that node in the
+  species tree (`parent_map.get(donnor)`, a `label -> parent_label` table precomputed from
+  the species tree; `donnor_search`, which walks up the parent chain of the
+  reconciliation tree, is used **only** by the rec branch below). This is
   exactly the direct input prescribed by the **official ALE MaxTiC integration**
   (`constraints_from_transfers` in `maxtic/constraints_from_reconciliations.py`), hence
   this package sets the default to `trf`.
@@ -61,11 +63,19 @@ denominator** (support = count / N).
   (where both endpoints must be in the species tree label set) — this is the result of
   line-by-line fidelity to the original; when mixing outputs from multiple tools, make
   sure the upstream species naming is consistent with the user's species tree.
+- **No endpoint hit-rate guard**: `convert_from_ale` has **no** `min_endpoint_hit_rate`
+  parameter and finishes with
+  `finalize_adapter_diagnostics(..., 0.0, raise_on_zero_hit=False)`, so an endpoint hit
+  rate of **0** does **not** raise `LabelMismatchError` — it only prints an error-level
+  notice to stderr; the other four adapters raise on a 0 hit rate. A
+  `min_endpoint_hit_rate` passed through the registry / CLI is dropped by signature
+  filtering and recorded in `diagnostics["adapter_params_not_applicable"]`.
 - **Donor endpoint level (one generation off from the other four adapters)**: this
   adapter records `donor_endpoint_convention = "parent_of_donor"` (taking
   `parent(donor)`), whereas RANGER-DTLx / ARTra / ecceTERA / AleRax record
-  `"donor_itself"` (taking the donor of `Mapping -->` itself / the parent node of
-  `branchingOut`, etc.). The endpoints of the same transfer event **differ by one species
+  `"donor_itself"` (taking the donor of `Mapping -->` itself / the `branchingOut
+  speciesLocation` of the parent clade, etc.). The endpoints of the same transfer event
+  **differ by one species
   level** under the two conventions; therefore when `--from-auto` encounters mixed input,
   each group is resolved with its own adapter and a warning "endpoint levels and weight
   semantics are not commensurable" is issued, instead of adding both directly onto the
@@ -75,6 +85,15 @@ denominator** (support = count / N).
 
 - Within a single family, counts are aggregated per edge key and **reciprocal
   subtraction** removes symmetric noise;
+- **Three-level denominator degradation** (`_merge_payload`): (1) the `<N> reconciled`
+  sample count declared in the file header (`weight_semantics =
+  support_over_declared_samples`); (2) without a declared value, the number of
+  reconciliation trees **actually parsed from this file**, `trees_seen`
+  (`support_over_replicate_blocks`, with a warning); (3) when neither is available,
+  `integer_count`: the weight is emitted as an **integer count**, in which case
+  `min_support` **has no [0,1] support semantics** (the threshold degenerates to "appears
+  at least once"), `diagnostics["min_support_is_fractional"] = False`, and stderr warns
+  about it;
 - `support = count / N`; only `support > min_support` is kept (default 0.05);
 - `distance = distance_from(receptor, donor)`: species tree topological distance (branch
   lengths treated as 1); **self-loop exception**: when `donor == receptor`,
@@ -90,6 +109,7 @@ denominator** (support = count / N).
 |-----------|----------|
 | Family size `leaf count <= min_family_size` (default 5) | Skip the family |
 | donor / receptor not in the species tree | The transfer is dropped |
+| Endpoint hit rate of 0 | No exception raised (ALE has no hit-rate guard); an error-level notice on stderr + recorded in the diagnostics |
 | Parse error on a single file (parallel mode) | Automatically falls back to sequential recomputation of that file |
 | Cache hit (`cache_dir`) | Reused directly (resumable runs) |
 

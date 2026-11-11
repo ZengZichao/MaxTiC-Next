@@ -101,6 +101,10 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
   [MCMC] 温度 T=22.184（auto：max(总权重,1)/100）；iters=1000、burn-in=500、thin=10
   ```
 
+  Instantiating the sampler directly in Python is a different matter: the
+  `MCMCSampler.__init__` default is still `temperature=0.01` — "not a fixed `0.01`" holds at
+  the CLI / API layer only.
+
 - Results land in `Result.mcmc_samples` (list of linear-extension samples), and sample
   statistics plus **convergence diagnostics** are printed:
 

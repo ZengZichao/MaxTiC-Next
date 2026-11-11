@@ -87,6 +87,9 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
   [MCMC] 温度 T=22.184（auto：max(总权重,1)/100）；iters=1000、burn-in=500、thin=10
   ```
 
+  在 Python 里直接实例化采样器时另当别论：`MCMCSampler.__init__` 的默认值仍是
+  `temperature=0.01`，“不再是固定 `0.01`”只对 CLI / API 层成立。
+
 - 结果在 `Result.mcmc_samples`（线性扩展样本列表），并打印样本统计与**收敛诊断**：
 
   ```
@@ -214,7 +217,7 @@ maxtic-next species.tree constraints.tsv --ls 600 --local-search-max-iters 20000
 - `--local-search-max-iters 0`（默认）= 只受 `--ls` 墙钟时长约束 → **迭代次数随机器负载而变**，
   同种子在不同机器上可能得到不同结果（程序会在 stdout 末尾打 WARNING 说明这点）。
 - 设为正整数 N → 至多 N 次迭代后停止。随机流消耗确定，因此**固定 `--seed` 即确定**。
-  给出 N 后 `--ls` 退化为“最多 also 这么久”的上界。
+  给出 N 后 `--ls` 退化为“最多也就这么久”的附加上界。
 - 默认路径（`--ls 0`）不涉及此问题，始终可复现。
 
 ## 8.6 检查点 / 断点续跑
@@ -277,9 +280,9 @@ pvalue of the similarity with the input order: 0.0196078431372549 [(k+1)/(n+1) c
 | `1` | 保留节点、随机化方向 |
 | `2` | 完全随机化节点 |
 
-取值域在 argparse 层强制为 `{0,1,2}`：旧实现把 `3`、`-1` 等**静默当作 0**，等于用未随机化的
-数据做对照实验。`--random-type 1/2` 会改变数据本身，因此“与默认路径一致”无从谈起，
-但同种子仍自洽可复现；仅在明确需要对照时使用。
+取值域在 argparse 层强制为 `{0,1,2}`：`3`、`-1` 等非法取值**直接被拒并以退出码 2 退出**，
+因为旧实现把它们**静默当作 0**，等于用未随机化的数据做对照实验。`--random-type 1/2` 会改变
+数据本身，因此“与默认路径一致”无从谈起，但同种子仍自洽可复现；仅在明确需要对照时使用。
 
 ## 8.9 协作式取消（`stop_check`）
 

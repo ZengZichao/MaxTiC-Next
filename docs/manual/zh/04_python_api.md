@@ -34,10 +34,11 @@ def rank(species_tree_path, constraints_path,
 - `constraints_path` 可为 **str 或 list**；多个文件会全部解析并合并（边键聚合与文件顺序无关），
   产物前缀取**第一个**文件（多文件时 stdout 不变、**stderr** 打一条 NOTE，并写入
   `result.run_metadata["multi_file_prefix_note"]`）。
-- 第 10 个位置参数之后（`from_ale` 起）全部是**关键字专用**参数。
+- 前 11 个参数（第 10 个 `output_prefix`、第 11 个 `print_summary`）位置/关键字两用；
+  第 11 个之后（`from_ale` 起）全部是**关键字专用**参数。
 - `lang` 选择 HTML 报告语言（默认 `"zh"`，可设 `"en"`）；只影响报告文案，不改变计算、输出表或数值。
 - `mcmc_temperature=0.0` 是 **`auto` 哨兵**（`max(总权重,1)/100`），不是“零温度”；传 `0.0`
-  与 CLI 传 `--mcmc-temperature auto` 等价。传负数或非正数会报错。
+  与 CLI 传 `--mcmc-temperature auto` 等价。**负数**温度才会被拒绝（`0.0` 不在报错之列）。
 - `top_k=50` 是**近优解收集容量**（CLI `--near-optimal-top-k`）：稳健性/敏感性摘要最多考察多少个
   **去重**近优排序，须为 ≥ 1 的整数（`ranking/ranker.py:check_near_optimal_top_k` 校验），
   仅 `local_search > 0` 时有意义，生效值见 `run_metadata["near_optimal_top_k"]`（03 章 3.6b）。
@@ -46,8 +47,9 @@ def rank(species_tree_path, constraints_path,
 - `species_tree_path` / `constraints_path` 同样**透明接受** `.gz` / gzip 流与 tar 归档
   （05 章 5.7）：`api.rank` 会先把 `.tgz`/`.tar.gz`/`.tar` 安全解压到进程临时目录、把成员
   当作输入（`run_metadata["archives_expanded"]` 留痕），单文件 gzip 则由读取层就地解压。
-- `threshold_constraints` 取值域 **[0, 1]**；`random_type` ∈ {0,1,2}；`temperature` > 0；
-  `local_search` ≥ 0；`random_trees` ≥ 0；`mcmc_iters` > 0；`top_k` ≥ 1。这些都在
+- `threshold_constraints` 取值域 **[0, 1]**；`min_transfer_distance` ≥ 0；`random_type` ∈ {0,1,2}；
+  `local_search` ≥ 0；`temperature` 只在 `local_search > 0` 时必须 > 0（局部搜索关闭时只要求
+  有限数值）；`random_trees` ≥ 0；`mcmc_iters` > 0；`top_k` ≥ 1。这些都在
   `Ranker._validate_params` 里强制，违反即 `ValueError`（**包括 `dry_run=True` 路径**）。
 - `adapter_min_endpoint_hit_rate=None` 表示沿用适配器层默认（`0.5`）。
 - `force=False` 时，若产物已存在会抛 `FileExistsError`（CLI 转为退出码 3）。
@@ -108,7 +110,7 @@ def rank(species_tree_path, constraints_path,
 | `best_source` | str | `"greedy heuristic"` / `"mixing heuristic"`；`--ls > 0` 且有改进时为 `"… + local search"` |
 | `values` | dict | `{"input":..,"greedy":..,"mixing":..}`；开局部搜索时另有 `"local_search"` 与 `"best"` |
 | `uninformative` | dict | `{"total","to_desc","to_leaf","to_anc","to_itself"}` |
-| `uninformative_percent` | float/None | **= total ÷ `total_weight` × 100**（，非原版双重计入的分母） |
+| `uninformative_percent` | float/None | **= total ÷ `total_weight` × 100**（非原版双重计入的分母） |
 | `from_leaf` | float | 供体来自叶子的约束权重（无法满足，忽略于打分） |
 | `trivial_conflict` | float | 平凡冲突权重 |
 | `total_weight` | float | 约束总权重（`--ts` 生效时为删边**之后**的口径） |
@@ -125,7 +127,7 @@ def rank(species_tree_path, constraints_path,
 | `mcmc_samples` | list/None | MCMC 线性扩展样本（`--mcmc` 时） |
 | `random_stats` | dict/None | 随机树 p 值统计（`--random-trees>0` 时），含 `value_pvalue`、`sim_pvalue`、`correction="(k+1)/(n+1)"`、`tested_order="delivered best order (after local search)"`、`distribution_file`（第 4 个产物路径） |
 | `warnings` | list[str] | 运行期口径声明/告警（与 stdout 末尾那些行同源） |
-| `run_metadata` | dict | 运行元数据：`params`、`dry_run`/`dry_run_ok`/`dry_run_n_errors`、`adapter_diagnostics`、`constraint_files_merged`、`multi_file_prefix_note`、`mcmc_status`、`near_optimal_top_k`（`--near-optimal-top-k` 的生效值）、`cancelled` / `stop_check_requested` / `mcmc_stopped_early`（协作式取消）、`archives_expanded` / `archive_notes`（归档输入展开了哪些成员）等 |
+| `run_metadata` | dict | 运行元数据：`params`、`seed`、`temperature`、`time_for_search`、`min_transfer_distance`、`threshold_constraints`、`random_type`、`distance_filter`、`informative_count`、`removed_by_threshold_*`、`adapter_diagnostics`、`constraint_files_merged`、`mcmc*`（含 `mcmc_status`、`mcmc_temperature_is_auto`、`mcmc_chain_diagnostics`）、`local_search_*`、`near_optimal_top_k`（`--near-optimal-top-k` 的生效值）、`cancelled` / `stop_check_requested` / `mcmc_stopped_early`（协作式取消）、`archives_expanded` / `archive_notes`（归档输入展开了哪些成员），以及相应路径上的 `dry_run` / `dry_run_ok` / `dry_run_n_errors` / `dry_run_n_warnings`、`constraints_out`、`multi_file_prefix_note` |
 | `dry_run_report` | str | 预检报告（`dry_run=True` 时） |
 
 > **没有“逐节点 MTC 分数”这一量**：MaxTiC 的目标函数是整个排序的被违反权重之和
@@ -179,7 +181,7 @@ ALE 默认 `ale_source="trf"`（转移事件、ALE 官方 MaxTiC 集成口径）
 ```python
 # 阶段 1：把 ALE .uml_rec 转为统一约束文件（不排序）
 rank("species.tree", ["fam1.uml_rec", "fam2.uml_rec"], from_tool="ale",
-   ale_cache_dir="cache/", constraints_out="constraints.tsv")
+     ale_cache_dir="cache/", constraints_out="constraints.tsv")
 
 # 阶段 2：对约束文件排序
 rank("species.tree", "constraints.tsv", local_search=180)

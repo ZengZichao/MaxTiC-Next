@@ -186,8 +186,9 @@ DSL2 structure:
   `if (params.from_ale)` to decide whether to *call* Stage 1. A `process` declared inside an
   `if` block is something DSL2 refuses to parse.
 - `GENERATE_CONSTRAINTS` takes `tuple path(species), path(rec)` and is invoked as
-  `GENERATE_CONSTRAINTS(species_ch, rec_ch)`, **in the same order** — passing
-  `(rec_ch, species_ch)` swaps the arguments and the task fails immediately.
+  `GENERATE_CONSTRAINTS(species_ch, rec_ch)`, **in the same order** — the old version declared
+  `path species; each path(rec)` and passed `(rec_ch, species_ch)`, which swapped the
+  arguments so the task failed the moment it started.
 - The species tree is shared by both stages, so it is carried by `Channel.value(...)`
   (re-subscribable, broadcasts automatically) rather than the single-subscription
   `Channel.fromPath` hot channel.

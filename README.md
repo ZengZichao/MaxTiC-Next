@@ -1,6 +1,6 @@
 # MaxTiC-Next
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
+[![concept DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
 [![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
 [![License: CeCILL-2.1](https://img.shields.io/badge/License-CeCILL--2.1-blue.svg)](LICENSE)
 [![ORCID](https://img.shields.io/badge/ORCID-0000--0001--6553--970X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0000-0001-6553-970X)
@@ -69,7 +69,8 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
      original and is therefore *not* a deviation). Newick parsing
      is out of its scope (that file reuses this project's `Tree`, as noted in it).
    - The "run the original and compare" case in `tests/test_equivalence_stats.py` needs both
-     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent.
+     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent, and
+     the field-by-field differential test above keeps running as the fallback.
    - `tests/test_original_py3_equivalence.py` runs a vendored 2to3 translation of the original
      `MaxTiC.py` / `script_tree.py` side by side with this package on the main synthetic and
      cyanobacterial instances and asserts byte-identical output tables and identical objective
@@ -86,8 +87,9 @@ pip install "MaxTiC-Next[report]"  # full install (adds jinja2/plotly for the in
 ```
 
 > **Revision note (v0.2.1).** PyPI serves 0.1.1, 0.2.0 and 0.2.1. Install the evaluated revision
-> with `pip install MaxTiC-Next==0.2.1`; the source archive is also supplied with the manuscript,
-> and v0.2.1 is archived on Zenodo (DOI 10.5281/zenodo.24133728).
+> with `pip install MaxTiC-Next==0.2.1`; the source archive (`Additional file 6.zip`) is also
+> supplied with the manuscript, and v0.2.1 is archived on Zenodo (version DOI
+> 10.5281/zenodo.24133728).
 
 From a source checkout (development):
 
@@ -273,9 +275,9 @@ item by item rather than hidden inside an "everything is equal" assertion.
 | ALE file-level cache key | — | key includes a **species-tree topology fingerprint** (two trees with the same labels but different topology cannot contaminate each other) |
 | Silent adapter drops | — | every drop path is **counted and reported** (one stderr line + `run_metadata`); a 0% endpoint hit rate is a hard error |
 | Output overwrite and atomicity | `open(...,"w")` clobbers, can leave half-written files | **refuses to overwrite by default** (`--force` opts in) + temporary file + `fsync` + `os.replace` |
-| Self-loop events (donor == receptor) removed by the distance filter | their topological distance is always 0, so `d` ate them and `to itself` silently under-counted | **all five adapters — RANGER-DTLx, ecceTERA, ARTra, AleRax and ALE — write `distance = None`** for self-loops, so the "distance-less constraints are kept" rule lets them through and `to itself` is not eaten by `--d`; the text-input path has always behaved this way. All five adapters share this convention: regression test `tests/test_ale_selfloop.py`, measurement in manual 03 §3.2.3 |
+| Self-loop events (donor == receptor) removed by the distance filter | their topological distance is always 0, so `d` ate them and `to itself` silently under-counted | **all five adapters — RANGER-DTLx, ecceTERA, ARTra, AleRax and ALE — write `distance = None`** for self-loops, so the "distance-less constraints are kept" rule lets them through and `to itself` is not eaten by `--d`; the text-input path has always behaved this way. All five adapters now share this convention (ALE was the last one to be aligned, so this defect is closed): regression test `tests/test_ale_selfloop.py`, measurement in manual 03 §3.2.3 |
 | Compressed input | plain text only | `.gz` / gzip streams decompressed by magic number and single-member tar archives by the `ustar` magic; official upstream `.tgz` example bundles can be fed whole (expanded into their members). A multi-member archive is **never** concatenated into "one" input — it raises with runnable `tar -xzf` / `tar -xzOf` commands |
-| `--dry-run` on upstream output | — (the original has no preflight) | the preflight **actually parses** it: corrupt/truncated XML, zero constraints and 0% endpoint hits are all error-level, so the CLI **exits 1** |
+| `--dry-run` on upstream output | — (the original has no preflight) | the preflight **actually parses** it: corrupt/truncated XML, zero constraints and 0% endpoint hits are all error-level, so the CLI **exits 1** (the previous implementation reported a pass on this path and exited 0) |
 | Cancelling the GUI front end | — (the original has no GUI) | the Cancel button interrupts at an **iteration boundary** via `stop_check` and delivers the best order so far; it does not mean "wait for the run to finish, then discard it" |
 
 ### Terminology discipline (not a deviation, but you must know it)

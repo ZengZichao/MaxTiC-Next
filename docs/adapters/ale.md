@@ -32,7 +32,8 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
 ## 2. 字段提取与语义映射
 
 - **转移事件（trf，默认）**：`T@donor->receptor` → 约束 `(donor, receptor)`，donor 取物种树中
-  该节点的父（`donnor_search` 沿父链上溯首个非 T@/D@ 事件）。此即 **ALE 官方 MaxTiC 集成**
+  该节点的**直接父**（`parent_map.get(donnor)`，即预先从物种树算好的 `label -> parent_label`
+  查表；`donnor_search` 沿调和树父链上溯只用于下面的 rec 分支）。此即 **ALE 官方 MaxTiC 集成**
   （`maxtic/constraints_from_reconciliations.py` 的 `constraints_from_transfers`）规定的
   直接输入，故本包把默认值定为 `trf`。
 - **调和事件（rec）**：仅对**标注中含 `T@` 事件的节点**执行（与原版门控一致）；
@@ -47,22 +48,33 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
   物种树中解析出父节点。注意 ALE 与其余四个适配器（双端点均须 ∈ 物种树标签集）
   的校验强度不同——这是对原版逐行保真的结果；混用多工具输出时建议保证上游物种
   命名与用户物种树一致。
+- **无端点命中率守卫**：`convert_from_ale` **没有** `min_endpoint_hit_rate` 形参，内部以
+  `finalize_adapter_diagnostics(..., 0.0, raise_on_zero_hit=False)` 收尾，因此端点命中率为
+  **0** 时**不抛** `LabelMismatchError`，只向 stderr 打印一行错误级提示；其余四个适配器命中率为
+  0 直接抛错。经 registry / CLI 传入的 `min_endpoint_hit_rate` 会被按签名丢弃，并记入
+  `diagnostics["adapter_params_not_applicable"]`。
 - **供体端点层级（与其余四个适配器相差一代）**：本适配器记
   `donor_endpoint_convention = "parent_of_donor"`（取 `parent(donor)`），而
   RANGER-DTLx / ARTra / ecceTERA / AleRax 记 `"donor_itself"`（取 `Mapping -->` 的供体本身 /
-  `branchingOut` 的父节点等）。同一转移事件在两套口径下的端点**相差一个物种层级**，
+  父 clade 的 `branchingOut speciesLocation` 等）。同一转移事件在两套口径下的端点**相差一个物种层级**，
   因此 `--from-auto` 遇到混合输入时按各自适配器分组解析、并告警“层级与权重口径不可通约”，
   不再把两者直接相加进同一条边。
 
 ## 3. 支持度 / 权重 / 距离
 
 - 单家族内按边键计数，做**互反减法**（reciprocal subtraction）消除对称噪声；
+- **分母三级退化**（`_merge_payload`）：① 文件头声明的 `<N> reconciled` 采样数
+  （`weight_semantics = support_over_declared_samples`）→ ② 无声明值时退为本文件**实际解析到
+  的调和树数 `trees_seen`**（`support_over_replicate_blocks`，并告警）→ ③ 两者皆拿不到时为
+  `integer_count`：权重按**整数计数**输出，此时 `min_support` **不具 [0,1] 支持度语义**
+  （阈值退化为“至少出现一次”），诊断里 `min_support_is_fractional = False` 并在 stderr 告警；
 - `support = 计数 / N`，仅保留 `support > min_support`（默认 0.05）；
 - `distance = distance_from(receptor, donor)`：物种树拓扑距离（枝长视为 1）；**自环
   `donor == receptor` 例外**：写 `distance = None`（无距离信息），不被
   `--min-transfer-distance` 删除。这与 RANGER-DTLx / ecceTERA / ARTra / AleRax
   的写法一致——ALE 是该缺陷的**最后一个**对齐者，回归测试见
-  `tests/test_ale_selfloop.py`，症状与实测见手册 03 章 3.2.3。
+  `tests/test_ale_selfloop.py`，症状与实测见手册
+  [03 章 3.2.3](../manual/zh/03_cli_reference.md)。
 
 ## 4. 错误处理与验证
 
@@ -70,6 +82,7 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
 |------|------|
 | 家族规模 `叶子数 <= min_family_size`（默认 5） | 跳过该家族 |
 | donor / receptor 不在物种树 | 该转移丢弃 |
+| 端点命中率为 0 | 不抛错（ALE 无命中率守卫），stderr 打印错误级提示 + 记入诊断 |
 | 单文件解析异常（并行） | 自动回退顺序重算该文件 |
 | 缓存命中（`cache_dir`） | 直接复用（断点续传） |
 

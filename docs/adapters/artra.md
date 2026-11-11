@@ -20,15 +20,25 @@ Gene Tree:
 (...);
 Reconciliation:
 H117_0: Leaf Node
- = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
- = LCA[H159, H17]: Additive Transfer, Mapping --> H17, Recipient --> H159
+m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+m19 = LCA[H159,H17]: Replacing Transfer, Mapping --> H17, Recipient --> H159
+m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 ```
+
+> **块头亦与 RANGER-DTLx 相同**（不是 ARTra 特有）：上游
+> `RANGER-DTLx-代码/Ranger-DTLx/DTL-algorithm.h:2170` 打印的就是
+> ` ------------ Reconciliation for Gene Tree N (rooted) -------------`。分块只匹配
+> `Reconciliation for Gene Tree` 这一**前缀**，故上游完整块头与 RANGER-DTLx 样本里的简写形式
+> `Reconciliation for Gene Tree 1:` 都能被识别（ARTra 自身的样本
+> `examples/adapters/artra/FAM1.txt` 用的就是完整 `(rooted)` 块头）。事件行的 `LCA[.., ..]` 内 ARTra 不写空格
+> （`Node.java:466`）、RANGER-DTLx 写空格，解析只取 `Mapping -->` / `Recipient -->` 之后的标签，
+> 两种写法都兼容。
 
 ## 2. 字段提取与语义映射
 
-- 与 RANGER 一致：`Mapping --> D` = 供体、`Recipient --> R` = 受体，产出约束 `(D, R)`；
-- `Replacing Transfer` / `Additive Transfer` / 纯 `Transfer` 均被识别（触发条件为含
-  `Recipient -->`）；
+- 与 RANGER-DTLx 一致：`Mapping --> D` = 供体、`Recipient --> R` = 受体，产出约束 `(D, R)`；
+- `Replacing Transfer` / `Additive Transfer` / 纯 `Transfer` 均被识别（触发条件为同一行**同时**
+  含 `Mapping` 与 `Recipient`，见 `parse_transfer_line`）；
 - `Species Tree:` / `Gene Tree:` 等段落头与 newick 行不含 `Recipient -->`，自动忽略。
 
 ## 3. 转移类别过滤（ARTra 专属）

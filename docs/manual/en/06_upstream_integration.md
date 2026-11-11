@@ -91,8 +91,9 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
 - The receptor must not be a leaf (extant species); donor/receptor must be in the species-tree
   label set.
 - In-family **reciprocal subtraction** removes symmetric noise; `support = count / N`, where N
-  is the `N reconciled` figure the report itself declares. Constraints below
-  `--ale-min-support` (default 0.05) are dropped and counted.
+  is the `N reconciled` figure the report itself declares. The keep test is
+  `support > threshold`, so constraints **at or below** `--ale-min-support` (default 0.05) are
+  dropped and counted.
 - The `--ale-cache-dir` cache key includes a **species-tree topology fingerprint**:
   two trees sharing a label set but differing in topology never hit the same
   cache entry.

@@ -1,6 +1,6 @@
 """祖先 / 后代集合缓存。
 
-**现状说明（，务必先读）**：本类是**独立的工具实现，未被排序热路径调用**。
+**现状说明（务必先读）**：本类是**独立的工具实现，未被排序热路径调用**。
 ``--incremental`` 启用的是 ``ranking/value.IncrementalValueComputer``，
 ``--checkpoint`` 启用的是 ``ranking/checkpoint.CheckpointManager``，二者都**不会**
 启用 ``PathCache``；排序算法里真正的加速来自 ``ranking/reachability.py`` 的

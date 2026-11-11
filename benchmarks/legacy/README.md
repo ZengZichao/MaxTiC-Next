@@ -1,4 +1,6 @@
-# Legacy benchmark
+# 遗留基准测试
+
+> 🌐 English version: [README.en.md](README.en.md)
 
 `run_benchmark.py` 是 2026-09 的临时基准脚本，仅保留作历史对照。它使用相对
 `examples/` 路径，必须从仓库根运行；临时目录通过 `atexit` 清理。

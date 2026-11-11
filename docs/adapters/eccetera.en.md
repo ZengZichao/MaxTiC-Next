@@ -47,15 +47,21 @@ The example above → constraint `61 -> 62`.
   clade's branchingOut `speciesLocation="D"` is the donor → produce constraint `(D, R)`;
 - Each `<recGeneTree>` is treated as one reconciliation block; `<leaf geneName>` counts
   toward the family size.
-  ⚠️ The block count does **not** automatically serve as the support denominator:
-  normalization by `support_over_replicate_blocks` applies only when all blocks share an
-  identical leaf set; otherwise the weight is an integer count and the semantics are
-  labeled honestly.
+- **Support-denominator ruling** (`_parse_core`, three levels): (1) the scenario count
+  **declared by the tool itself** in the file (`Total number of optimal solutions: N`; when
+  several appear, the **maximum** is used) → `support_over_declared_samples`; (2) without a
+  declared value, **the block count is used whenever the number of blocks is greater than 0**
+  (`support_over_replicate_blocks`), together with a warning that "the support is
+  overestimated if ecceTERA actually enumerated more optimal reconciliations" — unlike
+  RANGER-DTLx / ARTra, ⚠️ this path does **not** check whether the blocks share an
+  identical leaf set; (3) only when no `<recGeneTree>` was parsed at all (blocks = 0) does
+  it degrade to `integer_count` (**integer counts**), in which case `min_support` has no
+  [0,1] support semantics.
 
 ## 3. Support / Weight / Distance
 
-Same as RANGER: per-block counting → reciprocal subtraction →
-`support = count / declared sample count` → keep `> min_support`; the donor endpoint is
+Same as RANGER-DTLx: per-block counting → reciprocal subtraction →
+`support = count / denominator` (see the ruling in §2) → keep `> min_support`; the donor endpoint is
 the **donor itself** of `branchingOut speciesLocation` (`donor_itself`), one species
 level away from ALE's `parent_of_donor`.
 `distance = distance_from(receptor, donor)`; **self-loop exception**: when
@@ -67,17 +73,29 @@ constraint is not removed by `--min-transfer-distance`.
 | Situation | Handling |
 |-----------|----------|
 | Contains `<!DOCTYPE>` / `<!ENTITY>` | **Parsing refused** (guards against entity expansion / XXE; stdlib suffices, no defusedxml needed) |
-| XML parse error | Returns empty (no crash) |
-| donor / receptor not in the species tree | The transfer is dropped |
+| XML parse error (**adapter path**, `_process_eccetera_worker`) | **Raises `UpstreamParseError`**, whose message carries the **file name, line/column and the original exception** — "corrupt file" and "the tool detected no transfers" are henceforth distinguishable, never a silent empty result |
+| XML parse error (**legacy pure function** `parse_recphyloxml`, default `strict=False`) | Keeps the old behavior: returns the empty triple `({}, 0, 0)`, but prints a **loud warning** to stderr containing the file and the line/column; with `strict=True` it raises `UpstreamParseError` too |
+| donor / receptor cannot be resolved into the species tree (purely numeric IDs are resolved back first, see §5) | The transfer is dropped and counted in `dropped_by_label_miss` |
 | Family size `<= min_family_size` | Skipped |
+| Family size **probe failed** (not a single `<leaf>` found) | The `min_family_size` filter is **skipped** with a warning (all transfers are not wiped out) |
 
 ## 5. Known Limitations (Important)
 
 - ecceTERA labels **internal species nodes** in recPhyloXML with their **own numeric node
-  IDs** (leaves use names). These IDs **need not match** the species tree bootstrap
-  labels that the user passes into MaxTiC — non-matching endpoints are filtered out by
+  IDs** (leaves use names, `DTLGraph.cpp:2818-2821`). The numbering scheme, verified against
+  `MySpeciesTree.cpp:112-136`, takes the sorted leaves as `0..L-1` first and then numbers
+  the remaining generations **bottom-up, level by level (breadth-first)**. These IDs
+  **need not match** the species tree bootstrap labels that the user passes into MaxTiC.
+- **Numeric ID resolution**: an endpoint is first matched directly against the species tree
+  labels (leaf names + internal bootstrap labels); if that fails and the endpoint is
+  **purely numeric**, the adapter **resolves** the numeric ID back to a species-tree label
+  via `_species.numeric_species_id_map` following the numbering rule above, counts it in
+  `diagnostics["numeric_id_resolutions"]` and warns on stderr (set
+  `resolve_numeric_ids=False` to disable, which restores the old behavior of dropping all
+  numeric endpoints). Only endpoints that **still** fail to resolve are filtered out by
   `valid_labels` (conservatively correct: no false constraints are produced, but recall
-  may be reduced).
+  may be reduced); if, after resolution, **none** of the endpoints match, a
+  `LabelMismatchError` is raised instead of silently returning an empty set.
 - Recommendation: align the species tree internal labels with ecceTERA's species naming,
   or rely only on leaf–leaf / label-consistent transfers.
 - ecceTERA can also emit Sylvx / `.mr` formats; this adapter supports only standard

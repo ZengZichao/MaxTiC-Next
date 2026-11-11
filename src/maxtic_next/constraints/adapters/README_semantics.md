@@ -29,7 +29,7 @@ allow_mixed=True)` 在合并两种约定时：
 * `ConstraintSet.diagnostics["convention_conflict"] = ["donor_itself",
   "parent_of_donor"]`（同样地，口径不可通约时记 `semantics_conflict`）。
 
-因此 `--from-auto` 混用 ALE 与 RANGER 系输出不会再静默地把两代端点相加进同一条
+因此 `--from-auto` 混用 ALE 与 RANGER-DTLx 系输出不会再静默地把两代端点相加进同一条
 edge——它会说出来。
 
 ## 2. 权重口径：块数不是采样分母
@@ -40,9 +40,9 @@ edge——它会说出来。
 | 口径 | 含义 | 何时使用 |
 |---|---|---|
 | `support_over_declared_samples` | `count / N`，N 为**工具自己声明**的样本数 | ALE 的 `<N> reconciled`；RANGER-DTLx/ARTra 的 `Total number of optimal solutions: N`（`DTL-algorithm.h:1785/:2224`、`output.txt:206`） |
-| `support_over_replicate_blocks` | `count / 块数` | 无声明值，且各块叶子集合完全一致（确为同一家族的重复调和）；会附警告 |
-| `integer_count` | **整数计数**，不是 [0,1] 支持度 | 无声明值且块数不可信（各块叶子集合不同 = 多棵不同基因树），或一个样本数都拿不到 |
-| `posterior_frequency` | 上游已预聚合的后验频率 | AleRax `*_meanTransfers.txt`（不再除以任何分母） |
+| `support_over_replicate_blocks` | `count / 块数` | 无声明值，且块数 > 1 并各块叶子集合完全一致（确为同一家族的重复调和）；会附警告。**该叶子集合校验只在 RANGER-DTLx / ARTra 的共享核心 `_recon_report._leaf_sets_consistent` 里做**；ecceTERA 不校验叶子集合，无声明值时只要块数 > 0 就取块数作分母（见 `docs/adapters/eccetera.md` §2） |
+| `integer_count` | **整数计数**，不是 [0,1] 支持度 | 无声明值且块数不可信（各块叶子集合不同 = 多棵不同基因树，或只有 1 块），或一个样本数、块数都拿不到 |
+| `posterior_frequency` | 上游已预聚合的后验频率 | AleRax 两代汇总文件 `*_transfers.txt` / `*_meanTransfers.txt`（`alerax._TRANSFER_SUFFIXES`，不再除以任何分母） |
 
 要点：
 
@@ -67,7 +67,8 @@ self_loop_transfers, family_size_probe_ok, endpoint_hit_rate,
 unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 ```
 
-并打印一行 stderr 摘要：
+并打印一行 stderr 摘要。下述这行是程序的**字面输出**：`_diagnostics.summary_line()`
+恒用下列中文标签，不随 locale 变化，故英文版文档同样原样保留（另附英译）：
 
 ```
 [artra] donor 端点约定=donor_itself 权重口径=support_over_declared_samples 分母=24
@@ -77,7 +78,7 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 
 三条硬性规则：
 
-* **家族规模探测失败 ⇒ 跳过过滤**：`Leaf Node` 行（RANGER/ARTra）
+* **家族规模探测失败 ⇒ 跳过过滤**：`Leaf Node` 行（RANGER-DTLx/ARTra）
   或 `<leaf>` 元素（ecceTERA）探测不到时，`family_size` 会是 0，旧实现
   `if family_size <= min_family_size: transfers = {}` 于是**清空全部转移**
   （`--ale-min-family-size 0` 必然触发）。现在跳过过滤 + 告警。
@@ -87,6 +88,10 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
   据此反解；反解后仍**全部**不命中 ⇒ 抛 `LabelMismatchError`（错误信息同时给出
   未命中标本与物种树标签样本），部分命中低于阈值（默认 50%，可经
   `min_endpoint_hit_rate` 配置）⇒ 告警。绝不静默返回 `{}`。
+  **ALE 除外**：`convert_from_ale` 没有 `min_endpoint_hit_rate` 形参，它调
+  `finalize_adapter_diagnostics(..., raise_on_zero_hit=False)`，命中率为 0 也不抛错，
+  只打印错误级提示；经 registry / CLI 传入该参数会被忽略并记入
+  `adapter_params_not_applicable`（见 `docs/adapters/ale.md` §3、§4）。
 * **XML 解析失败 ⇒ 抛错**：`UpstreamParseError` 携带文件、行列号与原始异常；
   兼容旧签名的纯函数 `parse_recphyloxml(..., strict=False)` 至少打印含文件与行列的
   响亮警告，并另支持 `strict=True`。损坏文件与“该工具没检出转移”从此可区分。
@@ -103,7 +108,7 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
   调用方（`ranking/ranker.py`、`dry_run.py`）必须据此报 **error 级**“该选项对本次
   输入被忽略”，而不是反过来宣称“会丢弃全部约束”。
 * 自环（donor == receptor，“供体=受体谱系”）计入 `self_loop_transfers`，
-  不再从统计里消失（；文本路径由原版 `ranker` 的 "to itself" 分支处理）。
+  不再从统计里消失（文本路径由原版 `ranker` 的 "to itself" 分支处理）。
 
 ## 5. 缓存键含拓扑指纹
 
@@ -120,9 +125,10 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 `ALEAdapter` / `convert_from_ale` 的 `source` 默认为 **`"trf"`**：ALE 官方仓库自己的
 MaxTiC 集成（ALE 源码包内 `maxtic/README.md:131-169`）规定输入
 `constraints_from_transfers` 由**转移事件**产生（donor = 供体的父），实测该路径与
-官方产物逐条一致（5,328 边键 / 27,576 行 / 权重相等），而 `"rec"` 只有 13,995 条、
+官方产物逐条一致（边键与权重完全相同），而 `"rec"` 只有 13,995 条、
 总权重 5482.98 vs 6438.6 —— 默认值换了整个约束集。`"rec"` 仍完整保留、可选。
 `convert()` 结束时在 stderr 打印一行：本次由哪种口径产出、边数与总权重。
 
-> 上层接线（`api.py` 的 `ale_source` 形参默认值、`cli.py` 的 `--ale-source`
-> `default=`）需同步为 `"trf"`，否则 CLI/API 仍会覆盖本包的默认值。
+> 上层接线已同步：`api.py` 的 `ale_source` 形参默认值与 `cli.py` 的
+> `--ale-source` `default=` 均已是 `"trf"`（`choices=["rec", "trf"]`），
+> CLI/API 不会再覆盖本包的默认值。

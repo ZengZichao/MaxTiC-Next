@@ -52,7 +52,7 @@ A：ecceTERA 对内部物种节点用其自身数字 ID（叶子用名字），�
 
 **Q8：HTML 报告没生成？**
 A：完整报告需 `jinja2 + plotly`（`pip install "MaxTiC-Next[report]"`）。缺依赖时**不会报错**，
-而是降级为基础模板（无交互图，且降级模板不做 HTML 转义）；生成异常只在 stdout 打一行
+而是降级为基础模板（无交互图，但降级路径同样逐值做 HTML 转义）；生成异常只在 stdout 打一行
 `[警告] HTML 报告生成失败，已跳过：…`。排序与文件输出不受影响。也可 `--no-html` 主动关闭。
 
 **Q9：可以只生成约束、不排序吗？**
@@ -129,8 +129,9 @@ A：**不是**，那只是**计数**。`donor == receptor`（供体与受体同�
 `to itself` 统计里静默消失。现在**五个适配器 RANGER-DTLx / ecceTERA / ARTra /
 AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按“`--d` 保留无距离列的约束”的
 既有口径通过过滤，所以 `to itself` 不再被 `--d` 吃掉——这与**文本输入路径一直的行为一致**
-（3 列空格/4 列逗号本就没有距离列）。ALE 是最后一个对齐的：`--from ale` 的自环现在同样保留，
-实测 `to itself` 非零（`1.0 uninformative ( … 1.0 to itself 50.0%)`，见 03 章 3.2.3 的实测二，
+（3 列空格/4 列逗号本就没有距离列）。ALE 是最后一个对齐的：`--from ale` 的自环**在默认 `--d 0`
+下也保留**，并出现在摘要里——实测用的 `.uml_rec` 中，`T@62->65` 在默认 `trf` 口径下就是自环，
+`to itself` 非零（`1.0 uninformative ( … 1.0 to itself 50.0%)`，见 03 章 3.2.3 的实测二，
 回归测试 `tests/test_ale_selfloop.py`）。只有你在文本输入里**自己**写了距离 0（或人为把
 `None` 改成 `0.0`）时它才会被删，此时 stdout 会打 `NOTE: --min-transfer-distance=… 丢弃 …` 与
 `NOTE: 上述丢弃中有 N 条是**自环约束**…` 如实说明。见 03 章 3.2.3、05 章 5.2.5。

@@ -17,7 +17,7 @@ AleRax 在输出目录内，为每个基因家族生成转移频率文件：早�
 <donor_species> <receptor_species> <frequency>
 ```
 
-其中 `frequency` 是该转移在后验样本中的**期望频率**（浮点）。与 ALE / RANGER 的
+其中 `frequency` 是该转移在后验样本中的**期望频率**（浮点）。与 ALE / RANGER-DTLx 的
 “计数 / 采样数”不同，AleRax 已在家族内**预聚合为频率**，因此适配器**直接以频率为权重**
 （不再除以块数）。`weight_semantics = posterior_frequency`。
 
@@ -33,7 +33,10 @@ AleRax 在输出目录内，为每个基因家族生成转移频率文件：早�
 2. `reconciliations/summaries` **目录**（直接 glob）；
 3. 直接的若干转移频率**文件**。
 
-自动检测：目录含 `reconciliations/summaries` 或 `*_transfers.txt` → `alerax`。
+自动检测（`detect_format`）：目录含 `reconciliations/summaries`，或目录内含
+`*_transfers.txt` / `*_meanTransfers.txt` → `alerax`；单个文件按后缀判定，即以
+`_transfers.txt` / `_meanTransfers.txt` 结尾 → `alerax`（**大小写不敏感**，且先剥掉 `.gz`
+等压缩后缀，故 `FAM1_meanTransfers.txt.gz` 同样识别）。
 
 ## 3. 字段提取与语义映射
 

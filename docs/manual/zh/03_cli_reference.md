@@ -100,7 +100,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
   此时 `--ale-min-support` 阈值不具 [0,1] 语义。不同口径的权重**不可直接比较**。
 - `自环=N`：`donor == receptor`（供体与受体是同一谱系）的事件条数。这个数字是**计数**，
   不是“丢了 N 条”：自环约束**仍然保留**，并把自己的权重计入 stdout 摘要里原版口径的
-  **`to itself`** 分项（，见 3.2.3）。五个适配器（含 ALE）一律如此。
+  **`to itself`** 分项（见 3.2.3）。五个适配器（含 ALE）一律如此。
 - 同样的字典在 Python 侧可取：`result.run_metadata["adapter_diagnostics"]`。
 
 ### 3.2.3 自环转移与 `--d`
@@ -109,11 +109,11 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 `--min-transfer-distance` 就会以“距离太近”为由把它删掉，于是这类事件从 `to itself`
 统计里**静默消失**。现在 **五个适配器 RANGER-DTLx / ecceTERA / ARTra / AleRax / ALE**
 对自环一律写 **`distance = None`**（= 无距离信息），按 `--d` 的既有口径“无距离列的约束
-一律保留”，它们因此**不再被 `--d` 吃掉**。ALE 是最后一个对齐的，
-回归测试为 `tests/test_ale_selfloop.py`。
+一律保留”，它们因此**不再被 `--d` 吃掉**。回归测试为
+`tests/test_ale_selfloop.py`。
 
-实测一（RANGER-DTLx 输入：用 `examples/adapters/ale/species.tree` + 一份把 `` 的
-Recipient 改写成其自身 Mapping（62 → 62）的 RANGER-DTLx 报告）：
+实测一（RANGER-DTLx 输入：用 `examples/adapters/ale/species.tree` + 一份把某条转移行的
+`Recipient -->` 改写成其自身 `Mapping` 标签（62 → 62）的 RANGER-DTLx 报告）：
 
 ```
 $ maxtic-next species.tree selfloop.dtl --from ranger --d 1
@@ -176,7 +176,7 @@ NOTE: 上述丢弃中有 1 条是**自环约束**（donor == receptor，其拓�
 |------|------|
 | `--target-clade <标签>` | 目标类群根节点标签；默认仅保留两端点均在类群内的约束 |
 | `--target-clade-ancestor-map` | 开启“外部祖先映射到根”的保守剪裁规则（需配合 `--target-clade`，默认关闭以避免虚假偏序） |
-| `--dry-run` | 静态预检：树格式/二叉性/内部标签唯一/叶子名唯一/约束格式/权重合法性/端点合法性/`d` 列语义；`--from` 模式下**真正解析上游输出**并报告零约束与命中率。**任何一次适配器解析失败都会让预检判为失败**并以**退出码 1** 中止（，实例见 08 章 8.4b）。不运行排序 |
+| `--dry-run` | 静态预检：树格式/二叉性/内部标签唯一/叶子名唯一/约束格式/权重合法性/端点合法性/`d` 列语义；`--from` 模式下**真正解析上游输出**并报告零约束与命中率。**任何一次适配器解析失败都会让预检判为失败**并以**退出码 1** 中止（实例见 08 章 8.4b）。不运行排序 |
 
 ## 3.5 报告与输出
 
@@ -308,7 +308,7 @@ maxtic-next species.tree constraints.tsv --ts 0.1 --rd 1000
 maxtic-next species.tree FAM1.dtl --from ranger
 maxtic-next species.tree out.recphyloxml --from-auto
 
-# ALE：显式回到旧口径 rec（默认已是 trf）
+# ALE：显式改用 `rec`（调和事件）口径（默认已是 trf）
 maxtic-next species.tree fam.uml_rec --from ale --ale-source rec
 
 # 目标类群剪裁

@@ -81,7 +81,8 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
   `--from-auto` 混合输入时会分组解析并告警，不再静默相加。
 - 受体不得为叶子（现存物种）；donor/receptor 须在物种树标签集内。
 - 单家族内做**互反减法**消除对称噪声；`support = 计数 / N`，N 取报告自己声明的
-  `N reconciled`。支持度低于 `--ale-min-support`（默认 0.05）的约束被丢弃并计数。
+  `N reconciled`。保留判据是 `support > 阈值`，故支持度**低于或等于**
+  `--ale-min-support`（默认 0.05）的约束被丢弃并计数。
 - `--ale-cache-dir` 的缓存键含**物种树拓扑指纹**：标签集相同、拓扑不同的
   两棵树不会复用同一缓存条目。
 - 详见 [../adapters/ale.md](../../adapters/ale.md)。

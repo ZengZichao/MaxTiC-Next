@@ -37,12 +37,13 @@ def rank(species_tree_path, constraints_path,
   (edge-key aggregation is independent of file order), and the output prefix is taken from the
   **first** file. In the multi-file case stdout is unchanged, **stderr** carries one NOTE, and
   `result.run_metadata["multi_file_prefix_note"]` records it.
-- Everything after the 10th positional parameter (from `from_ale` on) is **keyword-only**.
+- The first 11 parameters (the 10th being `output_prefix`, the 11th `print_summary`) are
+  positional-or-keyword; everything after the 11th (from `from_ale` on) is **keyword-only**.
 - `lang` selects the HTML report language (`"zh"` default or `"en"`); it affects report text only,
   not calculations, output tables or numbers.
 - `mcmc_temperature=0.0` is the **`auto` sentinel** (`max(total weight,1)/100`), not "zero
-  temperature"; passing `0.0` equals CLI `--mcmc-temperature auto`. Non-positive explicit
-  temperatures are rejected.
+  temperature"; passing `0.0` equals CLI `--mcmc-temperature auto`, and it is not an error —
+  only **negative** temperatures are rejected.
 - `top_k=50` is the **near-optimal collector capacity** (CLI `--near-optimal-top-k`): how many
   **deduplicated** near-optimal orders the robustness/sensitivity summary may consider. It must
   be an integer ≥ 1 (`ranking/ranker.py:check_near_optimal_top_k`), it only has an effect when
@@ -56,8 +57,10 @@ def rank(species_tree_path, constraints_path,
   safely into a process temporary directory and treats the members as the inputs
   (`run_metadata["archives_expanded"]` keeps it traceable), while single-file gzip is
   decompressed in place by the reading layer.
-- `threshold_constraints` has domain **[0, 1]**; `random_type` ∈ {0,1,2}; `temperature` > 0;
-  `local_search` ≥ 0; `random_trees` ≥ 0; `mcmc_iters` > 0; `top_k` ≥ 1. All enforced by
+- `threshold_constraints` has domain **[0, 1]**; `min_transfer_distance` ≥ 0;
+  `random_type` ∈ {0,1,2}; `local_search` ≥ 0; `temperature` must be > 0 **only when
+  `local_search > 0`** (with the local search off only finiteness is checked);
+  `random_trees` ≥ 0; `mcmc_iters` > 0; `top_k` ≥ 1. All enforced by
   `Ranker._validate_params`, which raises `ValueError` — **including on the `dry_run=True`
   path**.
 - `adapter_min_endpoint_hit_rate=None` means "use the adapter-layer default" (`0.5`).

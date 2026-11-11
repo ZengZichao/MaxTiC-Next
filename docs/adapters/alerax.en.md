@@ -21,7 +21,7 @@ naming schemes are accepted by the adapter (case-insensitive). Each line is:
 ```
 
 Here `frequency` is the **expected frequency** of the transfer across posterior samples
-(a float). Unlike ALE / RANGER's "count / number of samples", AleRax has already
+(a float). Unlike ALE / RANGER-DTLx's "count / number of samples", AleRax has already
 **pre-aggregated within the family into frequencies**, so the adapter **uses the frequency
 directly as the weight** (no longer dividing by a block count).
 `weight_semantics = posterior_frequency`.
@@ -42,8 +42,11 @@ files by `expand_alerax_inputs`:
 2. The `reconciliations/summaries` **directory** (globbed directly);
 3. Transfer frequency **files** given directly.
 
-Auto-detection: a directory containing `reconciliations/summaries` or
-`*_transfers.txt` → `alerax`.
+Auto-detection (`detect_format`): a directory containing `reconciliations/summaries`, or a
+directory that itself contains `*_transfers.txt` / `*_meanTransfers.txt` → `alerax`; a
+single file is determined by its suffix, i.e. ending in `_transfers.txt` /
+`_meanTransfers.txt` → `alerax` (**case-insensitive**, and compression suffixes such as
+`.gz` are stripped first, so `FAM1_meanTransfers.txt.gz` is recognized as well).
 
 ## 3. Field Extraction and Semantic Mapping
 

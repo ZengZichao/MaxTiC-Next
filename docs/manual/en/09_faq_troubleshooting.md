@@ -70,8 +70,9 @@ internal labels with ecceTERA's naming (or the reverse, i.e. switch to numeric I
 
 **Q8: No HTML report?**
 A: The full report needs `jinja2 + plotly` (`pip install "MaxTiC-Next[report]"`). Without them
-it does **not** fail: it degrades to a basic template (no interactive plots, and the fallback
-template does not HTML-escape). If generation raises, one line is printed to stdout
+it does **not** fail: it degrades to a basic template (no interactive plots, but the fallback
+path escapes every interpolated value just like the Jinja one). If generation raises, one line
+is printed to stdout
 (`[警告] HTML 报告生成失败，已跳过：…` — "HTML report generation failed, skipped") and ranking
 and file output are unaffected. You can also disable it explicitly with `--no-html`.
 
@@ -191,7 +192,7 @@ Messages the program emits in Chinese are annotated with a translation.
 | `约束文件 <f> 第 N 行的约束权重为负：'-3.0'` ("weight is negative") | 4 | Negative weights void the objective and all percentages | Correct the weights (must be finite and ≥ 0) |
 | `约束文件 <f> 第 N 行的约束权重不是有限实数：'nan'` ("not a finite real") | 4 | `nan`/`inf` pollute the statistics | Use real values; delete the line if missing |
 | `输出文件已存在：<path>` + "请改用 -p… 或加 --force" ("output file exists") | 3 | Overwrite protection (refused by default) | `-f/--force`, or another `-p` prefix |
-| `argument --threshold-constraints/--ts: … 取值域 [0.0, 1.0]，收到 5.0` | 2 | `--ts` out of range (silently accepted before) | Use a fraction in 0–1 |
+| `argument --threshold-constraints/--ts: 约束权重阈值比例 是比例，取值域 [0.0, 1.0]，收到 5.0` | 2 | `--ts` out of range (silently accepted before) | Use a fraction in 0–1 |
 | `argument --random-type/--r: invalid choice: '3' (choose from '0', '1', '2')` | 2 | Illegal randomization type | Use 0/1/2 |
 | `ERROR: --min-transfer-distance=… 被忽略（N/N 条约束不含 phylogenetic distance 列…）` | 0 (1 with `--dry-run`) | `--d>0` without a distance column | Drop `--d` or provide 4/5-column input |
 | `[tool] 错误：…` / `LabelMismatchError` (0% adapter endpoint hit) | 4 | Upstream naming inconsistent with the species tree | Align naming, or lower `--min-endpoint-hit-rate` (0 hits still errors) |

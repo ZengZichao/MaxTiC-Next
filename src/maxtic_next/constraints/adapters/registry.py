@@ -12,7 +12,7 @@
 统一约定：所有适配器最终产出统一 ``ConstraintSet``（``Constraint(donor, receptor,
 weight, metadata)``），下游排序器与文本约束完全同构，实现"一次检测、统一管道"。
 
-两个不可通约的口径（，机器可读）：每个 ``ConstraintSet.diagnostics``
+两个不可通约的口径（机器可读）：每个 ``ConstraintSet.diagnostics``
 都带 ``donor_endpoint_convention``（ALE = ``parent_of_donor``，其余四工具 =
 ``donor_itself``，同一事件相差一个物种层级）与 ``weight_semantics``
 （``support_over_declared_samples`` / ``support_over_replicate_blocks`` /

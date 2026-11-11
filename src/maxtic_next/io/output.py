@@ -174,7 +174,7 @@ def format_summary(result) -> str:
 
     ``result`` 为 ``maxtic_next.ranking.ranker.Result`` 实例（惰性导入以避免循环依赖）。
 
-    与原版 ``MaxTiC.py`` 的**已记录偏离**（，非回归）：
+    与原版 ``MaxTiC.py`` 的**已记录偏离**（非回归）：
 
     1. ``uninformative`` 百分比按 ``uninformative / total_weight`` 计（
        原版分母 ``total_transfers + uninformative`` 把无信息权重量双重计入）；

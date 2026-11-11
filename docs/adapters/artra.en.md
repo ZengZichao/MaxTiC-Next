@@ -23,16 +23,28 @@ Gene Tree:
 (...);
 Reconciliation:
 H117_0: Leaf Node
- = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
- = LCA[H159, H17]: Additive Transfer, Mapping --> H17, Recipient --> H159
+m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+m19 = LCA[H159,H17]: Replacing Transfer, Mapping --> H17, Recipient --> H159
+m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 ```
+
+> **The block header is identical to RANGER-DTLx's** (it is not ARTra-specific): upstream
+> `RANGER-DTLx-代码/Ranger-DTLx/DTL-algorithm.h:2170` prints exactly
+> ` ------------ Reconciliation for Gene Tree N (rooted) -------------`. Chunking matches
+> only the `Reconciliation for Gene Tree` **prefix**, so both the full upstream header and
+> the abbreviated `Reconciliation for Gene Tree 1:` used by the RANGER-DTLx sample are
+> recognized (ARTra's own sample `examples/adapters/artra/FAM1.txt` carries the full
+> `(rooted)` header). Inside `LCA[.., ..]` ARTra writes no space (`Node.java:466`) while
+> RANGER-DTLx does; parsing only reads the labels after `Mapping -->` / `Recipient -->`, so
+> both spellings work.
 
 ## 2. Field Extraction and Semantic Mapping
 
-- Consistent with RANGER: `Mapping --> D` = donor, `Recipient --> R` = receptor,
+- Consistent with RANGER-DTLx: `Mapping --> D` = donor, `Recipient --> R` = receptor,
   producing constraint `(D, R)`;
 - `Replacing Transfer` / `Additive Transfer` / plain `Transfer` are all recognized (the
-  trigger condition is the presence of `Recipient -->`);
+  trigger condition is that the same line contains **both** `Mapping` and `Recipient`, see
+  `parse_transfer_line`);
 - Section headers such as `Species Tree:` / `Gene Tree:` and newick lines contain no
   `Recipient -->` and are ignored automatically.
 

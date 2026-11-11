@@ -2,7 +2,8 @@
 
 本章用仓库自带的示例数据（蓝细菌小数据集）在 5 分钟内跑通一次完整排序。
 
-> 本章所有 stdout / 文件清单均为**实际运行捕获**（Python 3.14 本机，命令逐字照抄即可复现）。
+> 本章所有 stdout / 文件清单均为**实际运行捕获**（Python 3.14 本机，命令逐字照抄即可复现），
+> 并与程序当前输出逐行核对一致。
 
 ## 2.1 输入数据
 
@@ -68,7 +69,7 @@ NOTE: 12 条约束与物种树谱系边同向（权重合计 63.55），已被�
 | `examples/Cyano_CUTConstraints.tsv` | 本次产物前缀 = **第一个**约束文件的路径 |
 | `tree with  13 internal nodes` | 待排序的内部节点数（两个空格为原版排版） |
 | `2218.4 total weight of constraints from transfers` | 所有转移约束的权重之和（分母） |
-| `uninformative (...)` | 被判为无信息（到后代 / 到叶子 / 到祖先 / 自环）的权重及占比；**百分比 = uninformative ÷ total_weight**（，原版分母把该项双重计入而报 `12%`，本版本报 `13.9%`） |
+| `uninformative (...)` | 被判为无信息（到后代 / 到叶子 / 到祖先 / 自环）的权重及占比；**百分比 = uninformative ÷ total_weight**（原版分母把该项双重计入而报 `12%`，本版本报 `13.9%`） |
 | `trivially conflicting` | 平凡冲突（后代→祖先或平凡环）权重及占比 |
 | `value of the ... heuristic` | 三种排序各自“被违反约束权重”（越小越好）及占 total_weight 的百分比 |
 | `best order is the greedy heuristic` | 最终选用的启发式；开局部搜索且确有改进时变为 `... + local search` |
@@ -135,8 +136,8 @@ maxtic-next examples/minitree.tree examples/adapters/eccetera/FAM1.recphyloxml \
 maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --dry-run
 ```
 
-适配器模式会先向 **stderr** 打印一行口径声明与一行诊断摘要（；
-不进 stdout，以免污染与原版对齐的摘要）：
+适配器模式会先向 **stderr** 打印一行口径声明与一行诊断摘要（不进 stdout，
+以免污染与原版对齐的摘要）：
 
 ```
 [ranger] 警告：报告未声明样本数（无 ``Total number of optimal solutions: N`` 行）且只有 1 个调和块：权重按**整数计数**输出，min_support 阈值不具 [0,1] 支持度语义。
