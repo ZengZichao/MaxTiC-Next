@@ -49,7 +49,7 @@
    - **真正的跨实现等价门禁**是 `tests/test_reference_equivalence.py`：按原版
      `MaxTiC.py` 的控制流与公式**独立重写**一份 Python 3 参考实现（不复用被测代码的
      `ReachabilityMatrix` / `EdgeBuilder` / `order_from_graph` / `mix` / `opt` / `value` /
-     `RandomWrapper`），在真实蓝细菌示例上**逐字段差分比对**。核心算法或统计口径一漂移它即失败。
+     `RandomWrapper`），在真实蓝细菌示例上与 `maxtic_next` **逐字段差分比对**。核心算法或统计口径一漂移它即失败。
      它同时**显式断言**已裁定的偏离（uninformative 分母、偏序产物哨兵、阈值后总权重、
      哨兵边不可删；并记录零权重边从 informative 文件中排除的做法与原版一致、故不算偏离）。
      Newick 解析层不在其覆盖范围内（该文件复用本项目的 `Tree`，文件内已注明）。
@@ -57,7 +57,7 @@
      与原版 `MaxTiC.py`；本环境没有则跳过，上面的差分测试照常运行作为兜底。
    - `tests/test_original_py3_equivalence.py` 用仓库内置的 2to3 直译版（原版 `MaxTiC.py` /
      `script_tree.py`）与本品在主合成实例和蓝细菌实例上并排运行，断言输出表逐字节相同、目标值
-     一致；它比独立参考实现更强，但仍不能替代真实的 Python 2.7 运行。
+     一致；作为兜底，它比独立参考实现更强，但仍不能替代真实的 Python 2.7 运行。
 
 ## 安装
 
@@ -125,7 +125,7 @@ maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42
 |------|------|------|
 | `species_tree` | 物种树（Newick，内部节点标签写在 bootstrap 字段；须**二叉**、内部标签与叶名各自唯一；透明支持 `.gz` / gzip 流与归档） | 必填 |
 | `constraints` | 一个或多个约束文件（空格 `donor receptor [weight] [distance]` 或逗号 `family,donor,receptor,[weight],[distance]`；同样透明支持 `.gz` / 归档，上游官方 `.tgz` 示例可整包喂） | 必填 |
-| `--seed` | 随机种子（驱动 mix 平局与局部搜索） | `42` |
+| `--seed` | 随机种子（驱动 `mix` 平局与局部搜索） | `42` |
 | `--local-search` / `--ls` | 局部搜索**墙钟时长**（秒），0 表示关闭 | `0` |
 | `--local-search-max-iters` | 局部搜索迭代上限（0 = 只受时长约束）；设正数以获得跨机器确定性 | `0` |
 | `--temperature` / `--t` | Metropolis 温度 | `0.001` |
@@ -165,10 +165,12 @@ maxtic-next species.tree alerax_run/     --from alerax
 
 - **ALE 的 `--ale-source` 默认是 `trf`**（转移事件，`parent(donor) -> receptor`），即 ALE 官方
   MaxTiC 集成 `constraints_from_transfers` 规定的口径；`rec`（调和事件）仍可选，但两者产出的
-  约束集规模与量级**不同**，切换等于换掉整个输入。
+  约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,995 条、总权重 5482.98，
+  `trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入。
 - 每次转换在 **stderr** 打印一行诊断（端点约定、权重口径、采样分母、端点命中率与各类**丢弃计数**），
   并写入 `result.run_metadata["adapter_diagnostics"]`；端点命中率为 0 直接报错，低于
-  `--min-endpoint-hit-rate`（默认 0.5）告警。`--quiet-adapters` 只关闭打印。
+  `--min-endpoint-hit-rate`（默认 0.5）告警（ALE 不适用该守卫，它沿用原版的逐条端点校验）。
+  `--quiet-adapters` 只关闭打印。
 
 详见[上游软件配套方案](docs/manual/zh/06_upstream_integration.md)与 [`docs/adapters/`](docs/adapters/README.md) 适配规格。
 
@@ -230,7 +232,7 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
 | `uninformative` 百分比分母 | `total_transfers + uninformative`（**双重计入**无信息权重）→ 同例报 `12%` | `total_weight` → 同例报 `13.9%` |
 | 偏序产物的哨兵判定 | 写死 `edge[e] < 100000`（其 `MAX_NUMBER` 为 `1e10`）→ 静默删掉权重 ≥ 1e5 的真实信息性约束 | 以 `MAX_NUMBER` 判定 |
 | `--threshold-constraints` 的总权重口径 | 在删边**之前**求和，分母含被删权重 | 在删边**之后**统计 |
-| 阈值删除集合 | 可把 `MAX_NUMBER` 谱系硬约束一并删掉 → 产出**不受物种树约束**的“合法”排名 | 哨兵边排除在可删除集合之外 |
+| 阈值删除集合 | 可把 `MAX_NUMBER` 谱系硬约束一并删掉 → 产出**不受物种树约束**的“合法”排序 | 哨兵边排除在可删除集合之外 |
 | 局部搜索后的 stdout | 打印的是**搜索前**的值与来源，与交付树矛盾 | 回写 `values` / `best_source` 并补打 `after local search … rejected` / `best found solution …` 两行 |
 | `--random-trees` 的 p 值 | `k/n`，50 次采样的最小非零 p 被压成 `0.0`；且检验的是**搜索前**的序 | `(k+1)/(n+1)` 校正（Phipson & Smyth 2010），且检验**最终交付序** |
 | 未校验的选项取值域 | `--r 3`、`--ts 5`、`--ls -5` 等静默通过 | argparse 层强制取值域，非法即退出码 2 |
@@ -259,7 +261,7 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
 
 ## 许可证
 
-继承原版 **CeCILL 2.1**，保留原作者 Eric Tannier 与引用（Biorxiv doi.org/10.1101/127548）。
+继承原版 **CeCILL 2.1**，保留原作者 Eric Tannier 与引用（bioRxiv doi.org/10.1101/127548）。
 详见 `LICENSE`。
 
 ## 当前能力
@@ -284,18 +286,18 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
   O(1) 查表替代 O(V) 遍历）在**每次排序中都生效**，且已按 400/400 例证明与原版 `path()` 贪婪一致。
   它是**默认开启**的，不是可选开关。
 - **默认已开启的增量打分**：`--incremental`（局部搜索每次区间旋转只算增量 O(b−a)，而非全量
-  O(|E|)）现在是**默认路径**。依据：`--incremental` 与全量重算在 4 组输入 × 5 个种子 ×
+  O(|E|)）现在是**默认路径**。依据：`--incremental` 与 `--no-incremental` 在 4 组输入 × 5 个种子 ×
   {stdout 摘要、ranked newick、best_order、values、三个 TSV} 上**逐字节一致**，实测加速
   3.1–8.2 倍；`--no-incremental` 保留原版全量口径作为逃生门，等价性由
   `tests/test_output_equivalence.py` 长期看守。
 - **默认路径提速**（不改任何数值顺序）：`mix` 动态规划里的前缀成员判定由列表切片改为增量维护的
-  集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（在评审主机上；AF2
+  集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（在评审主机上；Additional file 2
   `scaling_large.csv`；n=1000 / |E|=6000 为 2.506 s）；绝对耗时仍依赖主机。所用输入为确定性
   合成树，不是真实生物数据集。
 - **可选开关**：`--checkpoint`（仅覆盖 `--local-search` 阶段的续跑）、
   ALE 的 `--ale-cache-dir`（解析阶段按家族缓存）。
-- `tree/cache.py` 的 `PathCache` **不在排序热路径上**（保留导出是为了让公开 import 面
-  保持稳定）。它**不能**经 `--incremental` / `--checkpoint` “启用”——那两个开关
+- `tree/cache.py` 的 `PathCache` 属遗留实现，**从未接入排序热路径**（保留导出只是为了让既有外部
+  import 不至于断掉）。它**不能**经 `--incremental` / `--checkpoint` “启用”——那两个开关
   指向的是上面两条真实路径。相关说明已在其模块 docstring 中写明。
 
 ## 未来工作

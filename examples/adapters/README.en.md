@@ -18,7 +18,7 @@ numbers such as 61/62/67); the only exception is `ale/`, which ships its own mat
 | `eccetera/FAM1.recphyloxml` | ecceTERA | recPhyloXML (`branchingOut` / `transferBack`) |
 | `artra/FAM1.txt` | ARTra | `Replacing/Additive Transfer` report |
 | `alerax/run/reconciliations/summaries/*_transfers.txt` | AleRax | `donor receptor freq` |
-| `run_adapters.sh` | — | one-command demo of all tools + auto-detection + two-stage |
+| `run_adapters.sh` | — | one-command demo of the four tools other than ALE + auto-detection + two-stage |
 
 ## One-Command Run
 
@@ -56,7 +56,7 @@ maxtic-next examples/minitree.tree examples/adapters/ranger/FAM1.dtl \
 
 > Note: these are **small demonstration samples**, hence `--ale-min-family-size 0` is
 > added so that the family-size filter does not drop them; for real data, use the
-> default `5` or adjust as needed. See `docs/adapters/<tool>.md` for each tool's
-> adapter specification and known limitations (the file name follows the tool name; the
-> only exception is `--from ranger`, whose specification is
-> `docs/adapters/ranger_dtlx.md`).
+> default `5` or adjust as needed. See the corresponding `docs/adapters/<tool>.en.md`
+> for each tool's adapter specification and known limitations (the file name follows
+> the tool name; the only exception is `--from ranger`, whose specification is
+> `docs/adapters/ranger_dtlx.en.md`).

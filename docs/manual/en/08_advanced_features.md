@@ -17,24 +17,30 @@ maxtic-next species.tree constraints.tsv --ls 30
 ```python
 r = rank("species.tree", "constraints.tsv", local_search=30, print_summary=False)
 summ = r.sensitivity_summary
-print(summ["title"])                 # robustness/sensitivity summary over solutions visited by the local search
+print(summ["title"])                 # 基于局部搜索访问解的稳健性/敏感性摘要
 print(summ["n_orders_collected"])    # number of deduplicated near-optimal orders collected
 print(summ["node_position_distribution"]["61"])   # position distribution of node 61
 ```
 
+(`summ["title"]` is a fixed Chinese constant in the library —
+`基于局部搜索访问解的稳健性/敏感性摘要`, i.e. *"robustness/sensitivity summary over the
+solutions visited by the local search"*; the field is not localised, so it comes back verbatim
+in Chinese.)
+
 > **Terminology rule**: the local search is a Metropolis neighbourhood search and the
 > solutions it visits are **not** a statistical posterior. This module therefore speaks only
 > of a "robustness/sensitivity summary"; "confidence interval / posterior probability /
-> posterior distribution" are **forbidden**. Raising the capacity below does not loosen this
+> posterior distribution" are **forbidden**. Raising K below does not loosen this
 > rule one bit.
 
-### 8.1b `--near-optimal-top-k`: the hard cap on the summary's support
+### 8.1b `--near-optimal-top-k`: the hard cap on the summary's support set
 
 What the summary tallies is not resampling of the input but the **set of solutions the local
 search visited**, deduplicated (`is_resampling_robustness` is always `False`). The collector
-keeps only **K** deduplicated near-optimal orders, ordered by objective value, so K is the
-**support cap** of every frequency reported below: orders outside K take no part in the
-counts. **K defaults to 50** and is overridable from three layers —
+keeps only **K** deduplicated near-optimal orders, ordered by ascending objective value
+(lower is better), so K is the **support-set cap** of every frequency reported below: orders
+outside K take no part in the counts. **K defaults to 50** (earlier versions hard-coded it to
+50) and is now overridable from three layers —
 CLI `--near-optimal-top-k`, `api.rank(top_k=...)`, `Ranker.run(top_k=...)` — validated by
 `ranking/ranker.py:check_near_optimal_top_k` (**integer ≥ 1**; exit code 2 on the CLI,
 `ValueError` in Python), recorded in `Result.run_metadata["near_optimal_top_k"]`, echoed in
@@ -57,8 +63,8 @@ maxtic-next species.tree constraints.tsv --ls 180 --near-optimal-top-k 400
 
 ```python
 r = rank("species.tree", "constraints.tsv", local_search=180, top_k=400)
-r.run_metadata["near_optimal_top_k"]        # 400 — the machine-readable entry point
-r.sensitivity_summary["n_orders_retained"]  # deduplicated orders that took part
+r.run_metadata["near_optimal_top_k"]        # 400 — the machine-readable entry point beyond stdout
+r.sensitivity_summary["n_orders_retained"]  # orders retained after the capacity trim
 ```
 
 - A **larger K** lets the summary speak about a wider near-optimal neighbourhood; the price is
@@ -90,16 +96,19 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
 | `--mcmc-iters` | `1000` | Chain steps (must be > 0) |
 | `--mcmc-temperature` | **`auto`** | Boltzmann temperature. `auto` = `max(total weight, 1) / 100`; a positive number fixes it |
 | `--mcmc-burn-in` | **50%** of `iters` | Burn-in: advance the chain without recording samples |
-| `--mcmc-thin` | `max(1, iters // 100)` | Thinning interval, reducing autocorrelation between retained samples |
+| `--mcmc-thin` | `max(1, iters // 100)` | Thinning interval, reducing autocorrelation between successive retained samples |
 
-- **The default temperature is `auto`, not a fixed `0.01`.** At real total
-  weights (hundreds to thousands) a fixed `0.01` nearly freezes the chain, so it explores very
-  few states. `auto` scales with the energy, and the effective
-  value is printed to stdout:
+- **The default temperature is `auto`, not the fixed `0.01` an earlier version of this manual
+  documented.** At real total weights (hundreds to thousands) a fixed `0.01` nearly freezes the
+  chain, so it explores very few states. `auto` scales with the energy, and the effective value
+  is printed to stdout:
 
   ```
   [MCMC] 温度 T=22.184（auto：max(总权重,1)/100）；iters=1000、burn-in=500、thin=10
   ```
+
+  (Translation of the line above, which the program emits in Chinese: *"[MCMC] temperature
+  T=22.184 (auto: max(total weight, 1)/100); iters=1000, burn-in=500, thin=10"*.)
 
   Instantiating the sampler directly in Python is a different matter: the
   `MCMCSampler.__init__` default is still `temperature=0.01` — "not a fixed `0.01`" holds at
@@ -117,7 +126,9 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
   unique-sample count being far below the sample count shows the chain has not mixed, so the
   mean must not be used as an uncertainty measure)"* and *"convergence diagnostics (counted
   over the recorded chain before thinning): unique-sample fraction, adjacent-duplicate rate,
-  longest homogeneous-run fraction, effective sample size ESS, state coverage, energy sd"*.)
+  longest homogeneous-run fraction, effective sample size ESS=7.6 (i.e. 0.008 times the sample
+  count), state coverage = n/a (the state space is too large to enumerate exactly), energy
+  sd"*.)
 
 > ⚠️ **Honest capability boundary**: this is a **preliminary implementation that
 > has not passed convergence diagnostics**. The first line it prints says
@@ -125,8 +136,9 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
 > is **unmixed** (ESS far below the sample count, high adjacent-duplicate rate). Therefore
 > **until the diagnostics pass, its samples must not be used as an uncertainty measure**.
 > MCMC is merely the one module where the vocabulary of "distribution" is *permitted* — that
-> does not mean it has earned it. **Off by default**; when off, the P0/P1 paths are unchanged
-> (zero drift).
+> does not mean it has earned it. **Off by default**; when off, `Ranker.run` builds no sampler,
+> consumes no randomness and never touches the delivered order, so there is zero drift relative
+> to the default path without MCMC.
 > The sampler also **honours cooperative cancellation** (`MCMCSampler.sample(stop_check=...)`,
 > threaded through by `api.rank` / `Ranker.run`): the predicate is checked between chain steps,
 > the samples recorded so far are returned, and `run_metadata["mcmc_stopped_early"]` reports
@@ -139,7 +151,7 @@ When you only care about a subclade of the species tree, `--target-clade <label>
 ranking on that clade:
 
 ```bash
-# default: keep only constraints whose both endpoints are inside clade 61
+# default: keep only constraints with both endpoints inside clade 61
 maxtic-next species.tree constraints.tsv --target-clade 61
 
 # enable the conservative "external ancestor mapped to the root" rule (use with care)
@@ -153,8 +165,9 @@ maxtic-next species.tree constraints.tsv --target-clade 61 --target-clade-ancest
   always dropped. Off by default.
 - This step **does not modify tree topology or re-root**; it only filters / remaps constraint
   endpoints.
-- A `--target-clade` label absent from the tree is an **error** in both `--dry-run` and a
-  real run, not a deep `KeyError`.
+- A `--target-clade` label absent from the tree still **raises** `KeyError` in a real run
+  (`prune.py`); the CLI catches it and reports it as **exit code 4** with a friendly message,
+  while `--dry-run` intercepts it earlier as an error-level preflight finding.
 - Caveat: a constraint mapped to the root holds in every legal order (the root's rank is 0),
   so it only dilutes the weight denominator without carrying information.
 
@@ -168,7 +181,8 @@ maxtic-next species.tree constraints.tsv --dry-run
 maxtic-next species.tree fam1.uml_rec --from ale --dry-run   # actually parses upstream output
 ```
 
-Checks performed (transcribed from `src/maxtic_next/dry_run.py`):
+Checks performed (item by item against `src/maxtic_next/dry_run.py`; the two adapter rows come
+from `src/maxtic_next/api.py`):
 
 | Check | Severity |
 |-------|----------|
@@ -183,7 +197,7 @@ Checks performed (transcribed from `src/maxtic_next/dry_run.py`):
 | `--d > 0` but constraints carry **no** distance column (option would be ignored) | **error** |
 | Species tree has no internal nodes | warning |
 | Adapter mode: upstream output fails to parse / zero constraints / no endpoint hits at all | error |
-| Adapter mode: endpoint hit rate below `--min-endpoint-hit-rate` | warning |
+| Adapter mode: some (but not all) constraint endpoints miss the species tree — hit rate below 100% | warning |
 
 The output is a structured report ending with `结论：通过 / 存在致命问题，已中止
 （error N, warning N）` ("conclusion: passed / fatal problems found, aborted"). On legal
@@ -195,30 +209,33 @@ input (`examples/minitree.tree` + `examples/Cyano_CUTConstraints.tsv`) the measu
 结论：通过 （error 0, warning 0）
 ```
 
+(Translation of the three lines above, which the program emits in Chinese: *"preflight
+(dry-run) report"*, *"no problems found at all"*, *"conclusion: passed (error 0, warning 0)"*.)
+
 > **The exit code comes from the structured field** `run_metadata["dry_run_ok"]`,
 > never from substring matching on the report text. Passing preflight exits `0`; any
 > error-level finding exits `1`.
-> Preflight in adapter mode **actually parses the upstream output**: two
-> lines of garbage posing as a `.dtl` file must not be judged "passed", because dropping
-> `--dry-run` would then produce a complete, plausible-looking summary on 0 total weight.
-> Zero-constraint and no-endpoint-hit cases are error-level. When `--dry-run` and `-o` are both
-> given, `-o` still writes the constraint file.
+> Preflight in adapter mode **actually parses the upstream output**: in the past, two
+> lines of garbage posing as a `.dtl` file were judged "passed", and dropping `--dry-run`
+> then produced a complete, plausible-looking summary on 0 total weight; today both the
+> zero-constraint and the no-endpoint-hit cases are reported as errors. When `--dry-run` and
+> `-o` are both given, `-o` still writes the constraint file.
 
 ### 8.4b A parse failure always fails the preflight
 
 In adapter mode the preflight really runs the upstream conversion once. **Any adapter parse
 failure** — corrupt/truncated XML, an unreadable file, a multi-member archive — is converted
 into an **error-level** report entry, after which `n_errors` / `ok` are **recomputed**, so the
-CLI aborts with **exit code 1**. Appending the error without recomputing `ok` would print
-`[error]` while concluding *passed* and exiting 0, which is exactly what this recomputation
-prevents.
+CLI aborts with **exit code 1**. On this path the old implementation appended the error without
+recomputing `ok`, which printed `[error]` while concluding *passed* and exiting 0 — a regression,
+and this recomputation is what fixes it.
 
 Worked example: `examples/adapters/eccetera/FAM1.recphyloxml` truncated to 400 bytes
 (`head -c 400`), leaving the XML unclosed:
 
 ```bash
-$ head -c 400 examples/adapters/eccetera/FAM1.recphyloxml > truncated.recphyloxml
-$ maxtic-next examples/adapters/ale/species.tree truncated.recphyloxml \
+$ head -c 400 examples/adapters/eccetera/FAM1.recphyloxml > /tmp/truncated.recphyloxml
+$ maxtic-next examples/adapters/ale/species.tree /tmp/truncated.recphyloxml \
       --from eccetera --dry-run
 === 预检（dry-run）报告 ===
 [error] 上游输出（格式 eccetera）解析失败：UpstreamParseError: /tmp/truncated.recphyloxml：
@@ -250,7 +267,7 @@ maxtic-next species.tree constraints.tsv --ls 600 --incremental
 ```
 
 > **On by default**: the incremental and full paths are verified byte-for-byte identical
-> over 4 inputs × 5 seeds × 7 artifact fields (guarded by `tests/test_output_equivalence.py`),
+> over 4 inputs × 5 seeds × 7 output-file fields (guarded by `tests/test_output_equivalence.py`),
 > and the incremental path is 3.1–8.2× faster. It affects **performance only** and changes
 > neither the search trajectory nor the result; use `--no-incremental` to fall back to the
 > original full recompute.
@@ -311,18 +328,18 @@ similarity values from  50 random orders 0.4 0.9111111111111111
 pvalue of the similarity with the input order: 0.0196078431372549 [(k+1)/(n+1) corrected]
 ```
 
-Two statistical conventions define these p-values:
+Two statistical conventions were corrected here:
 
-1. **The `(k+1)/(n+1)` correction** (Phipson & Smyth 2010). Reporting `k/n`, as the original
-   does, would at N=50 squeeze the smallest non-zero p-value down to `0.0` and manufacture
-   an illusion of absolute significance; with 50 samples the minimum p reported here is
+1. **The `(k+1)/(n+1)` correction** (Phipson & Smyth 2010). The old implementation reported
+   `k/n`, which at N=50 squeezed the smallest non-zero p-value down to `0.0` and manufactured
+   an illusion of absolute significance; with 50 samples the minimum p now reported is
    `1/51 ≈ 0.0196`. The printout states `[(k+1)/(n+1) corrected]` explicitly.
 2. **The tested order is the final delivered order** (after local search), not the
-   pre-search heuristic order — testing an order that is not the tree handed to
-   the user would describe a different tree. The printout states
+   pre-search heuristic order — the order the old implementation tested was **not** the one
+   delivered to the user. The printout states
    `tested order = delivered best order`.
 
-The distribution file is the **4th output product**: `<prefix>.mt.random_dist.tsv`
+The distribution file is the **4th output file**: `<prefix>.mt.random_dist.tsv`
 (`_distribution_random` under the legacy style), one `value similarity` pair per line, N lines.
 Random orders are driven by `--seed` and are byte-for-byte reproducible under a fixed seed.
 
@@ -338,10 +355,10 @@ Random orders are driven by `--seed` and are byte-for-byte reproducible under a 
 | `2` | Fully randomize nodes |
 
 The domain is enforced as `{0,1,2}` in argparse: `3`, `-1` and the like are **rejected outright**
-with exit code 2, because silently treating them as `0` would amount to running a control
-experiment on un-randomized data. `--random-type 1/2` changes the data itself, so "agreement
-with the default path"
-is meaningless — but the same seed still reproduces. Use them only when a control is needed.
+with exit code 2, because the old implementation silently treated them as `0`, which amounted to
+running a control experiment on un-randomized data. `--random-type 1/2` changes the data itself,
+so "agreement with the default path" is meaningless — but the same seed still reproduces. Use
+them only when a control is needed.
 
 ## 8.9 Cooperative cancellation (`stop_check`)
 
@@ -375,8 +392,8 @@ A long local search and a long MCMC chain can be **cancelled cooperatively**. Th
   statistics over zero samples — with no samples there is nothing to report, and the program
   refuses to invent it.
 
-**With no `stop_check` (default `None`)** every byte of output is what it always was and
-`cancelled` is `False`.
+**With no `stop_check` (default `None`)** the output is byte-for-byte identical to a run that is
+never cancelled, and `cancelled` is always `False`.
 
 ```python
 import itertools
@@ -407,4 +424,4 @@ parameter, the log panel prints the verbatim `gui/i18n.py` string
 cancellation only takes effect at stage boundaries — a long local-search task will finish its
 current stage and then discard the results"*) — rather than pretending it can interrupt.
 
-> Prev: [07 · Workflows & deployment](07_workflows_deployment.md) ｜ Next: [09 · FAQ & troubleshooting](09_faq_troubleshooting.md)
+> Prev: [07 · Workflows & deployment](07_workflows_deployment.md) | Next: [09 · FAQ & troubleshooting](09_faq_troubleshooting.md)

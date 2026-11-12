@@ -3,7 +3,9 @@
 > 🌐 中文版：[README.md](README.md)
 
 This directory holds real large-scale HGT (horizontal gene transfer) datasets for
-performance stress testing via the `--real` mode of `benchmarks/suite.py`.
+performance stress testing via the `--real` mode of the benchmark suite module
+`src/maxtic_next/benchmarks/suite.py` (entry point
+`python -m maxtic_next.benchmarks.suite --real`).
 
 ## Directory Structure
 
@@ -17,9 +19,12 @@ benchmarks/datasets/
 └── ...
 ```
 
-> Directory scanning is **not recursive**, so `--data-dir` must point at the level that
+> Directory scanning is **not recursive**, so `--data-dir` should point at the level that
 > directly contains the tree and the constraints (e.g.
-> `benchmarks/datasets/<dataset_name>/`).
+> `benchmarks/datasets/<dataset_name>/`). Scanning also skips MaxTiC's own output files
+> (the three output files / distribution / HTML report suffixes, see
+> `suite._is_maxtic_output`), so that ranking output is not re-ingested as input
+> constraints.
 
 ## How to Add a Real Dataset
 
@@ -66,8 +71,10 @@ python -m maxtic_next.benchmarks.suite --real --data-dir <path/to/datasets> --se
 ```
 
 If the directory given to `--data-dir` contains no tree + constraints pair (e.g. the
-still-empty `benchmarks/datasets/`), `suite.py` prints a "未找到 tree+constraints 数据对"
-warning and skips all datasets.
+still-empty `benchmarks/datasets/`), `suite.py` prints the Chinese warning
+"警告：目录 <data_dir> 中未找到 tree+constraints 数据对。" verbatim (English gloss:
+"Warning: no tree+constraints data pair found in directory <data_dir>") and skips all
+datasets.
 
 ### 4. Output Metrics
 
@@ -83,7 +90,7 @@ For each dataset, the benchmark reports the following key metrics:
 | `cpu_time_iqr` / `wall_time_iqr` | Inter-quartile range of `cpu_time` / `wall_time` |
 | `wall_time` | Wall-clock time (seconds, median of `time.perf_counter`) |
 | `io_time` / `kernel_cpu_time` | I/O cost of writing the output files (CPU median) / ranking-kernel CPU time after subtracting I/O |
-| `peak_memory_mb` | Peak memory (MB, `tracemalloc`) |
+| `peak_memory_mb` | Peak memory (MiB, `tracemalloc`; computed as `peak / (1024 * 1024)`, the key name in the result dict is still `peak_memory_mb`) |
 | `best_value` | Objective value of the best ranking (the smaller of greedy / mixing) |
 | `delivered_value` | Independently recomputed objective value of the delivered ranking |
 | `best_source` | Provenance of the delivered ranking (`greedy heuristic` / `mixing heuristic`, possibly suffixed `+ local search`) |

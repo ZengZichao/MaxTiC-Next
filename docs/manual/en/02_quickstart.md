@@ -11,7 +11,7 @@ with the repository (the small cyanobacterial example).
 
 - Species tree: `examples/minitree.tree` (13 internal nodes, Newick, internal labels
   carried in the bootstrap field, **single line**)
-- Constraints: `examples/Cyano_CUTConstraints.tsv` (space format `donor receptor weight`,
+- Constraints: `examples/Cyano_CUTConstraints.tsv` (whitespace-separated format `donor receptor weight`,
   **123 lines** — the cyanobacterial constraint set distributed with the original MaxTiC)
 
 Species tree fragment (internal node labels are the numbers `42/59/61/...`):
@@ -20,7 +20,7 @@ Species tree fragment (internal node labels are the numbers `42/59/61/...`):
 (((((CYAP8:1,CYAP0:1)42:7,(CYAA5:7,UCYNA:7)41:1)59:2,...)69;
 ```
 
-Constraint fragment (`donor receptor weight`, tab-separated):
+Constraint fragment (`donor receptor weight`, whitespace-separated; this file uses tabs):
 
 ```
 61	62	15.04
@@ -54,12 +54,12 @@ unchanged). Note the **two spaces** after `tree with` (matching the original `pr
 ```
 examples/Cyano_CUTConstraints.tsv
 tree with  13 internal nodes
-2218.4 total weight of constraints from transfers
+2218.3999999999996 total weight of constraints from transfers
 307.45000000000005 uninformative (  307.45000000000005 to a descendant, 0.0 to a leaf 0.0 to an ancestor 0.0 to itself 13.9%)
 676.0400000000001 trivially conflicting constraints (30%) (descendant to ancestor or trivial cycle)
-value of the order given by the input tree 755.8800000000005 (34.0732059141724%)
-value of the greedy heuristic 755.8800000000005 (34.0732059141724%)
-value of the mixing heuristic: 755.8800000000005 (34.0732059141724%)
+value of the order given by the input tree 755.8800000000005 (34.073205914172405%)
+value of the greedy heuristic 755.8800000000005 (34.073205914172405%)
+value of the mixing heuristic: 755.8800000000005 (34.073205914172405%)
 best order is the greedy heuristic
 (((((CYAP8:1,CYAP0:1)42:7,(CYAA5:7,UCYNA:7)41:1)59:2,(MICAN:9,(CYAP2:3,CYAP7:3)43:6)45:1)61:2,(SYNY3:11,SYNP2:11)56:1)65:1,(TRIEI:6,(NOSA0:5,(NOSP7:4,(NOSS1:2,ANAVT:2)40:2)46:1)62:1)67:7)69;
 Similarity of the best order compared with the input order 1.0
@@ -79,7 +79,7 @@ uninformative summary above (once in the `total_weight` denominator, not twice).
 |------|---------|
 | `examples/Cyano_CUTConstraints.tsv` | Output prefix for this run = path of the **first** constraint file |
 | `tree with  13 internal nodes` | Number of internal nodes to rank (two spaces, as in the original) |
-| `2218.4 total weight of constraints from transfers` | Sum of all transfer-constraint weights (the denominator) |
+| `2218.3999999999996 total weight of constraints from transfers` | Sum of all transfer-constraint weights (the denominator) |
 | `uninformative (...)` | Weight classified as uninformative (to a descendant / leaf / ancestor / itself) and its share; **the percentage is `uninformative ÷ total_weight`**, which prints `13.9%` here — the original denominator double-counted the uninformative weight and printed `12%` on the same instance |
 | `trivially conflicting` | Weight of trivially conflicting constraints (descendant→ancestor or trivial cycle) and its share |
 | `value of the ... heuristic` | "Weight of violated constraints" for each of the three rankings (lower is better), plus its share of `total_weight` |
@@ -88,12 +88,12 @@ uninformative summary above (once in the `total_weight` denominator, not twice).
 | one Newick line | The **ranked tree**: branch lengths set to the ranking positions |
 | `Similarity ...` / `constraints in agreement ...` | Kendall similarity with the input ordering (∈[0,1], 1 = identical), etc. |
 | `values from N random orders ...` (4 lines) | **Only with `--random-trees > 0`** (see 08 §8.7) |
-| `NOTE: ...` / `WARNING: ...` | Runtime statements of convention and warnings, always appended at the **end** of the summary |
+| `NOTE: ...` / `WARNING: ...` | Runtime statements of convention and warnings; they go at the **end** of the summary, the one exception being the leaf-constraint `WARNING:` line, which is printed right after the `uninformative` line |
 
-> The trailing NOTE has **no counterpart in the original** (the per-edge print at `MaxTiC.py:444` is
-> unreachable on the original's execution path). It reports that 12 constraints point the
-> same way as an existing parent→child edge of the species tree, so they are promoted to
-> inviolable topological hard constraints.
+> The trailing NOTE has **no counterpart in the original** (the per-edge print at
+> `tests/data/original_maxitc/MaxTiC.py:447` is unreachable on the original's execution path).
+> It reports that 12 constraints point the same way as an existing parent→child edge of the
+> species tree, so they are promoted to inviolable topological hard constraints.
 
 ## 2.4 Output files
 
@@ -114,7 +114,7 @@ The fourth data file appears only when the randomization test is enabled:
 
 > - `--output-style legacy` switches back to the original long names (for reproducibility
 >   verification); the file **contents are byte-for-byte identical** under both styles.
-> - **Overwrites are refused by default**: if the products already exist, a second run
+> - **Overwrites are refused by default**: if the output files already exist, a second run
 >   aborts with exit code `3` instead of clobbering them. Pass `-f/--force`
 >   to override deliberately, or `-p` to pick another prefix.
 
@@ -127,14 +127,14 @@ open examples/Cyano_CUTConstraints.tsv.html
 xdg-open examples/Cyano_CUTConstraints.tsv.html
 ```
 
-The report is a **fully static** page (Plotly inlined/CDN), needs no backend and opens
-offline. Without `jinja2` / `plotly` installed it does **not** fail — it silently
-**degrades** to a basic template (see the FAQ in chapter 09).
+The report is a **fully static** page (Plotly is inlined, no CDN reference), needs no
+backend and opens offline. Without `jinja2` / `plotly` installed it does **not** fail — it
+prints a warning and **degrades** to a basic template (see the FAQ in chapter 09).
 
 ## 2.6 A bit more flavor
 
 ```bash
-# 10 s of local search (adds the two "local search" lines + robustness summary)
+# 10 s of local search (adds the two "local search" lines + robustness/sensitivity summary)
 maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42 --ls 10
 
 # randomization test (adds 4 p-value lines + the 4th output file)
@@ -153,19 +153,23 @@ maxtic-next examples/minitree.tree examples/adapters/eccetera/FAM1.recphyloxml \
 maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --dry-run
 ```
 
-Adapter mode first prints one convention statement and one diagnostic summary to
-**stderr** (kept out of stdout so that the original-aligned summary stays
-machine-parseable):
+Adapter mode first prints one convention statement to **stderr** (a warning instead when
+the convention is not closed), then one diagnostic summary (both kept out of stdout so as
+not to pollute the summary that is aligned with the original):
 
 ```
 [ranger] 警告：报告未声明样本数（无 ``Total number of optimal solutions: N`` 行）且只有 1 个调和块：权重按**整数计数**输出，min_support 阈值不具 [0,1] 支持度语义。
 [ranger] donor 端点约定=donor_itself 权重口径=integer_count 分母=不可确立 端点命中率=100.0% | 文件=1 块=1 转移=2 保留=2 丢弃[标签不匹配=0, 支持度=0, 家族规模=0, 家族规模探测失败=0, 自环=0]
 ```
 
-(These lines are emitted in Chinese; the fields read *"donor endpoint convention =
-donor_itself, weight semantics = integer_count, sample denominator = undeterminable,
-endpoint hit rate = 100.0% | files=1 blocks=1 transfers=2 kept=2 dropped[label mismatch=0,
-support=0, family size=0, family-size probe failure=0, self-loops=0]"*.)
+(These lines are emitted in Chinese. The warning line reads *"the report declares no
+sample count (there is no ``Total number of optimal solutions: N`` line) and holds only
+1 reconciliation block: weights are output as an **integer count**, so the `min_support`
+threshold carries no [0,1] support semantics"*; the fields of the diagnostic line read
+*"donor endpoint convention = donor_itself, weight convention = integer_count, sample
+denominator = undetermined, endpoint hit rate = 100.0% | files=1 blocks=1 transfers=2
+kept=2 dropped[label mismatch=0, support=0, family size=0, family-size probe failure=0,
+self-loops=0]"*.)
 
 The same quantities are also written to `Result.run_metadata["adapter_diagnostics"]`.
 Add `--quiet-adapters` to suppress the printing only — errors are still raised.
@@ -179,4 +183,4 @@ print(result.best_source, result.similarity_to_input)
 # greedy heuristic 1.0
 ```
 
-> Prev: [01 · Installation](01_installation.md) ｜ Next: [03 · CLI reference](03_cli_reference.md)
+> Prev: [01 · Installation](01_installation.md) | Next: [03 · CLI reference](03_cli_reference.md)

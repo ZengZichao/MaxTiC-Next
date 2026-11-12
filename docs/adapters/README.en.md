@@ -6,9 +6,12 @@
 > adapter framework**. It converts the outputs of 5 upstream reconciliation / transfer-inference
 > tools into MaxTiC-Next's internal constraint model `ConstraintSet`, and provides
 > **plug-in style registration** and **auto-detection of output formats**. For the detailed
-> adaptation specification of each tool, see the corresponding `docs/adapters/<tool>.md`
-> (the file name follows the tool name, except `--from ranger`, whose specification is
-> `docs/adapters/ranger_dtlx.md`).
+> adaptation specification of each tool, see the corresponding `<tool>.en.md` (Chinese
+> version: `<tool>.md`; the file name follows the tool name, the only exception being
+> `--from ranger`, whose specification is `ranger_dtlx.en.md`). For the **complete
+> semantic annotations** (donor endpoint levels, weight conventions, observability), which
+> prevail over this directory, see
+> [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md).
 
 ## 1. Why an Adapter Framework Is Needed
 
@@ -17,8 +20,8 @@ constraints** `donor → receptor` ("donor is not later than receptor"). Upstrea
 however, emit heterogeneous output formats — from NHX-style `.uml_rec` files and
 human-readable reconciliation reports, to standard recPhyloXML, and on to pre-aggregated
 transfer frequency tables. The adapter framework's job is to map these heterogeneous
-outputs, **without losing semantics**, onto the single `Constraint(donor, receptor, weight,
-metadata)` abstraction.
+outputs, **without losing semantics**, onto the single
+`Constraint(donor, receptor, weight, metadata)` abstraction.
 
 Key design principles:
 
@@ -27,7 +30,8 @@ Key design principles:
   guessed formats.
 - **Endpoint validity checking**: all donors / receptors must exist in the species tree
   label set (leaf names + internal bootstrap labels); non-matching endpoints are dropped,
-  and **incorrect constraints are never silently produced**.
+  and **incorrect constraints are never silently produced** (ALE follows a different
+  convention, see `ale.en.md` §2).
 - **Drops must be visible**: every dropped transfer is **counted by reason**; after the
   conversion finishes, a one-line diagnostic summary is printed to **stderr**, and the same
   dictionary is attached to `ConstraintSet.diagnostics` (as
@@ -40,35 +44,44 @@ Key design principles:
   (`donor_endpoint_convention = "parent_of_donor"`), while RANGER-DTLx / ARTra / ecceTERA /
   AleRax take the **donor itself** (`"donor_itself"`) — the two conventions **differ by one
   species level** for the same event. When `--from-auto` encounters mixed input, it resolves
-  each group with its own adapter and warns that "endpoint levels and weight semantics are
-  not commensurable", instead of adding both directly onto the same edge.
-- **Weight semantics are not commensurable**: `weight_semantics` is one of four values —
+  each group with its own adapter and warns that "endpoint levels and weight conventions
+  are not commensurable" (the program emits this warning in Chinese; quoted here is its
+  translation), instead of adding both directly onto the same edge.
+- **Weight conventions are not commensurable**: `weight_semantics` is one of four values —
   `support_over_declared_samples` (denominator = the number of samples **declared by the
   tool itself**, e.g. ALE's `N reconciled`, RANGER-DTLx/ARTra's
   `Total number of optimal solutions: N`), `support_over_replicate_blocks` (for
-  RANGER-DTLx / ARTra it is valid only when all blocks share an identical leaf set, i.e.
-  genuine repeated reconciliations of the same family; ecceTERA does not check the leaf
-  sets, see `eccetera.en.md` §2), `integer_count` (denominator cannot be established → the
-  weight is an **integer
-  count**, in which case the `min_support` threshold **has no [0,1] support semantics**),
+  RANGER-DTLx / ARTra it is valid only when there is more than one block and all blocks
+  share an identical leaf set, i.e. genuine repeated reconciliations of the same family;
+  ALE falls back to the number of reconciliation trees parsed from the file when it
+  declares no sample count, see `ale.en.md` §3; ecceTERA does not check the leaf sets,
+  see `eccetera.en.md` §2),
+  `integer_count` (denominator cannot be established → the weight is an **integer count**,
+  in which case the `min_support` threshold **has no [0,1] support semantics**),
   and `posterior_frequency` (AleRax pre-aggregates upstream; this package no longer
   normalizes).
   ⚠️ **"Number of reconciliation blocks" is not the number of samples**: RANGER-DTLx /
   ARTra print a block header per input **gene tree**, and ARTra even prints
-  `Total number of optimal solutions: 24` while outputting only 1 solution — the old
-  "block count = support denominator" assumption was therefore wrong. The implementation
-  now prefers the sample count declared by the tool, and honestly labels the weight as
-  `integer_count` when it cannot be detected.
-- **Unified metadata**: every constraint carries `metadata = {family, support, distance}`,
-  where `distance` is the species tree topological distance used for
-  `--min-transfer-distance` filtering. **Self-loop exception**: events with
+  `Total number of optimal solutions: 24` while outputting only 1 solution. The block count
+  therefore **must not** be used as the support denominator: the adapter prefers the sample
+  count declared by the tool, and honestly labels the weight as `integer_count` when it
+  cannot be detected.
+- **Unified metadata**: every constraint's `metadata` carries at least the four universal
+  keys `family`, `support`, `distance` and `weight_semantics` — `distance` is the species
+  tree topological distance used for `--min-transfer-distance` filtering, and
+  `weight_semantics` records the weight convention of the constraint (values listed in
+  [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md)
+  §2). On top of these, RANGER-DTLx / ARTra / ecceTERA / ALE additionally attach
+  `sample_denominator` (the sampling denominator; AleRax omits this key because its
+  `posterior_frequency` convention has no denominator), and ALE additionally attaches
+  `source` (`"rec"`/`"trf"`). **Self-loop exception**: events with
   `donor == receptor` are written with `distance = None` (no distance information) in
   **all five** adapters (RANGER-DTLx / ecceTERA / ARTra / AleRax / ALE), so they pass the
   "constraints without a distance column are always kept" rule and the `to itself`
   statistic is no longer swallowed by `--d`; the text-input path has always behaved this
   way. ALE was the last to be aligned; see the regression test
-  `tests/test_ale_selfloop.py`, and [ale.en.md](ale.en.md) plus §3.2.3 of
-  `docs/manual/en/03_cli_reference.md` for symptoms and measurements.
+  `tests/test_ale_selfloop.py`, and [ale.en.md](ale.en.md) plus
+  [§3.2.3](../manual/en/03_cli_reference.md) for symptoms and measurements.
 
 ## 2. Supported Tools at a Glance
 
@@ -178,7 +191,7 @@ compatibility).
 3. **Content sniffing** (on **decompressed** text, scanned in chunks of 65,536
    **characters** up to 4,194,304 characters in total, keeping the last 64 characters of
    the previous chunk as overlap; these upstream outputs are ASCII, so character counts
-   equal byte counts): contains `<recPhylo`/`<recGeneTree` → eccetera;
+   equal byte counts): contains `<recPhylo` / `<recGeneTree` / `recPhyloXML` → eccetera;
    contains `T@` and `reconciled`/`D@` → ale; contains `Recipient` and `-->` plus
    `Replacing/Additive Transfer` → artra; contains only `Recipient` and `-->` → ranger;
 4. No match → `None` (treated as generic text constraints and parsed by the native path).
@@ -200,12 +213,15 @@ def convert_mytool(species_tree, inputs, **kwargs):
     return cset
 
 REGISTRY.register(AdapterEntry(
-    "mytool", convert_mytool, "My reconciliation tool", "*.myrec files"))
+    "mytool", convert_mytool, "我的调和工具", "*.myrec 文件"))
 ```
 
-Note: the content-sniffing rules for auto-detection are built into `detect_format`; if a
-custom tool needs auto-detection, decide in the application layer first and then dispatch
-explicitly with `registry.convert("mytool", ...)`.
+Note: the `description` / `input_desc` literals in the example are Chinese, exactly as in
+the built-in registrations of `registry` (they are not translated; they read "my
+reconciliation tool" and "*.myrec files"). The content-sniffing
+rules for auto-detection are built into `detect_format`; if a custom tool needs
+auto-detection, decide in the application layer first and then dispatch explicitly with
+`registry.convert("mytool", ...)`.
 
 ## 7. Known Limitations (General)
 

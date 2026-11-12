@@ -65,8 +65,8 @@ donor,receptor,weight     # 错误！会被拒绝并报错
 ```
 
 因为逗号格式**首列一律丢弃**，三列逗号会把 `donor` 当 family 丢掉，导致 donor/receptor
-错位、权重丢失。解析器检测到三列逗号会抛 `ValueError`（退出码 4）。若你本意是空格格式，
-请改用空格分隔。
+错位、权重丢失。解析器对**任何少于 4 列的逗号输入**一律拒绝——2 列与 3 列都抛 `ValueError`
+（退出码 4）。若你本意是空格格式，请改用空格分隔。
 
 ### 5.2.4 注释、特殊行与取值校验
 
@@ -74,7 +74,8 @@ donor,receptor,weight     # 错误！会被拒绝并报错
   `#` 前须为空白或位于行首，以免切断含 `#` 的类群名）；
 - **首字段**为 `FRQ` 的行被跳过（兼容 ALE 汇总行）；
 - **权重与距离必须为有限实数、权重必须 ≥ 0**：`nan` / `inf` / 负权重在**解析层**即被
-  拒绝，错误信息含**文件名与行号**，非法值不会一路带进目标函数。
+  拒绝，错误信息含**文件名与行号**，非法值不会一路带进目标函数——**本版**在解析层就拦下，
+  **原版**则会把它们直接带进目标函数。
   数值列只接受十进制实数，不接受 `-` / `NA` / 空串。
 - 同样透明支持 `.gz` / gzip 流与归档输入（见 5.7）。
 
@@ -89,7 +90,7 @@ AleRax / ALE 都不会给出这样的 0**：自环一律写 `distance = None`（
 这是 5.2.4“数值列不接受空串”的唯一例外，且仅适用于距离列。
 文本输入一直是这个行为——3 列空格 / 4 列逗号没有距离列，自环自然保留；只有你**自己**在第 4 列
 （或逗号第 5 列）显式写 `0.0` 时它才会被删，此时 stdout 会打一条
-`NOTE: 上述丢弃中有 N 条是**自环约束**…` 说明 `to itself` 少算了什么。
+`NOTE: 上述丢弃中有 N 条是**自环约束**…` 说明 `to itself` 少算了什么（见 03 章 3.2.3）。
 
 ## 5.3 输出：文件产物
 
@@ -127,7 +128,8 @@ AleRax / ALE 都不会给出这样的 0**：自环一律写 `distance = None`（
 逐行复刻原版 `MaxTiC.py` 的 print 顺序与措辞（完整实例见
 [02 章 2.3](02_quickstart.md)）：内部节点数、约束总权重、uninformative 分项与占比、
 trivially conflicting 占比、input/greedy/mixing 三种排序的 value 与百分比、best order 标识、
-排序树 Newick、与输入树的 Kendall 相似度。
+排序树 Newick、与输入树的 Kendall 相似度，另有一行“与最优树一致却与输入树冲突”的占比
+与一行重复的相似度。
 
 随选项追加的行：
 
@@ -136,7 +138,7 @@ trivially conflicting 占比、input/greedy/mixing 三种排序的 value 与百�
 | `--ls > 0` | `attempting a local search …` 提示行；摘要中 `best order is the …` 之后补 `after local search X rejected` 与 `best found solution Y (%)` 两行（使 stdout 不与交付树矛盾） |
 | `--rd N > 0` | 4 行：随机序 value 区间、value 的 p 值、随机序 similarity 区间、similarity 的 p 值；p 值用 **(k+1)/(n+1)** 校正且检验**最终交付序** |
 | `--mcmc` | 5 行 `[MCMC]`：状态声明、口径声明、有效温度与 burn-in/thin、样本统计、收敛诊断 |
-| 总是（按需） | 摘要**末尾**追加 `NOTE:` / `WARNING:` / `ERROR:` 运行期口径声明与告警（谱系硬约束计入、空约束集、`--d` 被忽略、`--ls` 不可跨机器复现、自环被距离过滤删掉等） |
+| 视情况追加 | 摘要**末尾**追加 `NOTE:` / `WARNING:` / `ERROR:` 运行期口径声明与告警（谱系硬约束计入、空约束集、`--d` 被忽略、`--ls` 不可跨机器复现、自环被距离过滤删掉等）；唯一例外：叶子端点的 `WARNING:` 紧跟 `uninformative` 行 |
 | 被**取消**（API/GUI `stop_check`） | `NOTE: 本次运行按请求**取消**：局部搜索在第 N 次迭代边界停止（计划的搜索时长为 T 秒，未跑满）……`，交付的是截至取消点的历史最优序（见 08 章 8.9） |
 
 百分比口径（本版与原版已裁定的偏离）：
@@ -171,7 +173,7 @@ trivially conflicting 占比、input/greedy/mixing 三种排序的 value 与百�
 
 ## 5.7 压缩输入：`.gz` / gzip 流与 tar 归档（透明解压）
 
-上游工具的示例与结果**大多以压缩形式分发**（MaxTiC 的 `examples/reconciliations.tgz`、
+上游工具的示例与结果**大多以压缩形式分发**（原版 MaxTiC 自带的 `examples/reconciliations.tgz`、
 ALE/Ranger/AleRax 输出常被打包成 `.tar.gz`，单文件示例常见 `xxx.gz`）。
 `io/compression.py` 是全项目**唯一**的文本输入读取底层，因此**不需要先手工解压**。
 它同时按**内容魔数**和**扩展名**判定，避免“只看扩展名”和“只看魔数”各自的失效场景：
@@ -181,7 +183,7 @@ ALE/Ranger/AleRax 输出常被打包成 `.tar.gz`，单文件示例常见 `xxx.g
 | `x.gz` / 任何首两字节为 `1f 8b` 的文件 | gzip 魔数（RFC 1952） | 透明解压为文本。**无扩展名也能读** |
 | 扩展名是 `.gz` 但内容**不是** gzip | 魔数不匹配 | 按**纯文本**读取（误命名的未压缩文件仍然可用，不再抛 `BadGzipFile`） |
 | 恰好**一个**文件成员的 `.tar.gz` / `.tgz` / `.tar`（含被改名的） | `ustar` 魔数（偏移 257）+ `tarfile` | 透明取出该成员内容，等同普通文本文件 |
-| **多个**文件成员的 tar 归档 | 同上 | **不**自动拼接：抛 `CompressedArchiveError`（`ValueError` 子类，CLI 退出码 4），消息里给出成员数、前若干成员名与**可直接执行**的 `tar -xzf 归档 -C 目录` / `tar -xzOf 归档 成员 > 文件` 命令 |
+| **多个**文件成员的 tar 归档 | 同上 | **不**自动拼接：抛 `CompressedArchiveError`（`ValueError` 子类，CLI 退出码 4），消息里给出成员数、前 12 个成员名与**可直接执行**的 `tar -xzf 归档 -C 目录` / `tar -xzOf 归档 成员 > 文件` 命令 |
 
 ### 5.7.1 哪些入口真的吃得到
 
@@ -199,11 +201,13 @@ ALE/Ranger/AleRax 输出常被打包成 `.tar.gz`，单文件示例常见 `xxx.g
   统计的口径。
 - **归档输入（`CONSTRAINTS` 位置参数 / `api.rank` 的约束列表）**：`api.rank` 会先把
   `.tgz` / `.tar.gz` / `.tar` **安全解压**到进程临时目录，再把**成员当作输入**，
-  所以多成员归档（例如 ALE 官方 `examples/reconciliations.tgz`，内含上千个 `*.uml_rec`）
+  所以多成员归档（例如原版 MaxTiC 自带的 `examples/reconciliations.tgz`，内含上千个 `*.uml_rec`）
   在约束位置参数上**可以直接喂**；此时 stderr 打一条 `NOTE: 输入 … 是 tar 归档，已自动展开为
   N 项输入（解包于 …）`，映射关系记入 `run_metadata["archives_expanded"]`
-  （成员活在临时目录里，必须可追溯）。AleRax 的输出树归档按目录约定解出**根目录**。
-  解压有安全边界：只解常规文件，绝对路径 / 含 `..` / 链接与设备成员一律跳过。
+  （成员活在临时目录里，必须可追溯）。输出树归档**只有**在 `--from alerax` / `--from auto`
+  **且**成员路径里含 `reconciliations/summaries` 时，才按目录约定解出**根目录**交给 AleRax
+  适配器；其余情形一律逐个成员展开——所以 `--from ale` 喂 AleRax 的树归档不会走这条分支。
+  解压有安全边界：只解常规文件，绝对路径 / 含 `..` / 链接、设备与 FIFO 成员一律跳过。
 
 > **不要高估它**：拼接多成员归档为**一个**文本输入永远不做——归档内每个成员是一份独立的
 > 上游输出，拼在一起会被当成一个基因家族，从而按 `--ale-min-family-size` /

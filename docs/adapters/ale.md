@@ -1,5 +1,7 @@
 # ALE 适配器规格说明书
 
+> 🌐 English version: [ale.en.md](ale.en.md)
+
 - **工具**：ALE_undated（AmalgamatedLikelihoodEstimation），上游独立项目。
 - **适配器**：`maxtic_next.constraints.adapters.ale`（`ALEAdapter` / `convert_from_ale`）。
 - **工具名（注册表 / CLI）**：`ale`（`--from ale`，向后兼容 `--from-ale`）。
@@ -17,11 +19,16 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
 <空行>
 (gene_tree_1 with NHX-style event annotations);
 (gene_tree_2 ...);
-...（共 N 棵采样调和树）
+...
 ```
 
-内部节点事件标注带**前导点**（ALE_undated 恒输出 `.`+物种串），解析按
-`.` 分隔事件，如 `.59.T@61->62`、`.65`。事件类型：
+首行是**采样数声明行**：上游 ALE_undated 实际打印 `<N> reconciled G-s:`，精简样本
+（如 `tests/data/ale_example/rec.uml_rec`）只有 `<N> reconciled`——适配器判定**只看第二个
+token 是否恰为 `reconciled`**（`ale.py:261-262`），声明行其余部分不参与判定，故两种形态
+都能识别。声明行与首棵调和树之间恒隔一行（该行不参与解析：上游输出里是空行，
+本仓库样本中是家族名）。
+内部节点事件标注带**前导点**（ALE_undated 恒输出 `.`+物种串），解析按 `.` 分隔事件，
+如 `.59.T@61->62`、`.65`。事件类型：
 
 - `T@donor->receptor`：一次转移（donor 供体物种、receptor 受体物种）；
 - `D@species`：重复；
@@ -40,10 +47,11 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
   受体取该节点自身映射物种（或经子节点方向匹配 + `receptor_search` 递归收集，`D@`
   节点递归合并两子树受体），donor 取 `donnor_search` 上溯结果。纯物种形成/重复节点
   不产生 rec 约束。
-- **⚠️ `rec` 与 `trf` 不等价**：两者产出的约束集在**规模与权重量级上都不同**（官方示例规模
-  下边数与总权重相差数倍），切换 `--ale-source` 等于**换掉整个输入约束集**，所有下游数字随之
-  改变。需要复现以 `rec` 为默认的旧结果时，请显式 `--ale-source rec`。实际生效口径会打印到
-  stderr，并记入 `Result.run_metadata["adapter_diagnostics"]`。
+- **⚠️ `rec` 与 `trf` 不等价**：两者产出的约束集在**条数与权重上都不相同**（官方示例规模下
+  `rec` 只有 13,995 条、总权重 5482.98，`trf` 总权重 6438.6），切换 `--ale-source`
+  等于**换掉整个输入约束集**，所有下游数字随之改变。需要复现以 `rec` 为默认的旧结果时，
+  请显式 `--ale-source rec`。实际生效口径会打印到 stderr，并记入
+  `Result.run_metadata["adapter_diagnostics"]`。
 - **端点合法性（忠实原版的宽松语义）**：受体不得为现存物种（叶子）；donor 需可在
   物种树中解析出父节点。注意 ALE 与其余四个适配器（双端点均须 ∈ 物种树标签集）
   的校验强度不同——这是对原版逐行保真的结果；混用多工具输出时建议保证上游物种
@@ -53,7 +61,7 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
   **0** 时**不抛** `LabelMismatchError`，只向 stderr 打印一行错误级提示；其余四个适配器命中率为
   0 直接抛错。经 registry / CLI 传入的 `min_endpoint_hit_rate` 会被按签名丢弃，并记入
   `diagnostics["adapter_params_not_applicable"]`。
-- **供体端点层级（与其余四个适配器相差一代）**：本适配器记
+- **供体端点层级（与其余四个适配器相差一个物种层级）**：本适配器记
   `donor_endpoint_convention = "parent_of_donor"`（取 `parent(donor)`），而
   RANGER-DTLx / ARTra / ecceTERA / AleRax 记 `"donor_itself"`（取 `Mapping -->` 的供体本身 /
   父 clade 的 `branchingOut speciesLocation` 等）。同一转移事件在两套口径下的端点**相差一个物种层级**，
@@ -67,7 +75,8 @@ ALE_undated 对每个基因家族产出 `<family>.ale.uml_rec` 采样调和文�
   （`weight_semantics = support_over_declared_samples`）→ ② 无声明值时退为本文件**实际解析到
   的调和树数 `trees_seen`**（`support_over_replicate_blocks`，并告警）→ ③ 两者皆拿不到时为
   `integer_count`：权重按**整数计数**输出，此时 `min_support` **不具 [0,1] 支持度语义**
-  （阈值退化为“至少出现一次”），诊断里 `min_support_is_fractional = False` 并在 stderr 告警；
+  （阈值退化为“至少出现一次”），`diagnostics["min_support_is_fractional"] = False`
+  并在 stderr 告警；
 - `support = 计数 / N`，仅保留 `support > min_support`（默认 0.05）；
 - `distance = distance_from(receptor, donor)`：物种树拓扑距离（枝长视为 1）；**自环
   `donor == receptor` 例外**：写 `distance = None`（无距离信息），不被
@@ -110,5 +119,18 @@ print(cset.diagnostics["donor_endpoint_convention"])  # 'parent_of_donor'
 
 ## 7. 样本
 
-`tests/data/ale_example/rec.uml_rec` + `species.tree`。回归测试见
-`tests/test_ale_adapter.py` / `tests/test_ale_parallel.py`。
+- `tests/data/ale_example/rec_real.uml_rec` + `species.tree`：带前导点的**真实上游输出**
+  （首行 `1 reconciled G-s:`，事件标注 `.59.T@61->62` / `.65`），与 §1 描述的格式一致；
+- `tests/data/ale_example/rec.uml_rec` + `species.tree`：精简样本（首行 `1 reconciled`，
+  事件标注 `59.T@61->62` / `X65`，无前导点）。
+
+两种声明行形态（`rec_real.uml_rec` 的 `<N> reconciled G-s:` 与 `rec.uml_rec` 的
+`<N> reconciled`）适配器都能解析；实测两个样本对同一 `species.tree` 产出的约束
+`(donor, receptor, weight)` 多重集**逐条一致**——`--ale-source rec` 下均为一条
+`65 -> 59, w = 1.0`，`--ale-source trf` 下均为一条 `65 -> 62, w = 1.0`（两样本还同时存在
+§1 所述的前导点标注差异，该项同样不改变结果）；唯一区别是 `metadata["family"]`
+取自文件名（`rec_real` / `rec`）。回归测试**分别**断言两个样本在两种 source 下的期望约束
+对：`tests/test_ale_adapter.py::test_convert_endpoints_exist_in_species_tree` 与
+`test_convert_transfer_source_produces_65_62` 用 `rec.uml_rec`，
+`test_real_format_sample_end_to_end` 用 `rec_real.uml_rec`；测试并**没有**把两个样本互相
+比对。`tests/test_ale_parallel.py` 比对的是**同一文件**顺序执行与并行执行的结果一致性。

@@ -61,7 +61,9 @@ The example above → constraint `61 -> 62`.
 ## 3. Support / Weight / Distance
 
 Same as RANGER-DTLx: per-block counting → reciprocal subtraction →
-`support = count / denominator` (see the ruling in §2) → keep `> min_support`; the donor endpoint is
+`support = count / denominator` (denominator = the number of samples, i.e. the tool's
+declared value, or the block count when none is declared; see the three-level ruling in §2)
+→ keep `> min_support`; the donor endpoint is
 the **donor itself** of `branchingOut speciesLocation` (`donor_itself`), one species
 level away from ALE's `parent_of_donor`.
 `distance = distance_from(receptor, donor)`; **self-loop exception**: when
@@ -72,19 +74,19 @@ constraint is not removed by `--min-transfer-distance`.
 
 | Situation | Handling |
 |-----------|----------|
-| Contains `<!DOCTYPE>` / `<!ENTITY>` | **Parsing refused** (guards against entity expansion / XXE; stdlib suffices, no defusedxml needed) |
+| `<!DOCTYPE>` / `<!ENTITY>` appears at the **start of the document** (within the **first 512 characters** after leading whitespace is stripped) | **Parsing refused** (guards against entity expansion / XXE; stdlib suffices, no defusedxml needed); identically named declarations outside that window are not caught by this guard and still go through the XML parsing path |
 | XML parse error (**adapter path**, `_process_eccetera_worker`) | **Raises `UpstreamParseError`**, whose message carries the **file name, line/column and the original exception** — "corrupt file" and "the tool detected no transfers" are henceforth distinguishable, never a silent empty result |
 | XML parse error (**legacy pure function** `parse_recphyloxml`, default `strict=False`) | Keeps the old behavior: returns the empty triple `({}, 0, 0)`, but prints a **loud warning** to stderr containing the file and the line/column; with `strict=True` it raises `UpstreamParseError` too |
 | donor / receptor cannot be resolved into the species tree (purely numeric IDs are resolved back first, see §5) | The transfer is dropped and counted in `dropped_by_label_miss` |
 | Family size `<= min_family_size` | Skipped |
-| Family size **probe failed** (not a single `<leaf>` found) | The `min_family_size` filter is **skipped** with a warning (all transfers are not wiped out) |
+| Family size **probe failed** (not a single `<leaf>` found) | The `min_family_size` filter is **skipped** with a warning (instead of wiping out all transfers) |
 
 ## 5. Known Limitations (Important)
 
 - ecceTERA labels **internal species nodes** in recPhyloXML with their **own numeric node
   IDs** (leaves use names, `DTLGraph.cpp:2818-2821`). The numbering scheme, verified against
   `MySpeciesTree.cpp:112-136`, takes the sorted leaves as `0..L-1` first and then numbers
-  the remaining generations **bottom-up, level by level (breadth-first)**. These IDs
+  the remaining internal nodes **bottom-up, level by level (breadth-first)**. These IDs
   **need not match** the species tree bootstrap labels that the user passes into MaxTiC.
 - **Numeric ID resolution**: an endpoint is first matched directly against the species tree
   labels (leaf names + internal bootstrap labels); if that fails and the endpoint is
@@ -100,6 +102,10 @@ constraint is not removed by `--min-transfer-distance`.
   or rely only on leaf–leaf / label-consistent transfers.
 - ecceTERA can also emit Sylvx / `.mr` formats; this adapter supports only standard
   recPhyloXML.
+- This section is a summary: the **complete semantics** of the endpoint levels, weight
+  conventions and the diagnostics counters are governed by the normative semantic notes
+  [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) /
+  [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md).
 
 ## 6. Usage
 

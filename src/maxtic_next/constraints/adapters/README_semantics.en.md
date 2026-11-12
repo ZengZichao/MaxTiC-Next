@@ -1,4 +1,4 @@
-# Adapter Semantics (Donor Endpoint Hierarchy / Weight Semantics / Observability)
+# Adapter Semantics (Donor Endpoint Hierarchy / Weight Convention / Observability)
 
 > 🌐 中文版：[README_semantics.md](README_semantics.md)
 
@@ -33,38 +33,41 @@ that tool's official output) and only records the convention **in the diagnostic
 When merging the two conventions, `registry.merge_constraint_sets(sets)` and
 `registry.convert_auto(..., allow_mixed=True)`:
 
-* print a warning to stderr that "the constraint sets being merged come from
-  **different donor endpoint level conventions**";
+* print a warning to stderr stating that the constraint sets being merged come from
+  **different donor endpoint level conventions** (translation of the warning the program
+  emits in Chinese: "待合并的约束集来自**不同的供体端点层级约定**");
 * set `ConstraintSet.diagnostics["convention_conflict"] = ["donor_itself",
   "parent_of_donor"]` (likewise, `semantics_conflict` is recorded when the weight
-  semantics are incommensurable).
+  conventions are incommensurable).
 
 As a result, mixing ALE and RANGER-DTLx-family output under `--from-auto` no longer
-silently adds endpoints from two generations into the same edge — it says so.
+silently adds endpoints taken from two different species levels into the same edge —
+it says so.
 
-## 2. Weight Semantics: the Block Count Is Not the Sampling Denominator
+## 2. Weight Convention: the Block Count Is Not the Sampling Denominator
 
-`diagnostics["weight_semantics"]` takes one of the following four values, and is
-returned together with each constraint's `metadata["weight_semantics"]`:
+`diagnostics["weight_semantics"]` takes one of the following four values (or
+`mixed:a+b` when sets with several conventions are merged), and is returned together
+with each constraint's `metadata["weight_semantics"]`:
 
-| Semantics | Meaning | When used |
+| Convention | Meaning | When used |
 |---|---|---|
 | `support_over_declared_samples` | `count / N`, where N is the sample count **declared by the tool itself** | ALE's `<N> reconciled`; RANGER-DTLx/ARTra's `Total number of optimal solutions: N` (`DTL-algorithm.h:1785/:2224`, `output.txt:206`) |
-| `support_over_replicate_blocks` | `count / number of blocks` | No declared value, and more than one block whose leaf sets are exactly identical (genuine replicate reconciliations of the same family); a warning is attached. **This leaf-set check exists only in the RANGER-DTLx / ARTra shared core (`_recon_report._leaf_sets_consistent`)**; ecceTERA does not check leaf sets and uses the block count as the denominator whenever the number of blocks is greater than 0 (see `docs/adapters/eccetera.en.md` §2) |
-| `integer_count` | **Integer counts**, not [0,1] support values | No declared value and the block count is not trustworthy (blocks with different leaf sets = multiple distinct gene trees, or only a single block), or neither a sample count nor a usable block count can be obtained at all |
-| `posterior_frequency` | Posterior frequencies pre-aggregated upstream | AleRax's two generations of summary files, `*_transfers.txt` / `*_meanTransfers.txt` (`alerax._TRANSFER_SUFFIXES`; no longer divided by any denominator) |
+| `support_over_replicate_blocks` | `count / number of blocks` | **ALE**: when there is no `<N reconciled>` header line, the number of reconciliations actually parsed in this file is used as the denominator (`ale.py:640-651`, see `docs/adapters/ale.en.md` §3); **RANGER-DTLx / ARTra**: no declared value, and more than one block whose leaf sets are exactly identical (genuine replicate reconciliations of the same family); a warning is attached. **This leaf-set check exists only in the RANGER-DTLx / ARTra shared core (`_recon_report._leaf_sets_consistent`)**; ecceTERA does not check leaf sets and, when there is no declared value, uses the block count as the denominator whenever the number of blocks is greater than 0 (see `docs/adapters/eccetera.en.md` §2) |
+| `integer_count` | **Integer counts**, not [0,1] support values | No declared value and the block count is not trustworthy (blocks with different leaf sets = multiple distinct gene trees, or only a single block), or neither a sample count nor a block count can be obtained at all |
+| `posterior_frequency` | Posterior frequencies pre-aggregated upstream | both versions of AleRax's summary files, `*_transfers.txt` / `*_meanTransfers.txt` (`alerax._TRANSFER_SUFFIXES`; no longer divided by any denominator) |
 
 Key points:
 
 1. **Real ARTra output** prints only 1 optimal solution yet declares
    `Total number of optimal solutions: 24` ⇒ the denominator is 24. The old
    implementation normalized by "number of blocks = 1", so all weights became `1.0`
-   and thresholds such as `--min-support 0.95` became no-ops.
-2. Under `integer_count` semantics, `min_support` is still compared against the
+   and thresholds such as `--ale-min-support 0.95` became no-ops.
+2. Under the `integer_count` convention, `min_support` is still compared against the
    **same numeric values** (it does not pretend to pass), but the `[0,1]` semantics no
    longer hold: `diagnostics["min_support_is_fractional"] = False`, with an explicit
    warning on stderr.
-3. Weights under different semantics **must not be added or compared**: ALE's 0.3 and
+3. Weights under different conventions **must not be added or compared**: ALE's 0.3 and
    ARTra's count of 3 are not the same thing.
 
 ## 3. Drops Must Be Visible
@@ -77,6 +80,7 @@ tool, donor_endpoint_convention, weight_semantics, sample_denominator,
 files_seen, blocks_seen, trees_seen, transfers_seen, transfers_resolved,
 transfers_unpaired, numeric_id_resolutions, constraints_kept, edges_kept,
 dropped_by_label_miss, dropped_by_support, dropped_by_family_size,
+dropped_by_family_size_probe_failed, malformed_lines, families_skipped,
 self_loop_transfers, family_size_probe_ok, endpoint_hit_rate,
 unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 ```
@@ -84,14 +88,14 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 and prints a one-line stderr summary. The line below is the program's **literal**
 output: `_diagnostics.summary_line()` always uses the Chinese labels shown, regardless
 of the locale, so it is reproduced verbatim rather than translated (English gloss:
-"[artra] donor endpoint convention=donor_itself, weight semantics=
+"[artra] donor endpoint convention=donor_itself, weight convention=
 support_over_declared_samples, denominator=24, endpoint hit rate=100.0% | files=1
-blocks=1 transfers=13 kept=13 dropped[label mismatch=0, support=0, family size=0,
+blocks=1 transfers=13 kept=0 dropped[label mismatch=0, support=13, family size=0,
 family-size probe failed=0, self-loop=0]"):
 
 ```
 [artra] donor 端点约定=donor_itself 权重口径=support_over_declared_samples 分母=24
-端点命中率=100.0% | 文件=1 块=1 转移=13 保留=13 丢弃[标签不匹配=0, 支持度=0,
+端点命中率=100.0% | 文件=1 块=1 转移=13 保留=0 丢弃[标签不匹配=0, 支持度=13,
 家族规模=0, 家族规模探测失败=0, 自环=0]
 ```
 
@@ -136,8 +140,10 @@ Three hard rules:
   without_distance_column, self_loops_dropped, ignored}`, where `ignored=True` means
   "threshold > 0 but not a single constraint was removed". Callers
   (`ranking/ranker.py`, `dry_run.py`) must report at **error level** that "this option
-  was ignored for the current input", rather than claiming the opposite, that "all
-  constraints will be dropped".
+  was ignored for the current input" when **no constraint carries a distance column**
+  (if the input does have distance columns and simply none of them falls below the
+  threshold, the message is warning level, "not a single constraint was removed"),
+  rather than claiming the opposite, that "all constraints will be dropped".
 * Self-loops (donor == receptor, "donor = receptor lineage") are counted in
   `self_loop_transfers` and no longer vanish from the statistics; the text path is
   handled by the original `ranker`'s "to itself" branch.
@@ -154,18 +160,18 @@ Consequently, when `--ale-cache-dir` reuses a directory across two trees with th
 label set but different parent-child relations, it will no longer hit donors from the
 old topology (ground truth without cache: `E`; stale cache hit: `F`).
 
-## 6. ALE Default Semantics = `trf`
+## 6. ALE Default Convention = `trf`
 
 The `source` of `ALEAdapter` / `convert_from_ale` defaults to **`"trf"`**: the MaxTiC
 integration in the official ALE repository itself
-(the ``maxtic/README.md:131-169`` inside the ALE source package) specifies that the input
+(the `maxtic/README.md:131-169` inside the ALE source package) specifies that the input
 `constraints_from_transfers` is produced from **transfer events** (donor = the parent
 of the donor). Measurements confirm that this path matches the official output
 constraint-by-constraint (identical edge keys and identical weights), whereas
 `"rec"` yields only 13,995 constraints with a total weight of 5482.98 vs 6438.6 —
 the default changes the entire constraint set. `"rec"` remains fully available as an
 option. When `convert()` finishes, it prints one line to stderr stating which
-semantics produced the output, along with the edge count and the total weight.
+convention produced the output, along with the edge count and the total weight.
 
 > The upper-layer wiring is already in sync: the `ale_source` parameter of `api.py`
 > defaults to `"trf"`, and `--ale-source` in `cli.py` uses `default="trf"`

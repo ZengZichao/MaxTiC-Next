@@ -3,8 +3,8 @@
 > 🌐 中文版：[README.md](README.md)
 
 `run_benchmark.py` is an ad-hoc benchmark script from 2026-09, retained for
-historical comparison only. It uses paths relative to `examples/`, so it must be
-run from the repository root; temporary directories are cleaned up via `atexit`.
+historical comparison only. It uses relative `examples/` paths, so it must be
+run from the repository root; the temporary directory is cleaned up via `atexit`.
 
 The maintained benchmark entry point is:
 

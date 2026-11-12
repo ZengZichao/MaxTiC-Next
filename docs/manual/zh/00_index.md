@@ -18,7 +18,7 @@
 | **物种树（species tree）** | 有根 Newick 树，**内部节点标签写在 bootstrap 字段**（如 `...)61:2,...`，`61` 是标签） |
 | **约束（constraint）** | 有向加权边 `donor → receptor`，含义为“donor 不晚于 receptor” |
 | **供体 / 受体（donor / receptor）** | 转移的来源分支 / 目标分支所对应的物种树节点 |
-| **权重（weight）** | 约束的置信度分数（如采样支持度、后验频率） |
+| **权重（weight）** | 约束的支持度分数，作为目标函数的累计权重求和（如采样支持度、整数计数；见 03 章 3.2.2）——非置信度分数 |
 | **MTC（最大时间一致性）** | Maximum Time Consistency：最大化不冲突约束权重 |
 | **FAS（反馈弧集）** | Feedback Arc Set，被违反的约束集合；MTC 等价于最小化 FAS 权重 |
 | **信息性约束（informative）** | 既非树内祖先-后代关系、也非平凡环、端点均为内部节点的约束 |
@@ -58,7 +58,7 @@ MaxTiC-Next/                  # 仓库根（https://github.com/ZengZichao/MaxTiC
 │   ├── constraints/           # 约束数据结构、双格式解析、5 适配器
 │   │   └── adapters/          # ale/ranger_dtl/eccetera/artra/alerax + registry
 │   ├── ranking/               # 三启发式 + 主类 Ranker
-│   ├── robustness/            # 稳健性摘要 + MCMC
+│   ├── robustness/            # 稳健性/敏感性摘要 + MCMC
 │   ├── io/  report/           # 三文件输出 / HTML 报告
 │   └── benchmarks/            # 基准套件
 ├── docs/                      # 本手册与适配规格（桌面端说明在 Studio 仓库）
@@ -69,7 +69,7 @@ MaxTiC-Next/                  # 仓库根（https://github.com/ZengZichao/MaxTiC
 └── pyproject.toml
 ```
 
-## 0.6 命名约定（三层）
+## 0.6 命名约定（四层）
 
 | 层级 | 取值 |
 |------|------|

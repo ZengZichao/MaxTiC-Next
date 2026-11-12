@@ -1,9 +1,13 @@
 # MaxTiC-Next 多软件兼容适配框架
 
+> 🌐 English version: [README.en.md](README.en.md)
+
 > 本目录是**统一约束适配框架**的规格与 API 文档。它把 5 个上游调和 / 转移推断工具的
 > 输出统一转换为 MaxTiC-Next 的内部约束模型 `ConstraintSet`，并提供**插件式注册**与
 > **输出格式自动检测**。每个工具的详细适配规格见对应 `docs/adapters/<tool>.md`（文件名即
-> 工具名，唯一例外是 `--from ranger`，对应 `docs/adapters/ranger_dtlx.md`）。
+> 工具名，唯一例外是 `--from ranger`，对应 `docs/adapters/ranger_dtlx.md`）。供体端点层级、
+> 权重口径、可观测性等**完整语义注记**以
+> [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) 为准。
 
 ## 1. 为什么需要适配框架
 
@@ -17,7 +21,8 @@ receptor”）。但上游工具输出格式各异——从 NHX 风格的 `.uml_
 - **语义映射而非正则套用**：每个适配器都基于对该工具**真实输出格式的源码 / 样本求证**
   实现，而不是猜测格式。
 - **端点合法性校验**：所有 donor / receptor 必须存在于物种树标签集合（叶子名 + 内部
-  bootstrap 标签）；不匹配的端点被丢弃，**绝不静默产出错误约束**。
+  bootstrap 标签）；不匹配的端点被丢弃，**绝不静默产出错误约束**（ALE 口径不同，
+  见 `ale.md` §2）。
 - **丢弃必须可见**：每一条被丢弃的转移都**按原因计数**，转换结束后向
   **stderr** 打印一行诊断摘要，并把同一份字典挂在 `ConstraintSet.diagnostics`（Python API 侧即
   `result.run_metadata["adapter_diagnostics"]`）。端点命中率为 **0** 直接抛
@@ -31,15 +36,21 @@ receptor”）。但上游工具输出格式各异——从 NHX 风格的 `.uml_
 - **权重口径不可通约**：`weight_semantics` 四取之一——
   `support_over_declared_samples`（分母 = 工具**自己声明**的样本数，如 ALE 的 `N reconciled`、
   RANGER-DTLx/ARTra 的 `Total number of optimal solutions: N`）、`support_over_replicate_blocks`
-  （RANGER-DTLx / ARTra 仅当各块叶子集合一致、确为同一家族重复调和时才成立；
-  ecceTERA 不校验叶子集合，见 `eccetera.md` §2）、`integer_count`（分母不可确立 →
+  （RANGER-DTLx / ARTra 仅当块数 > 1 且各块叶子集合一致、确为同一家族重复调和时才成立；
+  ALE 无声明头行时取本文件解析到的调和树数，见 `ale.md` §3；ecceTERA 不校验叶子集合，见
+  `eccetera.md` §2）、`integer_count`（分母不可确立 →
   权重是**整数计数**，此时 `min_support` 阈值**不具 [0,1] 支持度语义**）、
   `posterior_frequency`（AleRax 上游已预聚合，本包不再归一化）。
   ⚠️ **“调和块数”不是采样数**：RANGER-DTLx / ARTra 的块头按输入**基因树**逐棵打印，ARTra
   还会打印 `Total number of optimal solutions: 24` 而只输出 1 个解。因此**不能**把“块数”当作
   支持度分母：适配器优先采用工具声明的样本数，探测不到则如实标为 `integer_count`。
-- **统一元数据**：每条约束携带 `metadata = {family, support, distance}`，其中 `distance`
-  为物种树拓扑距离，供 `--min-transfer-distance` 过滤。**自环例外**：`donor == receptor`
+- **统一元数据**：每条约束的 `metadata` 至少含四个通用键 `family`、`support`、`distance`、
+  `weight_semantics`——其中 `distance` 为物种树拓扑距离，供 `--min-transfer-distance` 过滤，
+  `weight_semantics` 标注该约束的权重口径（取值见
+  [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) §2）。
+  在此之上，RANGER-DTLx / ARTra / ecceTERA / ALE 另外附 `sample_denominator`（采样分母；
+  AleRax 因其 `posterior_frequency` 口径无分母，不附该键），ALE 还额外附 `source`
+  （`"rec"`/`"trf"`）。**自环例外**：`donor == receptor`
   的事件在**全部五个**适配器（RANGER-DTLx / ecceTERA / ARTra / AleRax / ALE）中一律写
   `distance = None`（无距离信息），因此按“无距离列的约束一律保留”通过过滤，`to itself`
   统计不再被 `--d` 吃掉；文本输入路径本来就是这个行为。ALE 是最后对齐的一个；
@@ -148,7 +159,7 @@ maxtic-next species.tree FAM1.dtl --from ranger -o constraints.tsv
    `.recphyloxml` → eccetera；
 3. **内容嗅探**（读**解压后**文本，按 65,536 个**字符**分块扫描、累计上限 4,194,304 个字符，
    块间保留上一块尾部 64 个字符；这些上游输出均为 ASCII，故字符数即字节数）：
-   含 `<recPhylo`/`<recGeneTree` → eccetera；含 `T@` 且
+   含 `<recPhylo` / `<recGeneTree` / `recPhyloXML` → eccetera；含 `T@` 且
    `reconciled`/`D@` → ale；含 `Recipient` 与 `-->` 且 `Replacing/Additive Transfer` → artra；
    仅含 `Recipient` 与 `-->` → ranger；
 4. 均不匹配 → `None`（视为通用文本约束，走原生解析）。
@@ -171,8 +182,9 @@ REGISTRY.register(AdapterEntry(
     "mytool", convert_mytool, "我的调和工具", "*.myrec 文件"))
 ```
 
-注：自动检测的内容嗅探规则内置于 `detect_format`；自定义工具如需自动检测，可在应用侧
-先行判定后用 `registry.convert("mytool", ...)` 显式分发。
+注：示例中的 `description` / `input_desc` 与 `registry` 内置注册项一样使用中文字面量
+（不作翻译）。自动检测的内容嗅探规则内置于 `detect_format`；自定义工具如需自动检测，
+可在应用侧先行判定后用 `registry.convert("mytool", ...)` 显式分发。
 
 ## 7. 已知限制（通用）
 

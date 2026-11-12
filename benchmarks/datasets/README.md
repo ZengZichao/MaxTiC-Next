@@ -2,8 +2,9 @@
 
 > 🌐 English version: [README.en.md](README.en.md)
 
-本目录用于存放真实大规模 HGT（水平基因转移）数据集，供 `benchmarks/suite.py` 的
-`--real` 模式进行性能压测。
+本目录用于存放真实大规模 HGT（水平基因转移）数据集，供基准套件模块
+`src/maxtic_next/benchmarks/suite.py` 的 `--real` 模式（入口
+`python -m maxtic_next.benchmarks.suite --real`）进行性能压测。
 
 ## 目录结构
 
@@ -18,7 +19,9 @@ benchmarks/datasets/
 ```
 
 > 目录扫描**不递归子目录**，故 `--data-dir` 应指到直接包含树与约束的那一层
-> （例如 `benchmarks/datasets/<dataset_name>/`）。
+> （例如 `benchmarks/datasets/<dataset_name>/`）。扫描还会跳过 MaxTiC 自身产出的输出
+> 文件（三文件 / distribution / HTML 报告等后缀，见 `suite._is_maxtic_output`），以免把
+> 排序输出重新当作输入约束摄入。
 
 ## 如何添加真实数据集
 
@@ -77,7 +80,7 @@ python -m maxtic_next.benchmarks.suite --real --data-dir <path/to/datasets> --se
 | `cpu_time_iqr` / `wall_time_iqr` | `cpu_time` / `wall_time` 的四分位距 |
 | `wall_time` | 墙钟时间（秒，`time.perf_counter` 中位数） |
 | `io_time` / `kernel_cpu_time` | 输出写入的 I/O 开销（CPU 中位数）/ 扣除 I/O 后的排序内核 CPU 时间 |
-| `peak_memory_mb` | 峰值内存（MB，`tracemalloc`） |
+| `peak_memory_mb` | 峰值内存（MiB，`tracemalloc`；实现按 `peak / (1024 * 1024)` 计算，结果字典的键名仍为 `peak_memory_mb`） |
 | `best_value` | 最优排序的目标值（greedy / mixing 中的较小者） |
 | `delivered_value` | 交付排序目标值的独立重算结果 |
 | `best_source` | 交付排序的来源（`greedy heuristic` / `mixing heuristic`，可能带 `+ local search`） |

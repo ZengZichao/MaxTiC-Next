@@ -13,7 +13,7 @@
   `--dry-run` reports it at error level too (see 08 §8.4).
 - **Internal node labels must be unique**, and **leaf names must be unique too**:
   a duplicated leaf name collapses node identity.
-- Ultrametry is **not required**, but if the tree is ultrametric one can compute a
+- Ultrametricity is **not required**, but if the tree is ultrametric one can compute a
   Kendall similarity between the input and output rankings from it.
 - The file may be **wrapped over several lines**: before parsing, all lines of the file are
   concatenated into one sequence (the original only read the first line; this is a documented
@@ -74,8 +74,9 @@ donor,receptor,weight     # wrong! rejected with an error
 ```
 
 Because the comma format **always discards the first column**, a 3-column line would drop
-`donor`, misalign donor/receptor and lose the weight. The parser raises `ValueError` when it
-detects a 3-column comma line (exit code 4). If you meant space format, use spaces.
+`donor`, misalign donor/receptor and lose the weight. The parser rejects **any comma input with
+fewer than 4 columns** — a 2-column as well as a 3-column line raises `ValueError` (exit code 4).
+If you meant space format, use spaces.
 
 ### 5.2.4 Comments, special lines and value validation
 
@@ -85,8 +86,9 @@ detects a 3-column comma line (exit code 4). If you meant space format, use spac
 - lines whose **first field** is `FRQ` are skipped (compatibility with ALE summary lines);
 - **weights and distances must be finite reals, and weights must be ≥ 0**: `nan` / `inf` /
   negative weights are rejected **at the parsing layer**, with the **file name and line
-  number** in the message (the original carried them straight into the
-  objective). Numeric columns accept decimal reals only — not `-`, `NA` or empty strings.
+  number** in the message, so an illegal value never reaches the objective — this version
+  intercepts it at the parsing layer, whereas **the original** carried such values straight into
+  the objective. Numeric columns accept decimal reals only — not `-`, `NA` or empty strings.
 - these files are also read transparently from `.gz` / gzip streams and archives
   (see 5.7).
 
@@ -123,11 +125,12 @@ computation but do not appear in the names, and this is declared once on **stder
 | Partial order | `<prefix>.mt.partial_order.tsv` | `<prefix>_MT_output_partial_order` |
 | Random-order distribution (**only `--random-trees > 0`**) | `<prefix>.mt.random_dist.tsv` | `<prefix>_distribution_random` |
 
-> - Under both styles the file **contents are byte-for-byte identical**; only names differ.
+> - For the **first four rows** of the table above the contents are **byte-for-byte identical**
+>   under both styles; only the file names differ.
 > - **Overwrite protection**: if a target file exists and was not written by this run, the
 >   CLI aborts with exit code **3**; only an explicit `-f/--force` overwrites.
 > - **Atomic writes**: a temporary file in the target directory is written, `fsync`-ed and
->   then moved into place with `os.replace`, so a crash cannot leave a half-written product.
+>   then moved into place with `os.replace`, so a crash cannot leave a half-written output file.
 >   Missing parent directories are created automatically.
 
 ### File contents
@@ -152,7 +155,9 @@ The print order and wording of the original `MaxTiC.py` are reproduced line by l
 worked example in [02 §2.3](02_quickstart.md)): internal node count, total constraint
 weight, uninformative breakdown and share, trivially-conflicting share, the value and
 percentage of the input/greedy/mixing rankings, the best-order identifier, the ranked-tree
-Newick, and the Kendall similarity with the input tree.
+Newick, and the Kendall similarity with the input tree, plus the ratio of constraints that
+agree with the best tree yet conflict with the input tree and a second, duplicated
+similarity line.
 
 Lines appended depending on options:
 
@@ -161,7 +166,7 @@ Lines appended depending on options:
 | `--ls > 0` | an `attempting a local search …` notice; and after `best order is the …` the two lines `after local search X rejected` and `best found solution Y (%)`, so stdout cannot contradict the delivered tree |
 | `--rd N > 0` | 4 lines: random value range, value p-value, random similarity range, similarity p-value. p-values use the **(k+1)/(n+1)** correction and test the **final delivered order** |
 | `--mcmc` | 5 `[MCMC]` lines: status statement, convention statement, effective temperature with burn-in/thin, sample statistics, convergence diagnostics |
-| whenever applicable | `NOTE:` / `WARNING:` / `ERROR:` statements of convention and warnings appended at the **end** of the summary (phylogenetic hard constraints, empty constraint set, `--d` ignored, self-loops removed by the distance filter, `--ls` not reproducible across machines, …) |
+| whenever applicable | `NOTE:` / `WARNING:` / `ERROR:` statements of convention and warnings appended at the **end** of the summary (phylogenetic hard constraints, empty constraint set, `--d` ignored, self-loops removed by the distance filter, `--ls` not reproducible across machines, …); the one exception is the leaf-constraint `WARNING:`, printed right after the `uninformative` line |
 | **cancelled** run (API/GUI `stop_check`) | `NOTE: 本次运行按请求**取消**：局部搜索在第 N 次迭代边界停止（计划的搜索时长为 T 秒，未跑满）……` (*"this run was cancelled as requested: the local search stopped at iteration boundary N (the planned budget of T seconds was not used up)"*) — what is delivered is the best order **as of the cancellation point** (see 08 §8.9) |
 
 Percentage conventions (deviations from the original, documented deliberately):
@@ -201,7 +206,7 @@ is recorded in `run_metadata["near_optimal_top_k"]`, and the summary dict carrie
 
 ## 5.7 Compressed input: `.gz` / gzip streams and tar archives (transparent)
 
-Upstream tools ship their examples and results **compressed** (MaxTiC's
+Upstream tools ship their examples and results **compressed** (the original MaxTiC's bundled
 `examples/reconciliations.tgz`, ALE/Ranger/AleRax outputs bundled as `.tar.gz`, single-file
 examples as `xxx.gz`). `io/compression.py` is the project's **only** text-input reading layer,
 so **nothing has to be unpacked first**. Detection uses *both* the content magic number and the
@@ -212,7 +217,7 @@ file extension, which avoids the failure mode each one alone has:
 | `x.gz` / any file whose first two bytes are `1f 8b` | gzip magic (RFC 1952) | decompressed transparently; **works with no extension at all** |
 | extension says `.gz` but the content is not gzip | magic mismatch | read as **plain text** (a misnamed uncompressed file still works; no more `BadGzipFile`) |
 | `.tar.gz` / `.tgz` / `.tar` with **exactly one** file member (renamed ones included) | `ustar` magic at offset 257 + `tarfile` | that member's content is used, exactly like a plain text file |
-| tar archive with **several** file members | as above | **never concatenated**: raises `CompressedArchiveError` (a `ValueError` subclass; CLI exit code 4) whose message lists the member count, some member names and a **directly runnable** `tar -xzf archive -C dir` / `tar -xzOf archive member > file` command |
+| tar archive with **several** file members | as above | **never concatenated**: raises `CompressedArchiveError` (a `ValueError` subclass; CLI exit code 4) whose message lists the member count, the first 12 member names and a **directly runnable** `tar -xzf archive -C dir` / `tar -xzOf archive member > file` command |
 
 ### 5.7.1 Which entry points actually take it
 
@@ -234,14 +239,18 @@ file extension, which avoids the failure mode each one alone has:
 - **Archives given as input** (`CONSTRAINTS` positional / the constraint list passed to
   `api.rank`): `api.rank` first **safely unpacks** `.tgz` / `.tar.gz` / `.tar` into a
   process-local temporary directory and then treats the **members** as the inputs. A
-  multi-member archive — e.g. ALE's official `examples/reconciliations.tgz`, which holds a
-  thousand `*.uml_rec` files — can therefore be fed **whole** in the constraint position.
-  One `NOTE: 输入 … 是 tar 归档，已自动展开为 N 项输入（解包于 …）` line goes to **stderr**
-  and the mapping is stored in `run_metadata["archives_expanded"]` (the members live in a
-  temporary directory, so this must stay traceable). An AleRax output-tree archive is
-  expanded to its **root directory**, which the AleRax adapter then reads by its own layout
-  convention. Unpacking is sandboxed: only regular files are extracted, and absolute paths,
-  members containing `..`, and link/device/FIFO members are skipped.
+  multi-member archive — e.g. the original MaxTiC's bundled `examples/reconciliations.tgz`,
+  which holds over a thousand `*.uml_rec` files — can therefore be fed **whole** in the
+  constraint position. One
+  `NOTE: 输入 … 是 tar 归档，已自动展开为 N 项输入（解包于 …）` (*"the input … is a tar archive;
+  it was expanded into N inputs (unpacked at …)"*) line goes to **stderr** and the mapping is
+  stored in `run_metadata["archives_expanded"]` (the members live in a temporary directory, so
+  this must stay traceable). An archive is expanded to its **root directory** (which the AleRax
+  adapter then reads by its own layout convention) **only** when the tool is `alerax` / `auto`
+  **and** some member path contains `reconciliations/summaries`; in every other case the members
+  are expanded one by one — so handing an AleRax tree archive to `--from ale` does not take that
+  branch. Unpacking is sandboxed: only regular files are extracted, and absolute paths, members
+  containing `..`, and link/device/FIFO members are skipped.
 
 > **Do not overstate it**: concatenating a multi-member archive into **one** text input is
 > never done — each member is a separate upstream output (its own gene family / sample set),
@@ -253,7 +262,7 @@ file extension, which avoids the failure mode each one alone has:
 ### 5.7.2 Measured
 
 ```bash
-# .gz constraints — products byte-for-byte identical to the uncompressed input
+# .gz constraints — output files byte-for-byte identical to the uncompressed input
 maxtic-next minitree.tree constraints.tsv.gz --seed 42          # exit 0
 diff constraints.mt.informative.tsv constraints_gz.mt.informative.tsv   # no difference
 
@@ -280,7 +289,18 @@ maxtic-next multi.tar.gz constraints.tsv --seed 42; echo "exit=$?"
 exit=4
 ```
 
+(Translation of that stderr block, which the program emits in Chinese — `--lang` switches only the
+HTML report, never stdout/stderr; the `……` marks an abridged sentence, and the message's final
+line, which points at this chapter and the FAQ, is not shown either: *"error: this input file is a
+tar archive with 2 file members (gzip): /tmp/multi.tar.gz — members: `Cyano_CUTConstraints.tsv`,
+`minitree.tree`. MaxTiC-Next transparently decompresses **single-file** gzip (`.gz`, or a gzip
+stream with no extension at all) and tar archives with **exactly one** member; a multi-member
+archive is never concatenated into one input, …… Choose either way of turning the members into
+real inputs: 1) unpack the whole archive and pass the extracted files (or a directory — AleRax
+supports directories) as input; 2) take just one member (both runnable `tar` command lines are
+quoted verbatim above). (Windows 10+ ships `tar`; `--dry-run` restates this hint verbatim.)"*)
+
 This module depends only on the standard library (`gzip` / `tarfile`); no third-party
 decompression dependency is introduced.
 
-> Prev: [04 · Python API](04_python_api.md) ｜ Next: [06 · Upstream integration](06_upstream_integration.md)
+> Prev: [04 · Python API](04_python_api.md) | Next: [06 · Upstream integration recipes](06_upstream_integration.md)

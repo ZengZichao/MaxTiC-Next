@@ -21,16 +21,25 @@ naming schemes are accepted by the adapter (case-insensitive). Each line is:
 ```
 
 Here `frequency` is the **expected frequency** of the transfer across posterior samples
-(a float). Unlike ALE / RANGER-DTLx's "count / number of samples", AleRax has already
+(a float, typically 0–1 upstream, though it can also be an expected count). Unlike ALE /
+RANGER-DTLx's `support = count / denominator` (denominator = the number of samples, i.e.
+the tool's declared value), AleRax has already
 **pre-aggregated within the family into frequencies**, so the adapter **uses the frequency
 directly as the weight** (no longer dividing by a block count).
 `weight_semantics = posterior_frequency`.
+⚠️ The frequency is **not renormalized** (this package does not normalize it a second
+time): summed across families, the same edge key can **exceed 1** (in this repository's
+samples, `0.9` on line 1 of `FAM1_transfers.txt` plus `0.4` on line 2 of
+`FAM2_transfers.txt` gives `1.3`), in which case the `min_support` threshold **has no
+[0,1] support semantics** and is compared as a plain number.
 
 The donor endpoint is taken from the donor column of the table itself
 (`donor_endpoint_convention = donor_itself`), which is **one species level away** from
 ALE's `parent_of_donor`; when `--from-auto` mixes ALE and AleRax inputs, the groups are
-resolved separately and a warning "endpoint levels and weight semantics are not
-commensurable" is issued, instead of adding both directly onto the same edge.
+resolved separately and the adapter **warns once about the endpoint level and once about
+the weight convention** (two separate `registry` notices: differing donor endpoint level
+conventions / inconsistent weight conventions), instead of adding both directly onto the
+same edge.
 
 ## 2. Input Forms and Automatic Expansion
 
@@ -71,6 +80,7 @@ single file is determined by its suffix, i.e. ending in `_transfers.txt` /
 |-----------|----------|
 | Fewer than 3 fields on a line, or a non-numeric frequency | The line is skipped |
 | donor / receptor not in the species tree | The transfer is dropped |
+| Endpoint-drop observability | Every dropped transfer is **counted by reason** (`dropped_by_label_miss`; numeric-ID resolution runs only on the ecceTERA path, so `numeric_id_resolutions` is always 0 here), a diagnostic summary is printed to stderr when the conversion finishes and the same dictionary is attached to `ConstraintSet.diagnostics`; an endpoint hit rate of **0** raises `LabelMismatchError`, and one below `min_endpoint_hit_rate` (default `0.5`) triggers a warning (`--quiet-adapters` only silences printing; counting and error raising are unaffected) |
 | Directory without summaries / no transfer frequency files | **Error** (never silently returns an empty constraint set) |
 
 ## 6. Known Limitations
@@ -83,6 +93,10 @@ single file is determined by its suffix, i.e. ending in `_transfers.txt` /
   whitespace-separated constraint format (`donor receptor weight`) — if not passed via
   `--from alerax` and lacking the conventional suffix, they will be parsed as generic
   text constraints (semantically equivalent).
+- This section is a summary: the **complete semantics** of the endpoint levels, weight
+  conventions and the diagnostics counters are governed by the normative semantic notes
+  [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) /
+  [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md).
 
 ## 7. Usage
 

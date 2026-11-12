@@ -29,7 +29,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 | `--seed` | — | int ≥ 0 | `42` | 随机种子，驱动 mix 平局与局部搜索 |
 | `--local-search` | `--ls` | float ≥ 0 | `0.0` | 局部搜索**墙钟时长**（秒），0 = 关闭；打开后触发稳健性/敏感性摘要 |
 | `--temperature` | `--t` | float > 0 | `0.001` | 局部搜索的 Metropolis 温度（接受劣解的尺度） |
-| `--random-type` | `--r` | int ∈ {0,1,2} | `0` | 随机化类型（`0` 保持数据原样；`2` 完全随机化节点） |
+| `--random-type` | `--r` | int ∈ {0,1,2} | `0` | 随机化类型（`0` 保持数据原样；`1` 保留节点、随机化其方向；`2` 完全随机化节点） |
 | `--min-transfer-distance` | `--d` | float ≥ 0 | `0` | 最小转移距离阈值，**按 phylogenetic distance 列过滤**，保留 `distance > 阈值` |
 | `--threshold-constraints` | `--ts` | float ∈ **[0, 1]** | `0.0` | 约束权重阈值比例，按权重升序剔除累计占比最低的一部分边 |
 | `--random-trees` | `--rd` | int ≥ 0 | `0` | 随机树采样数量，>0 时计算 value / similarity 的经验 p 值并写分布文件 |
@@ -57,30 +57,36 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 |------|------|------|------|
 | `--from` | `ale`/`ranger`/`eccetera`/`artra`/`alerax`/`auto` | 无 | 把 CONSTRAINTS 视为该工具输出，经注册表转为统一约束 |
 | `--from-auto` | — | 关 | 等价 `--from auto`：按内容/扩展名自动检测上游格式 |
-| `--from-ale` | — | 关 | 向后兼容开关，等价 `--from ale`（CONSTRAINTS 为 `.uml_rec` 列表） |
+| `--from-ale` | — | 关 | 向后兼容开关，等价 `--from ale`（CONSTRAINTS 为 `.uml_rec` 列表）；`--from` 与 `--from-ale` 同时给出时以 `--from` 为准，`--from-ale` 被忽略 |
 | `--ale-min-support` | float ∈ [0,1] | `0.05` | 单家族内最小支持度/频率阈值，保留 `> 阈值`（所有调和适配器通用） |
 | `--ale-min-family-size` | int ≥ 0 | `5` | 最小基因家族规模（调和树叶子数），`<=` 阈值的家族被跳过（alerax 不适用） |
-| `--ale-cache-dir` | 路径 | 无 | 基因家族文件级 pickle 缓存目录（断点续传） |
+| `--ale-cache-dir` | 路径 | 无 | 基因家族文件级 pickle 缓存目录（断点续传；alerax 不生效） |
 | `--ale-source` | `rec`/`trf` | **`trf`** | ALE 约束来源，见下方专门说明 |
 | `--ale-parallel` | `process`/`thread` | `process` | 并行解析模式：进程池（默认，绕 GIL）/ 线程池 |
 | `--artra-transfer-kind` | `all`/`replacing`/`additive` | `all` | ARTra 统计的转移类别 |
-| `--min-endpoint-hit-rate` | float ∈ [0,1] | `0.5` | 适配器**端点命中率**阈值：低于该比例向 stderr 警告；命中率为 0 直接报错。设为 `0` 关闭告警（0 命中仍报错） |
+| `--min-endpoint-hit-rate` | float ∈ [0,1] | `0.5` | 适配器**端点命中率**阈值：低于该比例向 stderr 警告；命中率为 0 直接报错。设为 `0` 关闭告警（0 命中仍报错）。**阈值守卫只对 `ranger/eccetera/artra/alerax` 生效，对 `ale` 不生效**（见下方说明） |
 | `--quiet-adapters` | — | 关 | 不打印适配器在 stderr 上的例行口径声明与诊断摘要；**只影响打印**，诊断量仍写入 `Result.run_metadata["adapter_diagnostics"]`，错误照旧抛出 |
 
 > 历史命名沿用 `--ale-` 前缀，但 `--ale-min-support` / `--ale-min-family-size` /
 > `--ale-cache-dir` / `--min-endpoint-hit-rate` / `--quiet-adapters` 对
-> `ranger/eccetera/artra/alerax` 同样生效。
+> `ranger/eccetera/artra/alerax` 同样生效。两处例外：`--ale-min-family-size` 与
+> `--ale-cache-dir` 对 `alerax` 只是接口占位（该适配器不做家族规模过滤、单文件解析极快
+> 也不缓存），传了不报错但**不生效**；`--min-endpoint-hit-rate` 则对 `ale` **不生效**——
+> ALE 沿用原版的端点校验口径，命中率多低都不告警，端点全不命中时只打印一行
+> `[ale] 错误：…` 并产出 0 条约束（正常运行仍以退出码 0 结束，`--dry-run` 则判为失败、
+> 退出码 1），而其余四个适配器在这种情况下直接抛错、以退出码 4 中止。
 
 ### 3.2.1 `--ale-source`：默认已是 `trf`
 
 | 取值 | 生成方式 | 语义 |
 |------|----------|------|
 | **`trf`（默认）** | 按**转移事件**生成，等价 ALE 官方 MaxTiC 集成脚本的 `constraints_from_transfers` | “供体分支的**父节点**须早于受体分支的**子节点**” |
-| `rec` | 按**调和事件**（`.uml_rec` 的 reconciliation 记录）生成 | 约束集规模与权重量级与 `trf` **不同** |
+| `rec` | 按**调和事件**（`.uml_rec` 的 reconciliation 记录）生成 | 约束**条数与总权重均与 `trf` 不同**（权重差约 17%，详见 [ale.md §2](../../adapters/ale.md)） |
 
 - 默认取 `trf`，因为 **ALE 自带**的 MaxTiC 集成文档规定的直接输入就是
   `constraints_from_transfers`（trf）。这不是“两种等价写法”：**切换即换掉整个输入约束集**
-  （官方示例规模下边数与总权重差异达数倍），所有下游数字随之改变。
+  （官方示例规模下 `rec` 只有 13,995 条、总权重 5482.98，`trf` 总权重 6438.6，权重相差约
+  17%，两者条数也不相同），所有下游数字随之改变。
 - 实际生效口径会打印到 stderr，例如：
   `[ale] 约束口径：source=trf（……ALE 官方 MaxTiC 集成口径），供体端点约定=parent_of_donor，产出边数=…，总权重=…`
 - 需要 `rec`（调和事件）口径时显式加 `--ale-source rec`。
@@ -90,12 +96,12 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [选项]
 每次适配器转换结束打印一行，字段固定：
 
 ```
-[tool] donor 端点约定=<parent_of_donor|donor_itself> 权重口径=<support_over_declared_samples|support_over_replicate_blocks|integer_count|posterior_frequency> 分母=<N|不可确立> 端点命中率=NN.N% | 文件=N 块=N 树=N 转移=N 保留=N 丢弃[标签不匹配=N, 支持度=N, 家族规模=N, 家族规模探测失败=N, 自环=N]
+[tool] donor 端点约定=<parent_of_donor|donor_itself> 权重口径=<support_over_declared_samples|support_over_replicate_blocks|integer_count|posterior_frequency> 分母=<N|不可确立> 端点命中率=NN.N% | 文件=N 块=N 转移=N 保留=N 丢弃[标签不匹配=N, 支持度=N, 家族规模=N, 家族规模探测失败=N, 自环=N]
 ```
 
 - `donor 端点约定`：ALE 取 `parent_of_donor`（供体的父节点），RANGER-DTLx/ARTra/ecceTERA/
   AleRax 取 `donor_itself`（供体本身）——**相差一个物种层级**，`--from-auto` 混合输入时
-  会另行告警，不再静默相加。
+  会另行告警并点名相互冲突的两种约定，不再静默相加。
 - `权重口径`：ALE 是 [0,1] 支持度；RANGER/ARTra 在报告未声明样本数时是**整数计数**，
   此时 `--ale-min-support` 阈值不具 [0,1] 语义。不同口径的权重**不可直接比较**。
 - `自环=N`：`donor == receptor`（供体与受体是同一谱系）的事件条数。这个数字是**计数**，
@@ -176,7 +182,7 @@ NOTE: 上述丢弃中有 1 条是**自环约束**（donor == receptor，其拓�
 |------|------|
 | `--target-clade <标签>` | 目标类群根节点标签；默认仅保留两端点均在类群内的约束 |
 | `--target-clade-ancestor-map` | 开启“外部祖先映射到根”的保守剪裁规则（需配合 `--target-clade`，默认关闭以避免虚假偏序） |
-| `--dry-run` | 静态预检：树格式/二叉性/内部标签唯一/叶子名唯一/约束格式/权重合法性/端点合法性/`d` 列语义；`--from` 模式下**真正解析上游输出**并报告零约束与命中率。**任何一次适配器解析失败都会让预检判为失败**并以**退出码 1** 中止（实例见 08 章 8.4b）。不运行排序 |
+| `--dry-run` | 静态预检：树格式/二叉性/内部标签唯一/叶子名唯一/约束格式/权重合法性/端点合法性/`d` 列语义；`--from` 模式下**真正解析上游输出**并报告零约束与低命中率问题（`ale` 只给零命中的错误提示，不做低命中率告警，见 3.2）。**任何一次适配器解析失败都会让预检判为失败**并以**退出码 1** 中止（实例见 08 章 8.4b）。不运行排序 |
 
 ## 3.5 报告与输出
 
@@ -243,11 +249,11 @@ NOTE: 上述丢弃中有 1 条是**自环约束**（donor == receptor，其拓�
   整数值浮点 `100.0` 归一化为 `100`；
 - **生效值**记入 `Result.run_metadata["near_optimal_top_k"]`，同时回显在
   `run_metadata["params"]` 字符串（`--near-optimal-top-k 12`）和 HTML 报告
-  （`top_k：12（本次报告使用 12）`）里，摘要 dict 里另有 `top_k` / `top_k_reported`。
+  （`保留上限 top_k：12（本次报告使用 12）`）里，摘要 dict 里另有 `top_k` / `top_k_reported`。
 
 **为什么这个上限要紧**：`--ls > 0` 时程序给出的**不是**对输入数据重抽样的稳健度
 （摘要 dict 的 `is_resampling_robustness` 恒为 `False`），而是**局部搜索访问过的解集合**
-的去重视图。所以 K 直接决定了这些频率统计的**支持集**有多宽：K 以下的序根本不参与计数。
+的去重视图。所以 K 直接决定了这些频率统计的**支持集**有多宽：落在这 K 个之外的序根本不参与计数。
 实测（`examples/minitree.tree` + `examples/Cyano_CUTConstraints.tsv`，`--ls 1`、
 `--local-search-max-iters 60000`、`--t 60`、`--seed 42`）：
 
@@ -271,7 +277,7 @@ NOTE: 上述丢弃中有 1 条是**自环约束**（donor == receptor，其拓�
 
 | 参数 | 类型 / 取值域 | 默认 | 说明 |
 |------|--------------|------|------|
-| `--incremental` / `--no-incremental` | — | **开** | 增量 scoring：局部搜索每次区间旋转仅算增量 O(b−a)，远优于全量 O(\|E\|)。默认开启（与全量逐字节等价、实测 3.1–8.2×）；`--no-incremental` 退回原版全量口径 |
+| `--incremental` / `--no-incremental` | — | **开** | 增量打分：局部搜索每次区间旋转仅算增量 O(b−a)，远优于全量 O(\|E\|)。默认开启（与全量逐字节等价、实测 3.1–8.2×）；`--no-incremental` 退回原版全量口径 |
 | `--checkpoint <路径>` | str | 无 | 检查点文件；搜索中断后可续跑（仅 `--local-search>0` 生效） |
 | `--checkpoint-interval` | float > 0 | `60.0` | 检查点自动保存间隔（秒） |
 | `--local-search-max-iters` | int ≥ 0 | `0` | **局部搜索迭代次数上限**（0 = 只受 `--ls` 时长约束）。设为正数可让固定 `--seed` 的局部搜索路径**跨机器可复现** |

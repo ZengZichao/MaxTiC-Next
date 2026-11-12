@@ -36,10 +36,10 @@
 | 02 · Quickstart | [en/02_quickstart.md](en/02_quickstart.md) | Run the first example in 5 minutes |
 | 03 · CLI reference | [en/03_cli_reference.md](en/03_cli_reference.md) | Every CLI flag explained |
 | 04 · Python API | [en/04_python_api.md](en/04_python_api.md) | `rank` / `build_constraints` / `Result` |
-| 05 · Input/Output | [en/05_io_formats.md](en/05_io_formats.md) | Trees, dual constraint formats, outputs |
-| 06 · Upstream integration | [en/06_upstream_integration.md](en/06_upstream_integration.md) | End-to-end recipes for the 5 tools |
+| 05 · Input/Output | [en/05_io_formats.md](en/05_io_formats.md) | Species tree, dual constraint formats, output files (incl. the 4th one under `--random-trees`), stdout, exit codes |
+| 06 · Upstream integration | [en/06_upstream_integration.md](en/06_upstream_integration.md) | End-to-end recipes for the 5 tools (ALE/RANGER/ecceTERA/ARTra/AleRax) |
 | 07 · Workflows & deployment | [en/07_workflows_deployment.md](en/07_workflows_deployment.md) | Snakemake / Nextflow / Docker / Singularity |
-| 08 · Advanced features | [en/08_advanced_features.md](en/08_advanced_features.md) | Robustness, MCMC, pruning, dry-run, checkpoint |
+| 08 · Advanced features | [en/08_advanced_features.md](en/08_advanced_features.md) | Robustness/sensitivity, MCMC, pruning, dry-run, checkpoint |
 | 09 · FAQ & troubleshooting | [en/09_faq_troubleshooting.md](en/09_faq_troubleshooting.md) | FAQ, error messages, reproducibility |
 
 ---
@@ -53,13 +53,14 @@
 
 ## 相关文档 · Related Docs
 
-- 适配框架规格：[../adapters/README.md](../adapters/README.md) 及 `../adapters/<tool>.md`
-- 顶层说明：[../../README.md](../../README.md)
+- 适配框架规格 / Adapter framework specs：中文 [../adapters/README.md](../adapters/README.md) · English [../adapters/README.en.md](../adapters/README.en.md)；逐工具规格 / per-tool specs `../adapters/<tool>.md`（中）/ `<tool>.en.md`（英）
+- 顶层说明 / Top-level readme：中文 [../../README.zh.md](../../README.zh.md) · English [../../README.md](../../README.md)
 
 ## 许可与引用 · License & Citation
 
 本软件继承原版 **CeCILL 2.1** 许可，保留原作者 Eric Tannier 与原始引用
-（MaxTiC, Biorxiv doi.org/10.1101/127548）。详见仓库根目录 `LICENSE`。
+（MaxTiC, bioRxiv doi.org/10.1101/127548）。详见仓库根目录 `LICENSE`。
 
 This software inherits the original **CeCILL 2.1** license and preserves the original
-author Eric Tannier and citation (MaxTiC, Biorxiv doi.org/10.1101/127548). See `LICENSE`.
+author Eric Tannier and citation (MaxTiC, bioRxiv doi.org/10.1101/127548). See `LICENSE`
+at the repository root.

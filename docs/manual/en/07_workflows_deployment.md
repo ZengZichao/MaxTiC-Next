@@ -1,6 +1,7 @@
 # 07 · Workflows & deployment
 
-MaxTiC-Next ships container images and wrappers for the two mainstream workflow engines.
+For modern bioinformatics pipelines, MaxTiC-Next ships container images and wrappers for the two
+mainstream workflow engines.
 
 > The commands below are aligned word-for-word with the repository's `Dockerfile`,
 > `Singularity.def` and `workflows/`. **Note**: this chapter was written in an environment with
@@ -24,7 +25,7 @@ Every engine follows the same two-stage model:
 ```
 
 - With text constraints already in hand, start directly at Stage 2.
-- Stage 1 products are reusable and cacheable (`--ale-cache-dir` for resumption; the cache key
+- Stage 1 output files are reusable and cacheable (`--ale-cache-dir` for resumption; the cache key
   includes a species-tree topology fingerprint).
 - `-o` is **only meaningful in adapter mode**: passing `-o` with text constraints is a hard
   error instead of a silent no-op.
@@ -62,7 +63,7 @@ Notes:
   actually need is kept: `pyproject.toml`, `src/`, `examples/`, `requirements*.txt`, `LICENSE`,
   `README.md`. No build or run command needs adjusting — the image is simply
   smaller and carries no repository metadata.
-- **Writing into a mounted directory**: if a previous run left products there, the CLI refuses
+- **Writing into a mounted directory**: if a previous run left output files there, the CLI refuses
   to overwrite and exits with code **3**. Add `-f/--force`, or change the prefix
   with `-p /data/run2`.
 - Smoke test: `docker run --rm maxtic-next:0.2.1 --version` → `MaxTiC-Next 0.2.1`.
@@ -132,18 +133,18 @@ cd workflows && snakemake --configfile config.yaml --cores 4
   paths pass through.
 - `from_ale: false`: runs Stage 2 only (rank text constraints).
 - `from_ale: true`: runs `generate_constraints` (ALE → constraints) first, then ranks.
-- Products (three files + HTML, plus one more when `random_trees > 0`) are written to `outdir`;
+- Output files (three files + HTML, plus one more when `random_trees > 0`) are written to `outdir`;
   the `rule all` target set stays in sync with `--output-style`.
 - Both rules pass `--force`: `outdir` belongs to the workflow manager, so a rerun must be able
-  to overwrite previous products (otherwise the CLI's overwrite protection fails the task with
+  to overwrite previous outputs (otherwise the CLI's overwrite protection fails the task with
   exit code 3).
 - With `use_conda: true`, Snakemake creates `envs/maxtic_next.yaml` per rule. That environment
   **includes `jinja2` / `plotly`**, not just an interpreter, so the
   HTML report is produced inside the pipeline instead of silently degrading into
   "the pipeline succeeded but there is no report".
 
-> Note: the snakemake engine is not shipped with the repository; `pip install snakemake` it
-> yourself.
+> Note: the snakemake engine is not shipped with the repository; you need to install it yourself
+> with `pip install snakemake`.
 
 ## 7.5 Nextflow
 
@@ -169,10 +170,14 @@ nextflow -C workflows/nextflow.config run workflows/main.nf \
   the parameter is `--species_tree` (mapping to `params.species_tree` in `main.nf`), passed
   through to `maxtic-next` one-for-one. Suited to cloud / cluster batch runs.
 - **`--output-style` defaults to `short` (matching the CLI)**, and `RANK`'s output declarations
-  are **derived from** `params.output_style` instead of being hard-coded long names; `main.nf`
-  and `workflows/config.yaml` carry the same `short` default, so the declared names and the
-  names actually written cannot drift apart — a drift would fail the pipeline with
-  "output file not found". Pass `--output_style legacy` for the original long names.
+  are **derived from** `params.output_style` instead of being hard-coded long names: the declared
+  names and the names actually written come from the same value, so they **cannot drift apart**
+  (the old version hard-coded long names while its own default disagreed with
+  `workflows/config.yaml`, which is exactly what failed the pipeline with "output file not found"
+  under the CLI default). All that remains is keeping one convention across the **two default
+  values** — `main.nf`'s `params` block and `workflows/config.yaml` (`workflows/main.nf:53` and
+  `workflows/config.yaml:40`, both `short` by default). Pass `--output_style legacy` for the
+  original long names.
 - `RANK`'s declarations include the **optional 4th file** (present only with
   `--random-trees > 0`), expressed with `optional: true`, so `--random_trees 0` does not fail
   the pipeline.
@@ -198,14 +203,14 @@ DSL2 structure:
 `workflows/envs/maxtic_next.yaml` defines the conda environment (named `MaxTiC-Next`), for
 Snakemake's `conda:` directive (`use_conda: true`) or manual creation. PyPI provides 0.1.1,
 0.2.0 and 0.2.1. The environment only declares the interpreter and third-party dependencies,
-so install the package separately:
+so install the package separately (`<REPO_ROOT>` is the repository root):
 
 ```bash
 micromamba env create -f workflows/envs/maxtic_next.yaml
 # PyPI release (evaluated revision):
 micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.1
 # or the v0.2.1 revision from a source checkout:
-micromamba run -n MaxTiC-Next pip install -e <repository root>
+micromamba run -n MaxTiC-Next pip install -e <REPO_ROOT>
 ```
 
 The environment already declares `jinja2 >=3.0` and `plotly >=5.0`
@@ -216,19 +221,22 @@ The environment already declares `jinja2 >=3.0` and `plotly >=5.0`
 | Scenario | Recommendation |
 |----------|----------------|
 | Thousands of gene families → constraints | In Stage 1 use `--ale-cache-dir` (resumable) and `--ale-parallel process` (multi-core) |
-| Retuning ranking parameters | Freeze the Stage 1 product `constraints.tsv` and rerun only Stage 2 |
-| Long local search | incremental scoring is on by default (3.1–8.2× faster) + `--checkpoint` against interruption (see chapter 08) |
+| Retuning ranking parameters | Freeze the Stage 1 output `constraints.tsv` and rerun only Stage 2 |
+| Long local search | Incremental scoring is on by default (3.1–8.2× faster) + `--checkpoint` against interruption (see chapter 08) |
 | Search results that must match across machines | `--local-search-max-iters N` (a wall-clock budget is not portable) |
 | Cluster reproducibility | Fix `--seed`, pin the Python/dependency versions, containerize and **pin the image tag** (`:0.2.1`, not `:latest`) |
-| Suspicious upstream output | Run `--dry-run` first (in adapter mode it genuinely parses the output, so zero-constraint, hit-rate **and parse-failure** cases all come out as errors and exit 1), then read the `[tool] …` diagnostic line on stderr |
-| Upstream examples arrive as archives | `.gz` / gzip streams / single-member archives decompress **transparently**; an official `.tgz` bundle (e.g. ALE's `reconciliations.tgz`) can be fed whole in the constraint position — it is expanded into its members and recorded in `run_metadata["archives_expanded"]` (see 05 §5.7) |
+| Suspicious upstream output | Run `--dry-run` first (in adapter mode it genuinely parses the output, so a parse failure, zero constraints, or no endpoint hits at all comes out as an **error** and exits 1, while an endpoint hit rate below `--min-endpoint-hit-rate` is only a **warning**), then read the `[tool] …` diagnostic line on stderr (emitted in Chinese; its fields are glossed in 03 §3.2.2) |
+| Upstream examples arrive as archives | `.gz` / gzip streams / single-member archives decompress **transparently**; an official `.tgz` bundle (e.g. the original MaxTiC's bundled `examples/reconciliations.tgz`) can be fed whole in the `CONSTRAINTS` position — it is expanded into its members and recorded in `run_metadata["archives_expanded"]` (see 05 §5.7) |
 | Wider near-optimal neighbourhood needed | `--near-optimal-top-k K` (default 50) enlarges the support set of the robustness/sensitivity summary; memory and summary cost grow like K·n² (see 03 §3.6b) |
 | Exit codes | `0` success / `1` preflight error (including an adapter that cannot parse in `--from` mode) / `2` invalid argument / `3` overwrite refused (`--force` missing) / `4` precondition unmet. Non-zero is captured correctly for Snakemake/Nextflow retries |
 
-> The desktop app `maxtic-studio` (separate repository `MaxTiC-Next-Studio`) reuses the same
-> exit-code table, where **`3`** has one extra meaning: with PySide6 missing it prints an install
-> hint and exits 3 rather than raising `ModuleNotFoundError` (see 03 §3.10). Workflow engines only
-> invoke `maxtic-next`, so they never see that entry point.
+> The desktop app `maxtic-studio` (separate repository `MaxTiC-Next-Studio`; this repository does
+> not register that entry point — see `pyproject.toml:55-57`) reuses the same exit-code table,
+> where **`3`** has one extra meaning: with PySide6 missing it prints an install hint and exits 3
+> **rather than raising `ModuleNotFoundError`** — consistent with how this repository treats
+> optional dependencies (`report/html.py:336-344` catches `ImportError`, warns, then degrades the
+> rendering; see also 03 §3.10). Workflow engines only invoke `maxtic-next`, so they never see
+> that entry point.
 
 ## 7.8 Self-check list after these changes
 
@@ -253,4 +261,4 @@ snakemake -s workflows/Snakefile --configfile workflows/config.yaml -n -p
 cd workflows && snakemake --configfile config.yaml -n -p
 ```
 
-> Prev: [06 · Upstream integration](06_upstream_integration.md) ｜ Next: [08 · Advanced features](08_advanced_features.md)
+> Prev: [06 · Upstream integration recipes](06_upstream_integration.md) | Next: [08 · Advanced features](08_advanced_features.md)

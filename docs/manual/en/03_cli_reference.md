@@ -33,14 +33,15 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 | `--seed` | — | int ≥ 0 | `42` | Random seed driving tie-breaking in `mix` and the local search |
 | `--local-search` | `--ls` | float ≥ 0 | `0.0` | Local-search **wall-clock budget** in seconds, 0 = off; turning it on also triggers the robustness/sensitivity summary |
 | `--temperature` | `--t` | float > 0 | `0.001` | Metropolis temperature of the local search (scale for accepting worse solutions) |
-| `--random-type` | `--r` | int ∈ {0,1,2} | `0` | Randomization type (`0` keeps data as-is; `2` fully randomizes nodes) |
+| `--random-type` | `--r` | int ∈ {0,1,2} | `0` | Randomization type (`0` keeps data as-is; `1` keeps the nodes and randomizes their direction; `2` fully randomizes nodes) |
 | `--min-transfer-distance` | `--d` | float ≥ 0 | `0` | Minimum transfer distance, filters on the **phylogenetic distance** column, keeps `distance > threshold` |
 | `--threshold-constraints` | `--ts` | float ∈ **[0, 1]** | `0.0` | Weight-threshold fraction; removes the lowest-weight edges up to that cumulative share |
-| `--random-trees` | `--rd` | int ≥ 0 | `0` | Number of random trees; >0 computes empirical p-values and writes a distribution file |
+| `--random-trees` | `--rd` | int ≥ 0 | `0` | Number of random trees; >0 computes empirical p-values for `value` and `similarity` and writes a distribution file |
 
-> **Domains are enforced in argparse**: `--r 3`,
-> `--ts 5`, `--ls -5`, `--t -1`, `--rd -1` are not accepted (they would quietly
-> change the semantics); each of them exits with code **2** and an actionable message.
+> **Domains are enforced in argparse**: the old-style `--r 3`,
+> `--ts 5`, `--ls -5`, `--t -1`, `--rd -1` were silently accepted in earlier builds
+> (equivalent to quietly changing the convention); the program now exits with code
+> **2** and prints an actionable message.
 > `--ts` is a **fraction**, not an absolute value, because it means "delete the constraints
 > making up the lowest X% of cumulative weight": `--ts 5` is illegal, while
 > `--ts 0.5` deletes low-weight constraints down to a 50% share.
@@ -48,7 +49,7 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 > ⚠️ **What `--d` actually does**: it filters on
 > phylogenetic distance **only**, never on weight; and constraints **without** a distance
 > column are **all kept**, not dropped. So for 3-column space input or 4-column comma
-> input, `--d 5` removes nothing. This case is **error-level** (not a soft
+> input that carry no distance column, `--d 5` removes nothing. This case is **error-level** (not a soft
 > warning) and appends to stdout:
 >
 > ```
@@ -67,34 +68,47 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 |--------|--------|---------|-------|
 | `--from` | `ale`/`ranger`/`eccetera`/`artra`/`alerax`/`auto` | none | Treat CONSTRAINTS as that tool's output and convert via the registry |
 | `--from-auto` | — | off | Equivalent to `--from auto`: auto-detect format from content/extension |
-| `--from-ale` | — | off | Backwards-compatible switch, equivalent to `--from ale` (CONSTRAINTS are `.uml_rec` files) |
+| `--from-ale` | — | off | Backwards-compatible switch, equivalent to `--from ale` (CONSTRAINTS are `.uml_rec` files); when both `--from` and `--from-ale` are given, `--from` takes precedence and `--from-ale` is ignored |
 | `--ale-min-support` | float ∈ [0,1] | `0.05` | Minimum within-family support/frequency, keeps `> threshold` (applies to all reconciliation adapters) |
 | `--ale-min-family-size` | int ≥ 0 | `5` | Minimum gene family size (reconciled-tree leaf count); families at or below the threshold are skipped (not applicable to alerax) |
-| `--ale-cache-dir` | path | none | Per-family pickle cache directory (resumable) |
+| `--ale-cache-dir` | path | none | Per-family pickle cache directory (resumable; no effect for alerax) |
 | `--ale-source` | `rec`/`trf` | **`trf`** | ALE constraint source — see the dedicated note below |
 | `--ale-parallel` | `process`/`thread` | `process` | Parallel parsing: process pool (default, sidesteps the GIL) / thread pool |
 | `--artra-transfer-kind` | `all`/`replacing`/`additive` | `all` | Which ARTra transfer classes to count |
-| `--min-endpoint-hit-rate` | float ∈ [0,1] | `0.5` | Adapter **endpoint hit-rate** threshold: below it a stderr warning is emitted; a 0% hit rate is a hard error. Set to `0` to disable the warning (0 hits still errors) |
+| `--min-endpoint-hit-rate` | float ∈ [0,1] | `0.5` | Adapter **endpoint hit-rate** threshold: below it a stderr warning is emitted; a 0% hit rate is a hard error. Set to `0` to disable the warning (0 hits still errors). The threshold guard applies to `ranger/eccetera/artra/alerax` only — it has **no effect for `ale`** (see the note below) |
 | `--quiet-adapters` | — | off | Suppress the adapters' routine stderr convention statement and diagnostic summary; **printing only** — diagnostics remain in `Result.run_metadata["adapter_diagnostics"]` and errors are still raised |
 
 > The `--ale-` prefix is historical: `--ale-min-support`, `--ale-min-family-size`,
 > `--ale-cache-dir`, `--min-endpoint-hit-rate` and `--quiet-adapters` also apply to
-> `ranger/eccetera/artra/alerax`.
+> `ranger/eccetera/artra/alerax`. Two exceptions: `--ale-min-family-size` and
+> `--ale-cache-dir` are mere interface placeholders for `alerax` (that adapter does no
+> family-size filtering, and its single-file parsing is fast enough that it never caches),
+> so passing them is accepted but **has no effect**; and `--min-endpoint-hit-rate` has
+> **no effect for `ale`** — ALE keeps the original tool's endpoint-check semantics, so it
+> never warns however low the hit rate is, and when no endpoint resolves at all it only
+> prints one `[ale] 错误：…` line ("all N transfer events have endpoints **entirely** absent
+> from the species-tree label set, hence 0 constraints — this is a naming incompatibility,
+> not 'the tool found no transfers'") and returns an empty constraint set: the run still
+> ends with exit code 0, while `--dry-run` flags it as a failure (exit code 1). The other
+> four adapters raise instead and abort with exit code 4.
 
 ### 3.2.1 `--ale-source`: the default is `trf`
 
 | Value | Generated from | Semantics |
 |-------|----------------|-----------|
 | **`trf` (default)** | **transfer** events; equivalent to `constraints_from_transfers` in ALE's own MaxTiC integration | "the **parent** of the donor branch is older than the **child** of the receptor branch" |
-| `rec` | **reconciliation** events (the reconciliation records in `.uml_rec`) | produces a constraint set of **different** size and weight scale |
+| `rec` | **reconciliation** events (the reconciliation records in `.uml_rec`) | **differs from `trf` in both constraint count and total weight** (~17% weight gap; see [ale.en.md §2](../../adapters/ale.en.md)) |
 
 - `trf` is the default because **ALE's own** MaxTiC integration documents
   `constraints_from_transfers` (trf) as the direct input to MaxTiC. These are not two
-  interchangeable spellings: **switching replaces the entire input constraint set** (edge
-  count and total weight differ by a factor of several on the official example), so every
-  downstream number changes.
+  interchangeable spellings: **switching replaces the entire input constraint set** (on
+  the official example `rec` yields only 13,995 constraints with a total weight of
+  5482.98, vs 6438.6 for `trf` — about 17% apart, and their counts differ too), so
+  every downstream number changes.
 - The effective convention is printed to stderr, e.g.
   `[ale] 约束口径：source=trf（……ALE 官方 MaxTiC 集成口径），供体端点约定=parent_of_donor，产出边数=…，总权重=…`
+  (*"ALE constraint convention in use: source=trf (…ALE's official MaxTiC integration
+  convention), donor endpoint convention=parent_of_donor, edges produced=…, total weight=…"*).
 - To reproduce results computed from **reconciliation** events, pass `--ale-source rec` explicitly.
 
 ### 3.2.2 The adapter diagnostic line (stderr)
@@ -102,21 +116,21 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 Each conversion prints one line with a fixed set of fields:
 
 ```
-[tool] donor 端点约定=<parent_of_donor|donor_itself> 权重口径=<support_over_declared_samples|support_over_replicate_blocks|integer_count|posterior_frequency> 分母=<N|不可确立> 端点命中率=NN.N% | 文件=N 块=N 树=N 转移=N 保留=N 丢弃[标签不匹配=N, 支持度=N, 家族规模=N, 家族规模探测失败=N, 自环=N]
+[tool] donor 端点约定=<parent_of_donor|donor_itself> 权重口径=<support_over_declared_samples|support_over_replicate_blocks|integer_count|posterior_frequency> 分母=<N|不可确立> 端点命中率=NN.N% | 文件=N 块=N 转移=N 保留=N 丢弃[标签不匹配=N, 支持度=N, 家族规模=N, 家族规模探测失败=N, 自环=N]
 ```
 
 (The line is emitted in Chinese; the fields read *"donor endpoint convention / weight
-semantics / sample denominator / endpoint hit rate | files / blocks / trees / transfers /
-kept / dropped [label mismatch, support, family size, family-size probe failure,
+convention / sample denominator / endpoint hit rate | files / blocks / transfers / kept /
+dropped [label mismatch, support, family size, family-size probe failure,
 self-loops]"*.)
 
 - `donor endpoint convention`: ALE uses `parent_of_donor` (the donor's parent), while
   RANGER-DTLx / ARTra / ecceTERA / AleRax use `donor_itself` (the donor itself) — they
-  differ by **one species level**. Mixed `--from-auto` input warns separately per tool instead of
-  silently summing the two.
-- `weight semantics`: ALE yields [0,1] support; RANGER/ARTra yield **integer counts** when
+  differ by **one species level**. Mixed `--from-auto` input triggers a separate warning
+  naming the conflicting conventions instead of silently summing the two.
+- `weight convention`: ALE yields [0,1] support; RANGER/ARTra yield **integer counts** when
   the report declares no sample count, in which case `--ale-min-support` has no [0,1]
-  meaning. Weights of different kinds are **not comparable**.
+  meaning. Weights under different conventions are **not comparable**.
 - `自环=N` (*self-loops*): the number of events with `donor == receptor` (donor and receptor
   are the same lineage). This is a **counter**, not "N constraints were discarded": self-loop
   constraints are **kept** and contribute their weight to the original
@@ -165,22 +179,24 @@ tree with  5 internal nodes
 ```
 
 (`约束口径` = "constraint convention", `供体端点约定` = "donor endpoint convention",
-`权重口径` = "weight semantics", `端点命中率` = "endpoint hit rate", `转移` = "transfers",
+`权重口径` = "weight convention", `端点命中率` = "endpoint hit rate", `转移` = "transfers",
 `保留` = "kept", `丢弃` = "dropped", `自环` = "self-loops".) ALE agrees with the other four:
 `自环=1` is only a counter, and that constraint still contributes the `1.0` seen under
 `to itself`; nothing was dropped at the default `--d 0`, so no NOTE was printed. The two-stage
-product says the same thing — the 5th column of the self-loop row is left **empty** instead of
+output files say the same thing — the 5th column of the self-loop row is left **empty** instead of
 carrying `0.0`:
 
 ```
 $ maxtic-next species.tree selfloop.uml_rec --from ale -o unified.tsv
 [ale] … (the two stderr diagnostic lines above, elided) …
-[约束生成] ale 约束已写出至：unified.tsv        (*"ale constraints written to unified.tsv"*)
+[约束生成] ale 约束已写出至：unified.tsv
 $ cat unified.tsv
 #family,donor,receptor,weight,distance
 selfloop,65,59,1.0,2.0
 selfloop,65,65,1.0,
 ```
+
+(the line is emitted in Chinese: *"ale constraints written to `unified.tsv"`*.)
 
 **The text-input path behaves the same way**: 3-column space or 4-column comma input
 carries no distance column, so self-loops are always kept and always counted under
@@ -210,7 +226,7 @@ original 'to itself' statistic"*.) In other words, whether `to itself` is non-ze
 |--------|-------|
 | `--target-clade <label>` | Root label of the target clade; by default only constraints with both endpoints inside the clade are kept  |
 | `--target-clade-ancestor-map` | Enable the conservative "external ancestor mapped to the root" rule (requires `--target-clade`; off by default to avoid spurious partial orders) |
-| `--dry-run` | Static preflight: tree format / binarity / internal-label uniqueness / leaf-name uniqueness / constraint format / weight validity / endpoint validity / `d`-column semantics. In `--from` mode it **actually parses the upstream output** and reports zero-constraint and low-hit-rate problems. **Any adapter parse failure makes the preflight FAIL** and aborts with **exit code 1** (worked example in 08 §8.4b). Does not rank |
+| `--dry-run` | Static preflight: tree format / binarity / internal-label uniqueness / leaf-name uniqueness / constraint format / weight validity / endpoint validity / `d`-column semantics. In `--from` mode it **actually parses the upstream output** and reports zero-constraint and low-hit-rate problems (for `ale` only the zero-hit error line is emitted — it never warns about a low hit rate; see §3.2). **Any adapter parse failure makes the preflight FAIL** and aborts with **exit code 1** (worked example in 08 §8.4b). Does not rank |
 
 ## 3.5 Reporting and output
 
@@ -236,11 +252,11 @@ original 'to itself' statistic"*.) In other words, whether `to itself` is non-ze
 >
 > (Chinese: *"2 constraint files given; the three output files and the HTML report all use
 > the first file as prefix … the other 1 file did take part in the computation … pass
-> -p/--output-prefix explicitly to keep products per source."*)
+> -p/--output-prefix explicitly to keep output files per source."*)
 >
 > It is also stored in `result.run_metadata["multi_file_prefix_note"]`.
 >
-> **Write semantics**: products are written to a temporary file in the target directory,
+> **Write semantics**: the output files are written to a temporary file in the target directory,
 > `fsync`-ed and then moved with `os.replace`, so a crash mid-write cannot leave a
 > half-written file; missing parent directories are created automatically (failures report
 > the offending path).
@@ -254,7 +270,7 @@ original 'to itself' statistic"*.) In other words, whether `to itself` is non-ze
 | `--mcmc-temperature` | `auto` or float > 0 | **`auto`** | Boltzmann temperature. `auto` = `max(total weight, 1) / 100`; the effective value is printed and recorded in `run_metadata["params"]`. A positive number fixes the temperature |
 | `--mcmc-burn-in` | int ≥ 0 | **50%** of `iters` | Burn-in steps: advance the chain without collecting |
 | `--mcmc-thin` | int > 0 | `max(1, iters // 100)` | Thinning interval, to reduce autocorrelation between retained samples |
-| `--near-optimal-top-k` | int ≥ 1 | `50` | **Near-optimal collector capacity**: how many **deduplicated** near-optimal orders the robustness/sensitivity summary may consider (API `top_k`, see 3.6b). Meaningful only with `--ls > 0` |
+| `--near-optimal-top-k` | int ≥ 1 | `50` | **Support-set cap of the near-optimal collector**: how many **deduplicated** near-optimal orders the robustness/sensitivity summary may consider (API `top_k`, see 3.6b). Meaningful only with `--ls > 0` |
 
 `--mcmc` appends a convention statement, the effective parameters, sample statistics and
 **convergence diagnostics** to stdout (measured: 1000 steps, `--seed 42`, cyanobacterial
@@ -268,6 +284,19 @@ example):
 [MCMC] 收敛诊断（convergence diagnostics，按抽稀前的记录链计）：唯一样本占比=0.074、相邻重复率=0.907、最长同态连续段占比=0.056、有效样本量 ESS=7.6（0.008 倍样本量）、状态覆盖=n/a（状态空间过大，未精确枚举）；能量 sd=21.2451
 ```
 
+(the last four lines are emitted in Chinese; they read *"convention statement: this is a
+**preliminary implementation** of a Metropolis–Hastings chain, its convergence diagnostics are
+not validated; samples along the chain are autocorrelated with one another (not independent
+observations) and must not be used as a measure of uncertainty until the diagnostics below
+pass"*; *"temperature T=22.184 (auto: max(total weight,1)/100); iters=1000, burn-in=500,
+thin=10"*; *"100 samples retained, of which 51 distinct orders; energy mean=835.7672,
+min=795.6300 (the number of distinct samples being far below the number of samples means the
+chain has not mixed, so the mean must not be used as a measure of uncertainty)"*; and
+*"convergence diagnostics (computed on the recorded chain, i.e. before thinning): distinct-sample
+fraction = 0.074, adjacent-duplicate rate = 0.907, longest run of identical states as a
+fraction = 0.056, effective sample size ESS = 7.6 (0.008 × the sample count), state coverage =
+n/a (state space too large, not enumerated exactly); energy sd = 21.2451"*.)
+
 > The default temperature is **not** a fixed `0.01`: on the example
 > with total weight 2218.4, `auto` yields T=22.184 — three orders of magnitude apart.
 > At 0.01 the chain is effectively frozen and explores very few states.
@@ -279,18 +308,20 @@ example):
 **distinct** (deduplicated) near-optimal orderings the "robustness/sensitivity summary over
 solutions visited by the local search" may consider:
 
-- default **50** (`config.DEFAULT_NEAR_OPTIMAL_TOP_K`): the collector holds at most K
-  deduplicated orders, so with the default the 51st order can never take part in the
-  counts;
+- default **50** (`config.DEFAULT_NEAR_OPTIMAL_TOP_K`), **unchanged from the historical
+  behaviour**: the collector holds at most K deduplicated orders, so with the default the 51st
+  order can never take part in the counts;
 - values are validated by `ranking/ranker.py:check_near_optimal_top_k()`: it must be an
   **integer ≥ 1**. Out-of-range on the CLI (e.g. `--near-optimal-top-k 0`) is rejected by
   argparse with **exit code 2**
-  (`argument --near-optimal-top-k: 近优解收集容量 必须 > 0，收到 0`); on the Python side
+  (`argument --near-optimal-top-k: 近优解收集容量 必须 > 0，收到 0`, i.e. *"near-optimal
+  collector cap must be > 0, received 0"*); on the Python side
   `0` / `-1` / `2.5` / `'50'` / `True` / `inf` all raise `ValueError`, while the integral
   float `100.0` normalizes to `100`;
 - the **effective** value is recorded in `Result.run_metadata["near_optimal_top_k"]`, echoed
   in the `run_metadata["params"]` string (`--near-optimal-top-k 12`) and in the HTML report
-  (`top_k：12（本次报告使用 12）`); the summary dict also carries `top_k` / `top_k_reported`.
+  (`保留上限 top_k：12（本次报告使用 12）`, i.e. *"retention cap top_k: 12 (this report uses
+  12)"*); the summary dict also carries `top_k` / `top_k_reported`.
 
 **Why the cap matters**: with `--ls > 0` what the program reports is **not** robustness under
 resampling of the input data (`is_resampling_robustness` is always `False`) — it is a
@@ -331,12 +362,13 @@ accumulated over K orders of length n).
 
 | Path | Reproducible under a fixed `--seed`? | Notes |
 |------|--------------------------------------|-------|
-| Default (`--ls 0`) | **Yes**, byte-for-byte | All three heuristics and the outputs are driven by the seed-determined random stream; constraint line order and multi-file order do not change the products |
+| Default (`--ls 0`) | **Yes**, byte-for-byte | All three heuristics and the outputs are driven by the seed-determined random stream; constraint line order and multi-file order do not change the output files |
 | `--ls > 0`, no iteration cap | **Not guaranteed across machines** | The stop condition is wall-clock time, so the iteration count follows machine load. The program says so itself: a WARNING is appended to stdout |
 | `--ls > 0` + `--local-search-max-iters N` | **Yes** (same Python/platform) | The iteration count and hence the random-stream consumption are deterministic; this is the option to use when you need a deterministic search |
 | `--r 1` / `--r 2` | Determined by `--seed` | Randomization alters the data itself, so "agrees with the default path" is meaningless, but the same seed still reproduces |
 
-> In other words, the blanket promise that "a fixed `--seed` is reproducible" holds only in
+> In other words, the blanket promise made in the manual and README that "a fixed `--seed` is
+> reproducible" holds only in
 > this precise form: **the default path (`--ls 0`) is reproducible;
 > `--ls > 0` needs `--local-search-max-iters` to be reproducible across machines.**
 
@@ -385,7 +417,7 @@ maxtic-next species.tree out.recphyloxml --from eccetera --dry-run; echo "exit=$
 maxtic-next species.tree constraints.tsv --ls 600 --incremental \
     --checkpoint run.ckpt --checkpoint-interval 30
 
-# re-run into the same directory, deliberately allowing overwrite of previous products
+# re-run into the same directory, deliberately allowing overwrite of previous output files
 maxtic-next species.tree constraints.tsv --seed 42 --force
 ```
 
@@ -402,8 +434,8 @@ maxtic-next species.tree constraints.tsv --seed 42 --force
 > In a container this code propagates directly (`ENTRYPOINT ["maxtic-next"]`).
 
 > **Front-end exit codes**: the desktop app `maxtic-studio` lives in the separate repository
-> `MaxTiC-Next-Studio` (see "Where is the graphical front end?" in the README). It reuses this
-> same table, where **`3`** additionally means "GUI dependencies missing — an install hint is
-> printed". This repository does not register that entry point.
+> `MaxTiC-Next-Studio` (see "Where is the graphical front end?" in the README). It reuses the
+> semantics of this same table (when **PySide6** is missing it prints an install hint and exits
+> with **`3`**). This repository does not register that entry point.
 
-> Prev: [02 · Quickstart](02_quickstart.md) ｜ Next: [04 · Python API](04_python_api.md)
+> Prev: [02 · Quickstart](02_quickstart.md) | Next: [04 · Python API](04_python_api.md)

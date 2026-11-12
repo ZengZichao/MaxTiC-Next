@@ -1,5 +1,7 @@
 # RANGER-DTLx 适配器规格说明书
 
+> 🌐 English version: [ranger_dtlx.en.md](ranger_dtlx.en.md)
+
 - **工具**：RANGER-DTLx（DTL 调和 + AggregateRanger），来自 `RANGER-DTLx-代码`。
 - **适配器**：`maxtic_next.constraints.adapters.ranger_dtl`（`RangerDTLAdapter` /
   `convert_from_ranger_dtl`），解析核心 `_recon_report`（与 ARTra 共用）。
@@ -8,14 +10,19 @@
 ## 1. 真实输出格式（源码求证）
 
 RANGER-DTLx 逐基因节点打印人类可读调和报告。块头由
-`RANGER-DTLx-代码/Ranger-DTLx/DTL-algorithm.h:2170` 打印，转移事件行由
-`DTL-algorithm.h:1840` 生成：
+`RANGER-DTLx-代码/Ranger-DTLx/DTL-algorithm.h:2170` 打印；转移事件行则由
+**同一文件的三处分支之一**生成，父节点片段随映射节点类型而变——`:1840-1841`（映射到
+`isEdge` 边节点）打 `Transfer, Mapping --> …, Edge, Parent = …, Recipient --> …`、
+`:1864-1865`（映射到 `isDummy` dummy 节点）打
+`Transfer, Mapping --> …, Parent = …, Recipient --> …`、`:1886`
+（`isDummy` 判定的 else 支，普通物种节点即由此打印）两者皆无。下文示例统一按
+`:1840-1841` 那一支（带 `Edge,`）书写：
 
 ```
  ------------ Reconciliation for Gene Tree 1 (rooted) -------------
 g1_0: Leaf Node
-m1 = LCA[g1, g2]: Speciation, Mapping --> 59, Parent = 69
-m2 = LCA[g3, g4]: Duplication, Mapping --> 61, Parent = 65
+m1 = LCA[g1, g2]: Speciation, Mapping --> 59, Edge, Parent = 69
+m2 = LCA[g3, g4]: Duplication, Mapping --> 61, Edge, Parent = 65
 m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 ```
 
@@ -28,7 +35,8 @@ m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 而非另一次采样。支持度分母现优先取报告**自己声明**的
 `Total number of optimal solutions: N`（`weight_semantics = support_over_declared_samples`）；
 报告里出现**多个**声明值时（RANGER-DTLx 为每棵基因树各打印一行）取**最大值**作分母并告警；
-仅当各块叶子集合一致（确为同一家族的重复调和）才退回 `support_over_replicate_blocks`；
+仅当块数 > 1 且各块叶子集合一致（确为同一家族的重复调和）才退回
+`support_over_replicate_blocks`（ecceTERA 不校验各块叶子集合，见 [eccetera.md](eccetera.md) §2）；
 两者都不成立时权重按**整数计数**输出（`integer_count`），并明确告知
 `--ale-min-support` 阈值此时**不具 [0,1] 支持度语义**。
 
@@ -46,7 +54,8 @@ m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 
 ## 3. 支持度 / 权重 / 距离
 
-块内计数 → 互反减法 → `support = 计数 / 声明样本数`（见 §1 的分母裁定）→ `> min_support` 保留；
+块内计数 → 互反减法 → `support = count / denominator`（分母 = 采样数，即工具声明值；分母裁定
+见 §1）→ `> min_support` 保留；
 `distance = distance_from(receptor, donor)`；**自环 `donor == receptor` 例外**：写
 `distance = None`（无距离信息），不被 `--min-transfer-distance` 删除。
 供体端点取 `Mapping -->` 的**供体本身**（`donor_endpoint_convention = donor_itself`），
@@ -57,6 +66,7 @@ m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 | 情形 | 处理 |
 |------|------|
 | donor / receptor 不在物种树标签集合 | 该转移丢弃（不产伪约束） |
+| 端点丢弃的可观测性 | 每条被丢弃的转移**按原因计数**（`dropped_by_label_miss`；数字 ID 反解仅在 ecceTERA 路径执行，本适配器 `numeric_id_resolutions` 恒为 0），转换结束打印 stderr 诊断摘要并挂在 `ConstraintSet.diagnostics`；端点命中率为 **0** 抛 `LabelMismatchError`，低于 `min_endpoint_hit_rate`（默认 `0.5`）告警（`--quiet-adapters` 只关打印，不影响计数与抛错） |
 | 家族规模（叶子行数）`<= min_family_size` | 跳过 |
 | 家族规模**探测失败**（报告里没有 `X: Leaf Node` 行） | **跳过** `min_family_size` 过滤并告警（`resolve_family_size_filter`），不再清空全部转移 |
 | 无块头但有转移 | 块数记为 1 |
@@ -66,6 +76,10 @@ m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 
 - 端点为物种标签（内部节点常为数字，如 `61`），须与物种树 bootstrap 标签一致；
 - AggregateRanger 的多样本聚合建议合并到同一文件的多个块，或分文件后由适配器跨文件求和。
+- 本节为摘要：端点层级、权重口径与 diagnostics 计数等**完整语义**以规范性语义注记
+  [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) /
+  [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md)
+  为准。
 
 ## 6. 用法
 

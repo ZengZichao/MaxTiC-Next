@@ -1,5 +1,7 @@
 # 多软件兼容适配 —— 各上游工具样例
 
+> 🌐 English version: [README.en.md](README.en.md)
+
 本目录为 5 个上游调和 / 转移推断工具提供**真实格式**样例输入，演示如何用
 `--from <tool>` / `--from-auto` 把它们的输出直接喂给 MaxTiC-Next 排序。
 物种树统一用 `../minitree.tree`（内部节点标签为 bootstrap 数字，如 61/62/67）；
@@ -14,7 +16,7 @@
 | `eccetera/FAM1.recphyloxml` | ecceTERA | recPhyloXML（`branchingOut` / `transferBack`） |
 | `artra/FAM1.txt` | ARTra | `Replacing/Additive Transfer` 报告 |
 | `alerax/run/reconciliations/summaries/*_transfers.txt` | AleRax | `donor receptor freq` |
-| `run_adapters.sh` | — | 一键演示全部 + 自动检测 + 两阶段 |
+| `run_adapters.sh` | — | 一键演示 ALE 以外的 4 个工具 + 自动检测 + 两阶段 |
 
 ## 一键运行
 
