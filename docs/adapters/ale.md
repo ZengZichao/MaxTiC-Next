@@ -48,7 +48,7 @@ token 是否恰为 `reconciled`**（`ale.py:261-262`），声明行其余部分�
   节点递归合并两子树受体），donor 取 `donnor_search` 上溯结果。纯物种形成/重复节点
   不产生 rec 约束。
 - **⚠️ `rec` 与 `trf` 不等价**：两者产出的约束集在**条数与权重上都不相同**（官方示例规模下
-  `rec` 只有 13,995 条、总权重 5482.98，`trf` 总权重 6438.6），切换 `--ale-source`
+  `rec` 只有 13,999 条、总权重 5483.31，`trf` 总权重 6438.6），切换 `--ale-source`
   等于**换掉整个输入约束集**，所有下游数字随之改变。需要复现以 `rec` 为默认的旧结果时，
   请显式 `--ale-source rec`。实际生效口径会打印到 stderr，并记入
   `Result.run_metadata["adapter_diagnostics"]`。

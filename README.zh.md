@@ -165,7 +165,7 @@ maxtic-next species.tree alerax_run/     --from alerax
 
 - **ALE 的 `--ale-source` 默认是 `trf`**（转移事件，`parent(donor) -> receptor`），即 ALE 官方
   MaxTiC 集成 `constraints_from_transfers` 规定的口径；`rec`（调和事件）仍可选，但两者产出的
-  约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,995 条、总权重 5482.98，
+  约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,999 条、总权重 5483.31，
   `trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入。
 - 每次转换在 **stderr** 打印一行诊断（端点约定、权重口径、采样分母、端点命中率与各类**丢弃计数**），
   并写入 `result.run_metadata["adapter_diagnostics"]`；端点命中率为 0 直接报错，低于

@@ -4,6 +4,8 @@
 桌面端是**独立的 GitHub 仓库**（MaxTiC-Next-Studio），两者只通过包依赖相连。
 文档里若用本地目录名或相对路径（``../MaxTiC-Next-Studio-项目代码`` 之类）描述它，
 换一台机器、换一个克隆布局就全是错的 —— 所以这里把它变成可执行的约束。
+
+同一原则也适用于适配器文档引用的**上游求证语料**：只允许简称，不允许本地路径。
 """
 
 from __future__ import annotations
@@ -44,6 +46,23 @@ def test_docs_never_point_at_a_local_folder(rel):
     text = (ROOT / rel).read_text(encoding="utf-8")
     hits = [m for m in _LOCAL_PATH_MARKERS if m in text]
     assert not hits, f"{rel} 用本地路径/本地目录名描述了桌面端仓库：{hits}"
+
+
+# 上游求证语料在文档里只允许写成简称（简称的含义见 docs/adapters/README.md 的
+# "引用约定"段落），不得写成本机目录路径。
+_CORPUS_PATH_MARKERS = ("参考软件-", "MaxTiC-Next-参考软件")
+
+ADAPTER_DOCS = tuple(
+    sorted(str(p.relative_to(ROOT)) for p in (ROOT / "docs" / "adapters").glob("*.md"))
+)
+
+
+@pytest.mark.parametrize("rel", ADAPTER_DOCS)
+def test_adapter_docs_cite_evidence_corpus_by_short_name(rel):
+    """目录布局因机器而异，把它写进文档换台机器就全错。"""
+    text = (ROOT / rel).read_text(encoding="utf-8")
+    hits = [m for m in _CORPUS_PATH_MARKERS if m in text]
+    assert not hits, f"{rel} 用本地目录路径描述了上游求证语料：{hits}"
 
 
 def test_readme_links_the_desktop_repository():

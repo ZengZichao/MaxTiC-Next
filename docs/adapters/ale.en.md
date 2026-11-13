@@ -58,8 +58,8 @@ denominator** (support = count / N).
   result of walking up with `donnor_search`. Pure speciation/duplication nodes produce no
   rec constraints.
 - **⚠️ `rec` and `trf` are not equivalent**: the constraint sets they produce differ in
-  **both count and weights** (at the official example scale, `rec` yields only 13,995
-  constraints with a total weight of 5482.98, vs 6438.6 for `trf`); switching
+  **both count and weights** (at the official example scale, `rec` yields only 13,999
+  constraints with a total weight of 5483.31, vs 6438.6 for `trf`); switching
   `--ale-source` is equivalent to **replacing the entire input constraint set**, and all
   downstream numbers change accordingly. To reproduce older results that used `rec` as
   the default, pass `--ale-source rec` explicitly. The convention actually in effect is

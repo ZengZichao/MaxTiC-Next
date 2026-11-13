@@ -91,7 +91,7 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
   指的是受体分支的**子节点**，不是受体分支本身（与 03 章 3.2.1、`--ale-source` 的 help 文本
   一致）。`rec` 取自 `.uml_rec` 的调和记录块（该块在上游脚本里位于 `T@` 门控体内，
   纯物种形成/重复节点不产生约束）。**两者不是等价写法**：约束**条数与总权重都不同**（官方
-  示例规模下 `rec` 只有 13,995 条、总权重 5482.98，`trf` 总权重 6438.6，权重相差约 17%；
+  示例规模下 `rec` 只有 13,999 条、总权重 5483.31，`trf` 总权重 6438.6，权重相差约 17%；
   详见 [../../adapters/ale.md](../../adapters/ale.md) §2），切换即换掉整个输入，需复现旧结果
   请显式 `--ale-source rec`。实际口径会打到 stderr。
 - 供体端点约定为 **`parent_of_donor`**（供体的父节点）——与 RANGER-DTLx / ARTra /
@@ -114,10 +114,11 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
 
 **工具定位**：DTL 调和 + AggregateRanger，输出**人类可读**调和报告。
 
-**真实格式**（源码 `DTL-algorithm.h:1840`）：逐基因节点打印，转移行形如
+**真实格式**（源码 `DTL-algorithm.h:1840-1841`）：逐基因节点打印、行首为该内部节点
+自身的标签，转移行形如
 
 ```
- = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
+m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 ```
 
 `Mapping --> D` = 供体、`Recipient --> R` = 受体 → 约束 `(D, R)`。一个文件可含多个
@@ -184,11 +185,12 @@ maxtic-next species_tree.nwk out.recphyloxml --from-auto
 
 **工具定位**：在 RANGER 风格调和上把每个转移分类为**加性（Additive）**或**替换（Replacing）**。
 
-**真实格式**：与 RANGER 调和报告**同形**，仅事件名多 `Replacing`/`Additive` 前缀：
+**真实格式**：与 RANGER 调和报告**同形**，事件名多 `Replacing`/`Additive` 前缀，且
+`LCA[..,..]` 内不写空格：
 
 ```
- = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
- = LCA[H159, H17]: Additive Transfer, Mapping --> H17, Recipient --> H159
+m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 ```
 
 **MaxTiC-Next 配套**：

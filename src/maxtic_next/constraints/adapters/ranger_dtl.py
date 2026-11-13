@@ -34,16 +34,19 @@ Ranger-DTL（来自 Ranger 软件包）输出 DTL 调和结果，其转移事件
   ``convert`` 结束时打印一行 stderr 摘要。端点命中率低于
   ``min_endpoint_hit_rate``（默认 50%）告警、为 0 时报错。
 
-RANGER-DTLx 真实输出格式示例（求证自 ``Ranger-DTLx/DTL-algorithm.h:1840``）::
+RANGER-DTLx 真实输出格式示例（逐字摘自随附样本
+``examples/adapters/ranger/FAM1.dtl``；事件行格式求证自
+``Ranger-DTLx/DTL-algorithm.h:1840-1841``）::
 
     Reconciliation for Gene Tree 1:
-    H117: Leaf Node
-     = LCA[H117, H121]: Speciation, Mapping --> H123
-     = LCA[H117, H14]: Transfer, Mapping --> H15, Edge, Parent = P, Recipient --> H125
-     = LCA[H18, H21]: Duplication, Mapping --> H22
+    g1_0: Leaf Node
+    g2_1: Leaf Node
+    m1 = LCA[g1, g2]: Speciation, Mapping --> 59, Parent = 61
+    m2 = LCA[g3, g4]: Duplication, Mapping --> 45, Parent = 61
+    m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 
-其中转移事件的 ``Mapping -->`` 为供体物种、``Recipient -->`` 为受体物种。
-上述格式已按 RANGER-DTLx 源码与真实输出逐项求证。
+每个内部节点一行的行首是该节点自身的标签（``m1`` / ``m2`` / ``m3`` …），叶子节点行
+则是 ``<叶标签>_序号: Leaf Node``。
 """
 
 from typing import Dict, List, Optional, Tuple

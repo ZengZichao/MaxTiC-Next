@@ -76,9 +76,11 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
 
 ```bash
 python -m pytest tests/ -q
-# Expected: all pass (currently 492 passed, 1 skipped with the [dev,report] extras;
+# Expected: all pass (currently 506 passed, 1 skipped with the [dev,report] extras;
 #           covers adapters, the reference-implementation differential, boundary cases
 #           and CLI switches. The single skip needs python2 plus the original MaxTiC.py)
+# Without the [report] extras, the Jinja rendering guard skips instead of failing —
+# take the counts from your own output
 ```
 
 ## 1.7 Uninstall

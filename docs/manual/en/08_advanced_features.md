@@ -52,10 +52,15 @@ Measured (`examples/minitree.tree` + `examples/Cyano_CUTConstraints.tsv`, `--ls 
 
 | `--near-optimal-top-k` | deduplicated orders retained and counted | distinct orders the search actually visited |
 |------------------------|-------------------------------------------|---------------------------------------------|
-| `3` | 3 | 9141 |
-| `10` | 10 | 9139 |
-| `50` (default) | 50 | 8982 |
-| `400` | 400 | 7940 |
+| `3` | 3 | 10123 |
+| `10` | 10 | 10123 |
+| `50` (default) | 50 | 10123 |
+| `400` | 400 | 10123 |
+
+The third column is **independent of K**: once the iteration count is pinned, the set of orders
+the chain walks is identical and K only truncates which of them the summary keeps. Switch to a
+wall-clock stop (no `--local-search-max-iters`) and that column becomes machine-dependent, at
+which point this table must not be quoted as a reproducible figure.
 
 ```bash
 maxtic-next species.tree constraints.tsv --ls 180 --near-optimal-top-k 400

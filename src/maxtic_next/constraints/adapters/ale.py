@@ -29,7 +29,7 @@ donor** branch should be older than the **child of the receptor** branch"，其�
 ``python MaxTiC.py species_tree_dated constraints_from_transfers ls=180``）。
 也就是说，ALE↔MaxTiC 的官方口径用的是**转移事件**（``trf``，键
 ``parent(donor),receptor``），而本实现旧默认值 ``rec``（调和事件）会**静默换掉整个
-约束集**（真实数据上 rec 仅 13995 条、总权重 5482.98，trf 与官方产物逐条一致、
+约束集**（真实数据上 rec 仅 13999 条、总权重 5483.31，trf 与官方产物逐条一致、
 总权重 6438.6）。故现默认 ``source="trf"``；两种口径都可选、都保留实现：
 
 * ``"trf"``（默认，与 ALE 官方 MaxTiC 集成一致）：每个 ``T@donor->receptor`` 事件

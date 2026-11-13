@@ -191,7 +191,7 @@ maxtic-next species.tree alerax_run/     --from alerax
   the convention of ALE's own MaxTiC integration (`constraints_from_transfers`). `rec`
   (reconciliation events) remains selectable, but the two produce constraint sets that differ
   in **both constraint count and total weight** (on the official example `rec` yields only
-  13,995 constraints with a total weight of 5482.98, vs 6438.6 for `trf` — about 17% apart),
+  13,999 constraints with a total weight of 5483.31, vs 6438.6 for `trf` — about 17% apart),
   so switching replaces the entire input.
 - Every conversion prints one diagnostic line to **stderr** (endpoint convention, weight
   convention, sample denominator, endpoint hit rate and **per-reason drop counters**) and records

@@ -2,23 +2,28 @@
 
 ARTra（Additive and Replacing Transfer classifier）在 RANGER-DTL 风格的 DTL 调和
 基础上，用规则启发式 + 机器学习把每个转移事件分类为**加性转移（Additive
-Transfer）**或**替换转移（Replacing Transfer）**。其最终输出（``ARTra-程序/output.txt``
-实证）与 RANGER-DTLx 调和报告**同形**，仅在事件名上多出 ``Replacing`` / ``Additive``
-前缀::
+Transfer）**或**替换转移（Replacing Transfer）**。其最终输出（实测样本见
+``tests/data/artra_real/output.txt``）与 RANGER-DTLx 调和报告**同形**，仅在事件名上
+多出 ``Replacing`` / ``Additive`` 前缀；与 RANGER-DTLx 方言不同的是，ARTra 把 ``LCA``
+方括号内的逗号写成无空格的 ``[A,B]``（RANGER-DTLx 为 ``[A, B]``），且不带
+``Edge, Parent =`` 一段。逐字摘自实测样本::
 
-    ------------ Reconciliation for Gene Tree 1 (rooted) -------------
+     ------------ Reconciliation for Gene Tree 1 (rooted) -------------
     Species Tree:
     (...);
     Gene Tree:
     (...);
     Reconciliation:
     H117_0: Leaf Node
-     = LCA[H119, H121]: Speciation, Mapping --> H122
-     = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
-     = LCA[H159, H17]: Additive Transfer, Mapping --> H17, Recipient --> H159
+    m7 = LCA[H119,H121]: Speciation, Mapping --> H122
+    m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+    m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
     ...
     The minimum reconciliation cost is: 65 (Duplications: 4, Transfers: 13, Losses: 18)
     Total number of optimal solutions: 24
+
+每个内部节点一行的行首是该节点自身的标签（``m7`` / ``m3`` …），叶子节点行则是
+``<叶标签>_序号: Leaf Node``。
 
 因此本适配器与 ``RangerDTLAdapter`` 共用同一"调和报告"解析核心
 （``_recon_report``）：转移事件的 ``Mapping --> <donor>`` 为**供体物种**、
@@ -33,7 +38,8 @@ Transfer）**或**替换转移（Replacing Transfer）**。其最终输出（``A
 * **供体端点约定** ``donor_endpoint_convention = "donor_itself"``（供体本身；ALE 取
   "供体的父" ``parent_of_donor``，两者相差一个物种层级，混用会被告警）；
 * **支持度分母**＝报告**自己声明**的 ``Total number of optimal solutions: N``
-  （真实 ``output.txt:206`` 声明 24 个最优解却只打印 1 个 → 分母是 24，不是 1）。
+  （实测 ``tests/data/artra_real/output.txt:206`` 声明 24 个最优解却只打印 1 个 →
+  分母是 24，不是 1）。
   旧实现把"块数"当分母，于是 13 条约束权重全为 1.0、``--min-support 0.95`` 成
   为空操作。声明值缺失时按诊断口径退化为**整数计数**并明说；
 * 每一次静默丢弃（标签不匹配 / 支持度 / 家族规模 / 自环）都被计数，随
