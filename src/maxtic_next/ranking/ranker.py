@@ -1010,7 +1010,6 @@ class Ranker:
                     + str(iters)
                     + "（迭代数一致时结果逐字节一致）。"
                 )
-                warnings.append(hint)
                 print(hint, file=sys.stderr)
             sensitivity_summary = collector.summary()
             # ：回写改进后的 value / best_source，使 stdout 不与交付树矛盾
