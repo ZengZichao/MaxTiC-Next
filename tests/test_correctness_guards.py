@@ -223,6 +223,9 @@ class TestB3McmcHonestDefaults:
             assert flag in meta["params"]
         out = capsys.readouterr().out
         assert "[MCMC]" in out and "auto" in out
+        # 手册逐字引用这一行，所以它必须渲染成 22.184，而不是浮点尾数 22.183999999999997。
+        assert f"温度 T={expected:.10g}" in out
+        assert f"温度 T={expected!r}" not in out
         # 不再宣称"严格/后验/独立样本"
         assert "后验" not in out and "独立样本" not in out
         assert "Metropolis" in out and "not validated" in out
