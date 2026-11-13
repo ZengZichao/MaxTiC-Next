@@ -8,6 +8,13 @@
 > 工具名，唯一例外是 `--from ranger`，对应 `docs/adapters/ranger_dtlx.md`）。供体端点层级、
 > 权重口径、可观测性等**完整语义注记**以
 > [README_semantics.md](../../src/maxtic_next/constraints/adapters/README_semantics.md) 为准。
+>
+> **引用约定**：本目录各文档里的 `ARTra-代码`、`ARTra-程序`、`RANGER-DTLx-代码`、
+> `AleRax-代码`、`ecceTERA-代码` 等反引号 token 是**求证语料的简称**——指开发本适配器时
+> 用来逐项核对上游输出格式的**各工具官方源码 / 发行包**（含其行号引用）。它们是简称而
+> **不是本仓库内的路径**，在任何克隆布局里都解析不到，请勿当作可打开的文件；凡本仓库内
+> 可直接核验的语料，一律写成真实路径（`tests/data/…`、`examples/adapters/…`、
+> `src/maxtic_next/…`）。
 
 ## 1. 为什么需要适配框架
 

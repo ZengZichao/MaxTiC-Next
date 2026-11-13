@@ -197,7 +197,7 @@ micromamba run -n MaxTiC-Next pip install -e <REPO_ROOT>
 |------|------|
 | 数千基因家族 → 约束 | Stage 1 开 `--ale-cache-dir`（断点续传）、`--ale-parallel process`（多核） |
 | 反复调排序参数 | 固化 Stage 1 产物 `constraints.tsv`，只重跑 Stage 2 |
-| 长局部搜索 | 增量打分已默认开启（加速 3.1–8.2×）+ `--checkpoint` 防中断丢失（见 08 章） |
+| 长局部搜索 | 增量打分已默认开启（本机实测 5.5–9.7×，口径见 08 章 8.5）+ `--checkpoint` 防中断丢失（见 08 章） |
 | 需要跨机器**完全一致**的搜索结果 | `--local-search-max-iters N`（墙钟时长本身不可移植） |
 | 集群可复现 | 固定 `--seed`，锁 Python/依赖版本，容器化并**固定镜像标签**（`:0.2.1` 而非 `:latest`） |
 | 上游输出可疑时 | 先看 `--dry-run`（适配器模式会**真正解析**上游输出：解析失败 / 零约束 / 端点全不命中都报 **error** 并退出 1，而端点命中率低于 `--min-endpoint-hit-rate` 只是 **warning**），再看 stderr 的 `[tool] …` 诊断行 |

@@ -223,6 +223,13 @@ class TestB3McmcHonestDefaults:
             assert flag in meta["params"]
         out = capsys.readouterr().out
         assert "[MCMC]" in out and "auto" in out
+        # 手册逐字引用这一行，所以它必须渲染成 22.184，而不是浮点尾数 22.183999999999997。
+        rendered = f"{expected:.10g}"
+        assert f"温度 T={rendered}" in out
+        if repr(expected) != rendered:
+            # 只在两者确实不同时才禁止原始 repr 出现：某些 Python 版本上 auto 值算出来
+            # 本就没有尾数（3.14 的 total_weight 差 1 ULP），无条件断言会不可能成立。
+            assert f"温度 T={expected!r}" not in out
         # 不再宣称"严格/后验/独立样本"
         assert "后验" not in out and "独立样本" not in out
         assert "Metropolis" in out and "not validated" in out
@@ -921,6 +928,46 @@ class TestDefaultsAndMinorGuards:
         )
         cap2 = capsys.readouterr()
         assert "个约束文件" not in cap2.err and "个约束文件" not in cap2.out
+
+    def test_m20_local_search_repro_note_is_stderr_only(self, capsys):
+        """: 墙钟局部搜索的"复现配方" NOTE 只能进 stderr，不得进 stdout。
+
+        ``ranker`` 把本次实际迭代数回灌成 ``--local-search-max-iters N`` 建议时，
+        stdout 与原版逐字节对齐是硬契约，不能加行；而有据可依的
+        ``WARNING: --local-search > 0 …`` 属于文档承诺的 stdout 摘要（手册 §3.8），
+        必须留在 stdout。两条通道各归各位，且不得重复输出。
+        """
+        api.rank(
+            TREE,
+            CONS,
+            seed=42,
+            local_search=0.02,
+            print_summary=True,
+            html_report=False,
+        )
+        cap = capsys.readouterr()
+        note = "跨机器复现请改用 --local-search-max-iters"
+        assert note in cap.err, "迭代数复现配方应出现在 stderr"
+        assert note not in cap.out, "stdout 被运行期复现建议污染（硬契约破坏）"
+        assert cap.out.count("NOTE: 本次局部搜索实际执行") == 0
+        assert "WARNING: --local-search > 0" in cap.out, "文档承诺的 stdout 告警缺失"
+        assert "WARNING: --local-search > 0" not in cap.err
+
+    def test_m20_iteration_capped_run_emits_no_wallclock_note(self, capsys):
+        """显式给定迭代上限时，墙钟相关文案一条都不该出现。"""
+        api.rank(
+            TREE,
+            CONS,
+            seed=42,
+            local_search=0.02,
+            local_search_max_iterations=50,
+            print_summary=True,
+            html_report=False,
+        )
+        cap = capsys.readouterr()
+        for text in (cap.out, cap.err):
+            assert "跨机器复现请改用" not in text
+            assert "WARNING: --local-search > 0" not in text
 
     def test_m19_auto_format_is_sniffed_only_once(self, tmp_path, monkeypatch):
         from maxtic_next.constraints.adapters import registry

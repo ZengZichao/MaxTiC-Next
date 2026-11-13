@@ -41,14 +41,14 @@ token 是否恰为 `reconciled`**（`ale.py:261-262`），声明行其余部分�
 - **转移事件（trf，默认）**：`T@donor->receptor` → 约束 `(donor, receptor)`，donor 取物种树中
   该节点的**直接父**（`parent_map.get(donnor)`，即预先从物种树算好的 `label -> parent_label`
   查表；`donnor_search` 沿调和树父链上溯只用于下面的 rec 分支）。此即 **ALE 官方 MaxTiC 集成**
-  （`maxtic/constraints_from_reconciliations.py` 的 `constraints_from_transfers`）规定的
-  直接输入，故本包把默认值定为 `trf`。
+  （由 `maxtic/constraints_from_reconciliations.py` 写出的
+  `constraints_from_transfers` 文件）规定的直接输入，故本包把默认值定为 `trf`。
 - **调和事件（rec）**：仅对**标注中含 `T@` 事件的节点**执行（与原版门控一致）；
   受体取该节点自身映射物种（或经子节点方向匹配 + `receptor_search` 递归收集，`D@`
   节点递归合并两子树受体），donor 取 `donnor_search` 上溯结果。纯物种形成/重复节点
   不产生 rec 约束。
 - **⚠️ `rec` 与 `trf` 不等价**：两者产出的约束集在**条数与权重上都不相同**（官方示例规模下
-  `rec` 只有 13,995 条、总权重 5482.98，`trf` 总权重 6438.6），切换 `--ale-source`
+  `rec` 只有 13,999 条、总权重 5483.31，`trf` 总权重 6438.6），切换 `--ale-source`
   等于**换掉整个输入约束集**，所有下游数字随之改变。需要复现以 `rec` 为默认的旧结果时，
   请显式 `--ale-source rec`。实际生效口径会打印到 stderr，并记入
   `Result.run_metadata["adapter_diagnostics"]`。

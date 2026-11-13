@@ -30,7 +30,7 @@ m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 
 > **The block header is identical to RANGER-DTLx's** (it is not ARTra-specific, yet it is
 > printed by ARTra's **own Java code**):
-> `参考软件-ARTra-代码/JavaCode/dtl_algo/DTLReconciliation.java:619` (the stdout variant
+> `ARTra-代码/JavaCode/dtl_algo/DTLReconciliation.java:619` (the stdout variant
 > `printOutputOfDTRLConsole`) and `:1387` (the `PrintWriter` variant `printOutputOfDTRL`)
 > print exactly
 > ` ------------ Reconciliation for Gene Tree 1 (rooted) -------------`, **identical in

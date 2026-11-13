@@ -1,18 +1,24 @@
 """共享的"调和报告"文本解析核心（RANGER-DTLx / ARTra 共用）。
 
 经对参考软件源码求证，RANGER-DTLx 与 ARTra 输出的是**同一形状**的人类可读调和
-报告，每个内部基因节点一行，转移事件形如::
+报告，每个内部基因节点一行、行首为该节点自身的标签，转移事件形如::
 
-     = LCA[H117, H14]: Transfer, Mapping --> H15, Edge, Parent = P, Recipient --> H125
-     = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
-     = LCA[H117, H14]: Additive Transfer, Mapping --> H15, Recipient --> H125
+    m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
+    m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+    m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
+
+第一行是 RANGER-DTLx 方言（``LCA`` 内逗号后带空格、多一段 ``Edge, Parent = N``，见
+``examples/adapters/ranger/FAM1.dtl``）；后两行是 ARTra 方言（``LCA`` 内不带空格、
+事件名带 ``Replacing`` / ``Additive`` 前缀，见 ``tests/data/artra_real/output.txt``）。
+两侧只有 ``Mapping --> `` 与 ``Recipient --> `` 两段是本模块关心的语义，余皆忽略。
 
 关键求证来源：
 
-* RANGER-DTLx ``Ranger-DTLx/DTL-algorithm.h:1840``（``os << ... "Transfer, Mapping --> "
-  << donor << ... ", Recipient --> " << recipient``）；
-* ARTra ``ARTra-程序/output.txt``（``Replacing Transfer`` / ``Additive Transfer`` 前缀，
-  其余结构一致）。
+* RANGER-DTLx ``Ranger-DTLx/DTL-algorithm.h:1840-1841``（``os << ... "Transfer,
+  Mapping --> " << donor << ... ", Edge, Parent = " << ... ", Recipient --> " <<
+  recipient``）；
+* ARTra ``Node.java:466`` 与实测 ``tests/data/artra_real/output.txt``（``Replacing
+  Transfer`` / ``Additive Transfer`` 前缀，其余结构一致）。
 
 因此本模块把转移事件的语义统一抽象为：``Mapping --> <donor>`` 给出**供体物种**
 （转移离开的谱系，映射所在），``Recipient --> <receptor>`` 给出**受体物种**（转移
@@ -30,8 +36,8 @@ receptor）。
 权重口径
 -------------------------------------
 **"输出块数"不是采样分母**。RANGER-DTLx 的块头（``DTL-algorithm.h:2170``）按**输入
-基因树**逐棵打印，一块 = 另一棵树，不是另一次采样；真实 ARTra 输出
-ARTra 源码的 ``output.txt:206`` 打印 ``Total number of optimal solutions: 24``
+基因树**逐棵打印，一块 = 另一棵树，不是另一次采样；ARTra 的实测输出
+``tests/data/artra_real/output.txt:206`` 打印 ``Total number of optimal solutions: 24``
 却只输出 1 个最优解。故本模块按下列优先级确立分母：
 
 1. 工具**自己声明**的样本数：``Total number of optimal solutions: N``

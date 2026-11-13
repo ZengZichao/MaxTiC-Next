@@ -40,10 +40,14 @@ CLI 越界退出码 2，Python 侧 `ValueError`），生效值记入
 
 | `--near-optimal-top-k` | 摘要保留并统计的去重序数 | 局部搜索累计见过的不同序数 |
 |------------------------|----------------------------|----------------------------|
-| `3` | 3 | 9141 |
-| `10` | 10 | 9139 |
-| `50`（默认） | 50 | 8982 |
-| `400` | 400 | 7940 |
+| `3` | 3 | 10123 |
+| `10` | 10 | 10123 |
+| `50`（默认） | 50 | 10123 |
+| `400` | 400 | 10123 |
+
+第三列与 K **无关**：迭代数被钉死后局部搜索走过的序集合完全一致，K 只裁剪摘要留下的前 K
+个序。改用墙钟停止（不设 `--local-search-max-iters`）时第三列变成机器相关的量，届时不要
+把这张表当作可复现数值引用。
 
 ```bash
 maxtic-next species.tree constraints.tsv --ls 180 --near-optimal-top-k 400
@@ -206,9 +210,16 @@ Python 侧判定用 `result.run_metadata["dry_run_ok"]` / `dry_run_n_errors`，�
 maxtic-next species.tree constraints.tsv --ls 600 --incremental
 ```
 
-> **默认已开启**：增量与全量在 4 组输入 × 5 个种子 × 7 个产物字段上逐字节一致
-> （由 `tests/test_output_equivalence.py` 看守），实测提速 3.1–8.2 倍。它只影响**性能**，
-> 不改变搜索轨迹与结果；需要原版全量口径时用 `--no-incremental`。
+> **默认已开启**：增量与全量的**打分口径相同**——一次 4 组输入 × 5 个种子的扫描
+> （`examples/minitree.tree` 加三组合成输入，`--ls 10`、迭代上限 20000、Python 3.10）里，
+> `values`、`uninformative` 与三个 TSV 产物在 20/20 组配置上逐项一致；CI 侧由
+> `tests/test_output_equivalence.py` 的成对用例（`pair_ls_full` / `pair_ls_incremental`，
+> 浮点末位归一到 12 位有效数字后比对）与 `tests/test_delivery_guards.py` 看守。
+> **但交付序不保证唯一**：同一扫描有 5/20 组配置给出**不同的 `best_order`**——它们与全量
+> 路径同分，且翻转的物种对**一个都不在约束集里**（120 叶那组翻到 243 对，其中被约束的是
+> 0 对）。所以增量改的是**搜索轨迹**，不改数据能够决定的那部分结果；把两条路径的交付序
+> 当作必须逐字节相同来验收，会误报成回归。本机该扫描实测提速 5.5–9.7 倍；
+> 需要原版全量口径时用 `--no-incremental`。
 
 ## 8.5b 让局部搜索跨机器可复现
 
@@ -334,7 +345,9 @@ r.values["best"]                         # 截至取消点的最优值，照常�
 实测（同一份蓝细菌样例，`--ls 30`、`--t 60`、谓词在第 51 次检查转真）：
 `cancelled=True`、迭代数 51、耗时远小于 30 秒、结果照常写出。
 
-**Studio 的「取消 ■」按钮就绑在这条路径上**（Studio 仓库的 `maxtic_studio/cancellation.py`）：按钮 →
+**Studio 的「取消 ■」按钮就绑在这条路径上**（`maxtic_studio/cancellation.py`、`gui/i18n.py`
+都在桌面端仓库 [`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio) 里，
+本仓库不含这些代码，下述接线以该仓库为准）：按钮 →
 `RunEngine.cancel()` → `StopToken.cancel()`；令牌由 `cancellation_hook` 探测形参名后
 以 `stop_check=token.should_stop` 注入 `api.rank`，因此取消会在迭代边界**真正打断计算**，
 而不是过去那样“等跑完再丢弃结果”。若下层某天不再接受该形参，日志面板会显式打出

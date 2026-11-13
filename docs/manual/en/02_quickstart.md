@@ -4,8 +4,15 @@ This chapter runs one complete ranking in under five minutes on the dataset ship
 with the repository (the small cyanobacterial example).
 
 > Every stdout listing and file list below is **captured from an actual run**
-> (Python 3.14, local machine; copy the commands verbatim to reproduce them), and
-> matches the program's current output line for line.
+> (Python 3.10, local machine; copy the commands verbatim to reproduce them), and
+> matches the program's current output line for line. **The last digits of a float are not a
+> contract**, though: summing the same weights lands on different bits across CPython versions --
+> this same `Cyano_CUTConstraints.tsv` adds up to the `2218.3999999999996` of the line below on
+> this machine (3.10), while in CI's 3.12+ jobs the quantity derived from it (auto temperature =
+> `total_weight / 100`) is already a different float (`22.184` versus `22.183999999999997`).
+> Compare these listings with a float tolerance; the repository's own stdout baseline
+> (`tests/test_output_equivalence.py`) rounds floats to 12 significant digits before hashing for
+> exactly this reason.
 
 ## 2.1 Input data
 

@@ -12,6 +12,15 @@
 > semantic annotations** (donor endpoint levels, weight conventions, observability), which
 > prevail over this directory, see
 > [README_semantics.en.md](../../src/maxtic_next/constraints/adapters/README_semantics.en.md).
+>
+> **Citation convention**: the backticked tokens `ARTra-代码`, `ARTra-程序`,
+> `RANGER-DTLx-代码`, `AleRax-代码`, `ecceTERA-代码` and the like used throughout this
+> directory are **short names for the evidence corpora** — the official source code /
+> release package of each upstream tool, consulted line by line while this adapter was
+> written (including the cited line numbers). They are short names, **not paths inside this
+> repository**: they resolve under no clone layout, so do not try to open them. Anything
+> verifiable inside this repository is always given as a real path (`tests/data/…`,
+> `examples/adapters/…`, `src/maxtic_next/…`).
 
 ## 1. Why an Adapter Framework Is Needed
 

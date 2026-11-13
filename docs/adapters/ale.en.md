@@ -48,9 +48,9 @@ denominator** (support = count / N).
   species tree (`parent_map.get(donnor)`, a `label -> parent_label` table precomputed from
   the species tree; `donnor_search`, which walks up the parent chain of the
   reconciliation tree, is used **only** by the rec branch below). This is
-  exactly the direct input prescribed by the **official ALE MaxTiC integration**
-  (`constraints_from_transfers` in `maxtic/constraints_from_reconciliations.py`), hence
-  this package sets the default to `trf`.
+  exactly the direct input prescribed by the **official ALE MaxTiC integration** — the
+  `constraints_from_transfers` file written by
+  `maxtic/constraints_from_reconciliations.py` — hence this package sets the default to `trf`.
 - **Reconciliation events (rec)**: applied only to **nodes whose annotation contains a
   `T@` event** (matching the original gate); the receptor is the node's own mapped species
   (or, via child-direction matching plus recursive collection with `receptor_search`; a
@@ -58,8 +58,8 @@ denominator** (support = count / N).
   result of walking up with `donnor_search`. Pure speciation/duplication nodes produce no
   rec constraints.
 - **⚠️ `rec` and `trf` are not equivalent**: the constraint sets they produce differ in
-  **both count and weights** (at the official example scale, `rec` yields only 13,995
-  constraints with a total weight of 5482.98, vs 6438.6 for `trf`); switching
+  **both count and weights** (at the official example scale, `rec` yields only 13,999
+  constraints with a total weight of 5483.31, vs 6438.6 for `trf`); switching
   `--ale-source` is equivalent to **replacing the entire input constraint set**, and all
   downstream numbers change accordingly. To reproduce older results that used `rec` as
   the default, pass `--ale-source rec` explicitly. The convention actually in effect is

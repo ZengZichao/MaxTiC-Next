@@ -28,7 +28,7 @@ m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 ```
 
 > **块头亦与 RANGER-DTLx 相同**（不是 ARTra 特有，但由 ARTra **自己的 Java 代码**打印）：
-> `参考软件-ARTra-代码/JavaCode/dtl_algo/DTLReconciliation.java:619`（stdout 版
+> `ARTra-代码/JavaCode/dtl_algo/DTLReconciliation.java:619`（stdout 版
 > `printOutputOfDTRLConsole`）与 `:1387`（`PrintWriter` 版 `printOutputOfDTRL`）打印的就是
 > ` ------------ Reconciliation for Gene Tree 1 (rooted) -------------`，与上游
 > `RANGER-DTLx-代码/Ranger-DTLx/DTL-algorithm.h:2170` 的输出**同形**。分块只匹配

@@ -106,7 +106,7 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
   of `.uml_rec` (in the upstream script that block sits inside the `T@` gate, so pure
   speciation/duplication nodes contribute nothing). **These two conventions are not
   interchangeable**: constraint **counts and total weights both differ** (on the official example
-  `rec` yields only 13,995 constraints with a total weight of 5482.98, vs 6438.6 for `trf` —
+  `rec` yields only 13,999 constraints with a total weight of 5483.31, vs 6438.6 for `trf` —
   about 17% apart; see [../../adapters/ale.en.md](../../adapters/ale.en.md) §2), so switching
   replaces the entire input. Pass `--ale-source rec` explicitly to reproduce results computed
   from reconciliation records. The effective convention is printed to stderr.
@@ -135,10 +135,11 @@ maxtic-next species_tree.nwk constraints.tsv --ls 180
 
 **Role**: DTL reconciliation + AggregateRanger; a **human-readable** reconciliation report.
 
-**Real format** (source `DTL-algorithm.h:1840`): per gene node; transfer lines look like
+**Real format** (source `DTL-algorithm.h:1840-1841`): one line per gene node, each led by that
+internal node's own label; transfer lines look like
 
 ```
- = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
+m3 = LCA[g1, g4]: Transfer, Mapping --> 61, Edge, Parent = 65, Recipient --> 62
 ```
 
 `Mapping --> D` = donor, `Recipient --> R` = receptor → constraint `(D, R)`. One file may contain
@@ -210,11 +211,12 @@ is **rejected** (XXE guard). Details: [../../adapters/eccetera.en.md](../../adap
 
 **Role**: classifies each transfer on a RANGER-style reconciliation as **Additive** or **Replacing**.
 
-**Real format**: **isomorphic** to a RANGER report, only event names gain a `Replacing`/`Additive` prefix:
+**Real format**: **isomorphic** to a RANGER report; event names gain a `Replacing`/`Additive`
+prefix, and ARTra writes no space inside `LCA[..,..]`:
 
 ```
- = LCA[H117, H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
- = LCA[H159, H17]: Additive Transfer, Mapping --> H17, Recipient --> H159
+m3 = LCA[H117,H14]: Replacing Transfer, Mapping --> H15, Recipient --> H125
+m93 = LCA[H10,H90]: Additive Transfer, Mapping --> H90, Recipient --> H10
 ```
 
 **MaxTiC-Next recipe**:

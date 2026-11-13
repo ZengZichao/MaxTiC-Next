@@ -190,8 +190,11 @@ def rank(
         mcmc_burn_in: burn-in 步数；``None`` 表示取 ``mcmc_iters`` 的一半。
         mcmc_thin: 抽稀间隔；``None`` 表示 ``max(1, mcmc_iters // 100)``。
         incremental: 是否启用增量 scoring。**默认开启**：
-            增量与全量在逐字节等价性扫描（4 组输入 × 5 个种子 × 7 个产物字段全一致）
-            下等价，由 tests/test_output_equivalence.py 的成对用例与 tests/test_delivery_guards.py 看守；
+            增量与全量的**打分口径**一致——4 组输入 × 5 个种子的扫描里 ``values``、
+            ``uninformative`` 与三个 TSV 逐项相同，由 tests/test_output_equivalence.py 的成对用例
+            （浮点末位归一后比对）与 tests/test_delivery_guards.py 看守；同一扫描里有 5/20 组
+            配置给出**同分但不同**的 ``best_order``，翻转的物种对都不在约束集里，因此
+            "两条路径交付序逐字节相同"不是可依赖的承诺（口径见手册 08 章 8.5）。
             传 False（CLI ``--no-incremental``）可退回全量重算口径。
         checkpoint_path: 检查点文件路径；``None``（默认）禁用。
         checkpoint_interval: 检查点自动保存间隔（秒），默认 60 秒。

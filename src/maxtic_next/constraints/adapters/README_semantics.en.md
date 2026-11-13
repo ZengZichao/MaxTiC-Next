@@ -168,7 +168,7 @@ integration in the official ALE repository itself
 `constraints_from_transfers` is produced from **transfer events** (donor = the parent
 of the donor). Measurements confirm that this path matches the official output
 constraint-by-constraint (identical edge keys and identical weights), whereas
-`"rec"` yields only 13,995 constraints with a total weight of 5482.98 vs 6438.6 —
+`"rec"` yields only 13,999 constraints with a total weight of 5483.31 vs 6438.6 —
 the default changes the entire constraint set. `"rec"` remains fully available as an
 option. When `convert()` finishes, it prints one line to stderr stating which
 convention produced the output, along with the edge count and the total weight.

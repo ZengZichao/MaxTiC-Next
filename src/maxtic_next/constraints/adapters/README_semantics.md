@@ -130,8 +130,8 @@ unresolved_endpoint_samples, species_label_samples, warnings[], per_file[]
 `ALEAdapter` / `convert_from_ale` 的 `source` 默认为 **`"trf"`**：ALE 官方仓库自己的
 MaxTiC 集成（ALE 源码包内 `maxtic/README.md:131-169`）规定输入
 `constraints_from_transfers` 由**转移事件**产生（donor = 供体的父），实测该路径与
-官方产物逐条一致（边键与权重完全相同），而 `"rec"` 只有 13,995 条、
-总权重 5482.98 vs 6438.6 —— 默认值换了整个约束集。`"rec"` 仍完整保留、可选。
+官方产物逐条一致（边键与权重完全相同），而 `"rec"` 只有 13,999 条、
+总权重 5483.31 vs 6438.6 —— 默认值换了整个约束集。`"rec"` 仍完整保留、可选。
 `convert()` 结束时在 stderr 打印一行：本次由哪种口径产出、边数与总权重。
 
 > 上层接线已同步：`api.py` 的 `ale_source` 形参默认值与 `cli.py` 的

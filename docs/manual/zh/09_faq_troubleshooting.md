@@ -79,8 +79,8 @@ A：是。前缀取自 `CONSTRAINTS` 列表的**第一个**文件，其余文件
 
 **Q13：`--ale-source` 到底该用 `rec` 还是 `trf`？**
 A：默认是 **`trf`**（= ALE 官方 MaxTiC 集成规定的 `constraints_from_transfers`）。
-两者产出的约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,995 条、总权重
-5482.98，`trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入；完整口径见
+两者产出的约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,999 条、总权重
+5483.31，`trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入；完整口径见
 [../../adapters/ale.md](../../adapters/ale.md) §2。只有在复现以 `rec` 为默认的旧结果时
 才显式 `--ale-source rec`。生效口径会打到 stderr。
 
@@ -124,7 +124,9 @@ A：能。`api.rank(..., stop_check=...)` / `Ranker.run(..., stop_check=...)` �
 `()`→`bool` 谓词，它在局部搜索主循环与 MCMC 链步之间被检查，于是取消发生在**迭代边界**：
 程序**返回**截至当下的历史最优序、照常写产物，不抛异常也不毁掉解；是否真的打断看
 `run_metadata["cancelled"]`（局部搜索 `stats_out["cancelled"]` 或 `mcmc_stopped_early`）。
-Studio 的「取消 ■」按钮已经绑在这条路径上（Studio 仓库 `maxtic_studio/cancellation.py` 的 `StopToken`）——
+Studio 的「取消 ■」按钮已经绑在这条路径上（桌面端仓库
+[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio) 的
+`maxtic_studio/cancellation.py` 里的 `StopToken`；本仓库不含该文件）——
 过去那个按钮只是“等跑完再丢弃结果”。**唯一例外**：一条一个样本都没产出的 MCMC 链被取消时
 会 `RuntimeError`，因为没有样本就没有可交付的量。详见 08 章 8.9。
 
@@ -164,6 +166,7 @@ AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按
 | `MaxTiC-Next Studio 需要 GUI 依赖 PySide6（以及 matplotlib）。请在 Studio 仓库根目录执行：pip install -e .` | 3 | 未装 GUI 依赖就运行 `maxtic-studio`（本条消息与退出码 3 **由 Studio 仓库定义**，不在本仓库 `src/` 内；本仓库 `pyproject.toml` 注明 GUI 位于独立的 MaxTiC-Next-Studio 仓库） | 在 Studio 仓库执行 `pip install -e .`；或改用 `maxtic-next`（CLI 不受影响） |
 | `WARNING: 输入约束集为空（0 条时间约束）。…` | 0 | 数据或阈值导致无约束 | **别把 0.0 的 value 读成“完美一致”** |
 | `WARNING: --local-search > 0 以墙钟时长为停止条件…` | 0 | 不可跨机器复现 | 加 `--local-search-max-iters` |
+| `NOTE: 本次局部搜索实际执行 N 次迭代（X.XX 秒），停止条件是墙钟 T 秒。跨机器复现请改用 --local-search-max-iters N（迭代数一致时结果逐字节一致）。`（`X.XX` 是本次实际耗时、保留两位小数，通常≈但未必等于 `T`） | 0（**只在 stderr**，stdout 逐字节不变） | 只给了 `--ls`、没给迭代上限 | 把提示里的 N 原样写进 `--local-search-max-iters` 固化迭代数 |
 | `错误："--target-clade 指定的节点 … 不在物种树中"` | 4（dry-run 报 error） | 类群标签写错（`prune.py` 抛的是 `KeyError`，故 CLI 的 `错误：` 前缀之外还会多出一对引号——那是 `KeyError.__str__` 对消息做的 `repr`） | 用物种树内部 bootstrap 标签 |
 | `maxtic-next: command not found` | — | 未 pip 安装 | `pip install -e .`，或用 `PYTHONPATH=src python3 -m maxtic_next` |
 | HTML 报告“跑通了但很朴素” | 0 | 未装 jinja2/plotly → 静默降级 | `pip install "MaxTiC-Next[report]"` |

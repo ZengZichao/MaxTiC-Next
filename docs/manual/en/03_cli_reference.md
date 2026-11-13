@@ -102,8 +102,8 @@ maxtic-next SPECIES_TREE CONSTRAINTS [CONSTRAINTS ...] [options]
 - `trf` is the default because **ALE's own** MaxTiC integration documents
   `constraints_from_transfers` (trf) as the direct input to MaxTiC. These are not two
   interchangeable spellings: **switching replaces the entire input constraint set** (on
-  the official example `rec` yields only 13,995 constraints with a total weight of
-  5482.98, vs 6438.6 for `trf` — about 17% apart, and their counts differ too), so
+  the official example `rec` yields only 13,999 constraints with a total weight of
+  5483.31, vs 6438.6 for `trf` — about 17% apart, and their counts differ too), so
   every downstream number changes.
 - The effective convention is printed to stderr, e.g.
   `[ale] 约束口径：source=trf（……ALE 官方 MaxTiC 集成口径），供体端点约定=parent_of_donor，产出边数=…，总权重=…`
@@ -332,10 +332,16 @@ resampling of the input data (`is_resampling_robustness` is always `False`) — 
 
 | `--near-optimal-top-k` | deduplicated orders retained and counted | distinct orders the search actually visited |
 |------------------------|-------------------------------------------|---------------------------------------------|
-| `3` | 3 | 9141 |
-| `10` | 10 | 9139 |
-| `50` (default) | 50 | 8982 |
-| `400` | 400 | 7940 |
+| `3` | 3 | 10123 |
+| `10` | 10 | 10123 |
+| `50` (default) | 50 | 10123 |
+| `400` | 400 | 10123 |
+
+The third column is **independent of K**: once the iteration count is pinned, the set of orders
+the chain walks is identical, and K only truncates which of them the summary keeps. Switch to a
+wall-clock stop (no `--local-search-max-iters`) and that column becomes machine-dependent — the
+same seed performs a different number of iterations under different load — at which point this
+table must not be quoted as a reproducible figure.
 
 The chain visits far more distinct orders than K; the summary only sees the K best by
 objective. Raising K widens the near-optimal neighbourhood the summary can speak about, at
@@ -353,7 +359,7 @@ accumulated over K orders of length n).
 
 | Option | Type / domain | Default | Notes |
 |--------|---------------|---------|-------|
-| `--incremental` / `--no-incremental` | — | **on** | Incremental scoring: each interval rotation in the local search costs O(b−a) instead of a full O(\|E\|) recompute. On by default (byte-identical to the full path, measured 3.1–8.2× faster); `--no-incremental` falls back to the original full recompute |
+| `--incremental` / `--no-incremental` | — | **on** | Incremental scoring: each interval rotation in the local search costs O(b−a) instead of a full O(\|E\|) recompute. On by default (`values` and the three TSVs match the full path item for item, 5.5–9.7× on this machine; **the delivered order can differ while tied** — convention in 08 §8.5); `--no-incremental` falls back to the original full recompute |
 | `--checkpoint <path>` | str | none | Checkpoint file; a search interrupted midway can be resumed (only effective with `--local-search>0`) |
 | `--checkpoint-interval` | float > 0 | `60.0` | Automatic checkpoint save interval in seconds |
 | `--local-search-max-iters` | int ≥ 0 | `0` | **Iteration cap for the local search** (0 = bounded by `--ls` only). Setting a positive number makes the fixed-`--seed` local-search path **reproducible across machines** |

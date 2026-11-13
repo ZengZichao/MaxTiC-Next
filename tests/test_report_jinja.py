@@ -17,7 +17,14 @@ bug），并且产出文件必须包含 Jinja 模板专属标记（而非降级�
 import os
 import warnings
 
+import pytest
+
 from maxtic_next.api import rank
+
+# 本测试只覆盖 Jinja 渲染路径。缺 [report] 可选依赖时被测代码刻意走降级分支
+# （告警 + 不产出报告文件），断言无从成立，故必须跳过而不是失败。
+pytest.importorskip("jinja2")
+pytest.importorskip("plotly")
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 TREE = os.path.join(DATA_DIR, "minitree.tree")

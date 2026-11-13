@@ -106,8 +106,8 @@ To keep the output files separated per source, pass an explicit `-p` for each ru
 **Q13: Should `--ale-source` be `rec` or `trf`?**
 A: The default is **`trf`** (= `constraints_from_transfers`, the convention prescribed by ALE's
 own MaxTiC integration). The two produce constraint sets that **differ in both constraint count
-and total weight** (on the official example `rec` yields only 13,995 constraints with a total
-weight of 5482.98, vs 6438.6 for `trf` — about 17% apart), so switching replaces the entire
+and total weight** (on the official example `rec` yields only 13,999 constraints with a total
+weight of 5483.31, vs 6438.6 for `trf` — about 17% apart), so switching replaces the entire
 input; see [../../adapters/ale.en.md](../../adapters/ale.en.md) §2 for the full convention.
 Use `--ale-source rec` only to reproduce results from versions that defaulted to `rec`. The
 effective convention is printed to stderr.
@@ -165,9 +165,10 @@ steps, so cancellation happens at an **iteration boundary**: the program **retur
 order as of that point and writes the output files, raising nothing. Whether it really interrupted
 is in `run_metadata["cancelled"]` (the local search's `stats_out["cancelled"]` or
 `mcmc_stopped_early`). **Studio's "Cancel ■" button is bound to this path**
-(the `StopToken` in Studio's `maxtic_studio/cancellation.py`) — the semantics are "deliver the
-best order as of the cancellation point", not "wait for the run to finish,
-then discard the result". **The one exception**: an MCMC chain cancelled before producing any
+(the `StopToken` in `maxtic_studio/cancellation.py` — a file of the separate desktop repository
+[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio), not of this one) — the
+semantics are "deliver the best order as of the cancellation point", not "wait for the run to
+finish, then discard the result". **The one exception**: an MCMC chain cancelled before producing any
 sample raises `RuntimeError`, because zero samples is nothing to report. Details in 08 §8.9.
 
 **Q17: Does `自环=N` (*self-loops*) in the adapter diagnostic line mean "N constraints dropped"?**
@@ -214,6 +215,7 @@ Messages the program emits in Chinese are annotated with a translation.
 | `MaxTiC-Next Studio 需要 GUI 依赖 PySide6（以及 matplotlib）。请在 Studio 仓库根目录执行：pip install -e .` ("MaxTiC-Next Studio needs the GUI dependencies PySide6 (and matplotlib). Run `pip install -e .` in the Studio repository root") | 3 | `maxtic-studio` run without its GUI dependencies (this message and exit code 3 are **defined by the Studio repository**; no such string exists in this repository's `src/`, and `pyproject.toml` states that the GUI lives in the separate MaxTiC-Next-Studio repository) | Install the Studio package (`pip install -e .` in the Studio repo), or use `maxtic-next` (the CLI is unaffected) |
 | `WARNING: 输入约束集为空（0 条时间约束）。…` ("input constraint set is empty") | 0 | Data or thresholds left no constraint | **Do not read the 0.0 values as "perfect consistency"** |
 | `WARNING: --local-search > 0 以墙钟时长为停止条件…` ("--local-search > 0 uses wall-clock duration as the stop condition, so the actual iteration count follows machine load: a fixed --seed therefore does **not** guarantee cross-machine reproducibility") | 0 | Not reproducible across machines | Add `--local-search-max-iters` |
+| `NOTE: 本次局部搜索实际执行 N 次迭代（X.XX 秒），停止条件是墙钟 T 秒。跨机器复现请改用 --local-search-max-iters N（迭代数一致时结果逐字节一致）。` (*"this local search ran N iterations (X.XX s elapsed) and stopped on the T-second wall clock; for cross-machine reproduction use `--local-search-max-iters N` — with equal iteration counts the results are byte-identical"*; `X.XX` is the measured elapsed time to 2 decimals, usually but not always equal to the `T`-second budget) | 0 (**stderr only**; stdout is byte-unchanged) | Only `--ls` given, no iteration cap | Feed the N from the message back into `--local-search-max-iters` |
 | `错误："--target-clade 指定的节点 … 不在物种树中"` ("Error: the node given by --target-clade is not in the species tree") | 4 (error in dry-run) | Wrong clade label (`prune.py` raises a `KeyError`, so on top of the CLI's `错误：` prefix there is one extra pair of quotes — that is `KeyError.__str__`, which `repr`s the message) | Use a species-tree internal bootstrap label |
 | `maxtic-next: command not found` | — | Not pip-installed | `pip install -e .`, or `PYTHONPATH=src python3 -m maxtic_next` |
 | HTML report "ran, but looks plain" | 0 | jinja2/plotly absent → silent degradation | `pip install "MaxTiC-Next[report]"` |

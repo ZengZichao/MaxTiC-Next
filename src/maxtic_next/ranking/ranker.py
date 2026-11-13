@@ -1010,7 +1010,6 @@ class Ranker:
                     + str(iters)
                     + "（迭代数一致时结果逐字节一致）。"
                 )
-                warnings.append(hint)
                 print(hint, file=sys.stderr)
             sensitivity_summary = collector.summary()
             # ：回写改进后的 value / best_source，使 stdout 不与交付树矛盾
@@ -1169,8 +1168,10 @@ class Ranker:
                 "收敛诊断未经验证；链上样本彼此自相关（非独立观测），"
                 "未通过下列诊断前不得用作不确定性度量"
             )
+            # 10 位有效数字：auto 公式的二进制尾数（22.183999999999997）不该泄进
+            # 人读的横幅。手册逐字引用本行。
             print(
-                f"[MCMC] 温度 T={eff_temp}"
+                f"[MCMC] 温度 T={eff_temp:.10g}"
                 + (f"（auto：max(总权重,1)/{MCMC_TEMPERATURE_DIVISOR:g}）" if eff_temp_auto else "")
                 + f"；iters={eff_iters}、burn-in={eff_burn_in}、thin={eff_thin}"
             )
