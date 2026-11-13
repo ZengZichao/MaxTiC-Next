@@ -91,10 +91,11 @@ using the block count as the denominator necessarily degenerates for this tool; 
 denominator cannot be established the weight is an **integer count**, and `min_support`
 has no [0,1] semantics. The donor endpoint likewise takes `donor_itself` (one species
 level away from ALE). Observability of drops matches the other adapters: every dropped
-transfer is counted in `dropped_by_label_miss` (numeric-ID resolution runs only on the
-ecceTERA path, so `numeric_id_resolutions` is always 0 here), a diagnostic summary is
-printed to stderr when the conversion finishes and the same dictionary is attached to
-`ConstraintSet.diagnostics`; an endpoint hit rate of **0** raises `LabelMismatchError`,
+transfer is **counted by reason** (label misses in `dropped_by_label_miss`; numeric-ID
+resolution runs only on the ecceTERA path, so `numeric_id_resolutions` is always 0 here),
+a diagnostic summary is printed to stderr when the conversion finishes and the same dictionary
+is attached to `ConstraintSet.diagnostics`; an endpoint hit rate of **0** raises
+`LabelMismatchError`,
 and one below `min_endpoint_hit_rate` (default `0.5`) triggers a warning
 (`--quiet-adapters` only silences printing; counting and error raising are unaffected).
 

@@ -57,7 +57,8 @@ Rule sets live in `pyproject.toml` (`[tool.ruff.lint]` and mypy overrides).
    Zenodo DOI if applicable.
 3. Tag with an **annotated** tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
    Annotated tags carry the tagger and message metadata and keep the history
-   consistent (v0.1.1 was lightweight by accident — please do not repeat that).
+   consistent (v0.1.1 and v0.2.0 were lightweight by accident — please do not
+   repeat that).
 4. Push the tag and publish a GitHub release with notes; CI must be green on
    the release commit.
 

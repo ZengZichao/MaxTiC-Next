@@ -36,10 +36,10 @@ samples, `0.9` on line 1 of `FAM1_transfers.txt` plus `0.4` on line 2 of
 The donor endpoint is taken from the donor column of the table itself
 (`donor_endpoint_convention = donor_itself`), which is **one species level away** from
 ALE's `parent_of_donor`; when `--from-auto` mixes ALE and AleRax inputs, the groups are
-resolved separately and the adapter **warns once about the endpoint level and once about
+resolved separately and the registry **warns once about the endpoint level and once about
 the weight convention** (two separate `registry` notices: differing donor endpoint level
-conventions / inconsistent weight conventions), instead of adding both directly onto the
-same edge.
+conventions / inconsistent weight conventions), instead of **silently** adding endpoints
+from the two species levels onto the same edge — it warns explicitly.
 
 ## 2. Input Forms and Automatic Expansion
 

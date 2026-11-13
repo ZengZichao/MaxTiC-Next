@@ -224,7 +224,7 @@ original 'to itself' statistic"*.) In other words, whether `to itself` is non-ze
 
 | Option | Notes |
 |--------|-------|
-| `--target-clade <label>` | Root label of the target clade; by default only constraints with both endpoints inside the clade are kept  |
+| `--target-clade <label>` | Root label of the target clade; by default only constraints with both endpoints inside the clade are kept |
 | `--target-clade-ancestor-map` | Enable the conservative "external ancestor mapped to the root" rule (requires `--target-clade`; off by default to avoid spurious partial orders) |
 | `--dry-run` | Static preflight: tree format / binarity / internal-label uniqueness / leaf-name uniqueness / constraint format / weight validity / endpoint validity / `d`-column semantics. In `--from` mode it **actually parses the upstream output** and reports zero-constraint and low-hit-rate problems (for `ale` only the zero-hit error line is emitted — it never warns about a low hit rate; see §3.2). **Any adapter parse failure makes the preflight FAIL** and aborts with **exit code 1** (worked example in 08 §8.4b). Does not rank |
 

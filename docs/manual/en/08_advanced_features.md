@@ -30,8 +30,8 @@ in Chinese.)
 > **Terminology rule**: the local search is a Metropolis neighbourhood search and the
 > solutions it visits are **not** a statistical posterior. This module therefore speaks only
 > of a "robustness/sensitivity summary"; "confidence interval / posterior probability /
-> posterior distribution" are **forbidden**. Raising K below does not loosen this
-> rule one bit.
+> posterior distribution" are **forbidden**. Raising K as described below does not loosen
+> this rule one bit.
 
 ### 8.1b `--near-optimal-top-k`: the hard cap on the summary's support set
 

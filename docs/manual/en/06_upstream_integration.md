@@ -43,9 +43,10 @@ Auto-detection (`--from-auto`) runs three passes, from the most specific rule to
 (`registry.py:288-320`): (1) **directory** — contains a `reconciliations/summaries` subdirectory,
 or any `*_transfers.txt` / `*_meanTransfers.txt` inside → alerax; (2) **extension** (compression
 suffix stripped first) — `.uml_rec` → ale, `*_transfers.txt` / `*_meanTransfers.txt` → alerax,
-`.recphyloxml` → eccetera; (3) **content sniffing** — `<recPhylo` → eccetera, `T@` together with
-`reconciled`/`D@` → ale, `Recipient -->` with `Replacing/Additive Transfer` → artra, only
-`Recipient -->` → ranger. When the inputs resolve to **several** tools, `--from-auto` groups
+`.recphyloxml` → eccetera; (3) **content sniffing** — `<recPhylo` / `<recGeneTree` /
+`recPhyloXML` → eccetera, `T@` together with `reconciled`/`D@` → ale, `Recipient` and `-->`
+with `Replacing/Additive Transfer` → artra, `Recipient` and `-->` only → ranger. When the
+inputs resolve to **several** tools, `--from-auto` groups
 them, converts each group and merges them with a warning; it is an explicit `--from` that
 requires a single tool.
 

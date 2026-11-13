@@ -73,8 +73,8 @@ ecceTERA 不校验叶子集合，见
 ⚠️ ARTra 会打印 `Total number of optimal solutions: 24` 却只输出**一个**最优解，
 因此以块数为分母在该工具上必然退化；分母不可确立时权重为**整数计数**，
 `min_support` 不具 [0,1] 语义。供体端点同样取 `donor_itself`（与 ALE 相差一个物种层级）。
-丢弃的可观测性与其余适配器相同：每条被丢弃的转移都计入
-`dropped_by_label_miss`（数字 ID 反解仅在 ecceTERA 路径执行，本适配器
+丢弃的可观测性与其余适配器相同：每条被丢弃的转移都**按原因计数**（标签不匹配计入
+`dropped_by_label_miss`；数字 ID 反解仅在 ecceTERA 路径执行，本适配器
 `numeric_id_resolutions` 恒为 0），转换结束打印 stderr 诊断摘要并挂在
 `ConstraintSet.diagnostics`；端点命中率为 **0** 抛
 `LabelMismatchError`，低于 `min_endpoint_hit_rate`（默认 `0.5`）告警（`--quiet-adapters`

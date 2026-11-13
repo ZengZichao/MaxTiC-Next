@@ -35,8 +35,9 @@
 自动检测（`--from-auto`）按**由具体到宽松**三级判定（`registry.py:288-320`）：① **目录**——含
 `reconciliations/summaries` 子目录、或目录内出现 `*_transfers.txt` / `*_meanTransfers.txt` → alerax；
 ② **扩展名**（先剥压缩后缀）——`.uml_rec` → ale，`*_transfers.txt` / `*_meanTransfers.txt` → alerax，
-`.recphyloxml` → eccetera；③ **内容嗅探**——`<recPhylo` → eccetera，`T@` 且 `reconciled`/`D@` → ale，
-含 `Recipient -->` 且 `Replacing/Additive Transfer` → artra，仅 `Recipient -->` → ranger。
+`.recphyloxml` → eccetera；③ **内容嗅探**——`<recPhylo` / `<recGeneTree` / `recPhyloXML` → eccetera，
+`T@` 且 `reconciled`/`D@` → ale，`Recipient` 与 `-->` 且 `Replacing/Additive Transfer` → artra，
+仅 `Recipient` 与 `-->` → ranger。
 多文件被嗅出**多种**格式时，`--from-auto` 按工具分组各自解析、再合并并告警；显式 `--from` 才要求同一工具。
 
 ---
@@ -270,6 +271,6 @@ REGISTRY.register(AdapterEntry("mytool", convert_mytool, "我的调和工具", "
 `AdapterRegistry.describe()` 回显——那是供 CLI help / 文档使用的可读工具清单
 （`registry.py:122-131`）；5 个内置适配器的注册条目都把它写成中文（`registry.py:235-267`，
 例如 `"AleRax 贝叶斯调和"`、`"ecceTERA DTL 调和"`）。因此上面代码里的字面量保持中文是有意为之：
-若在片段里改成英文串，它永远不会与工具清单实际打印出的内容一致（`"my reconciliation tool"`）。
+若在片段里改成英文串（如 `"my reconciliation tool"`），它永远不会与工具清单实际打印出的内容一致。
 
 > 上一章：[05 · 输入输出格式](05_io_formats.md) ｜ 下一章：[07 · 流程封装与部署](07_workflows_deployment.md)
