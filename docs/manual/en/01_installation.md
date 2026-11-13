@@ -76,11 +76,13 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
 
 ```bash
 python -m pytest tests/ -q
-# Expected: all pass (currently 506 passed, 1 skipped with the [dev,report] extras;
-#           covers adapters, the reference-implementation differential, boundary cases
-#           and CLI switches. The single skip needs python2 plus the original MaxTiC.py)
-# Without the [report] extras, the Jinja rendering guard skips instead of failing —
-# take the counts from your own output
+# Expected: **0 failed**. The counts move with the environment and the Python version: this
+#           machine (3.10, with numpy and the [dev,report] extras) gives 507 passed, 1 skipped,
+#           while CI installs no numpy and skips the 3 numpy guards instead. Covers adapters,
+#           the reference-implementation differential, boundary cases and CLI switches. The one
+#           skip that must always happen is the byte-level comparison against the original
+#           MaxTiC.py under python2; without the [report] extras the Jinja rendering guard
+#           skips too, rather than failing
 ```
 
 ## 1.7 Uninstall

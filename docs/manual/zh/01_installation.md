@@ -74,9 +74,10 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
 
 ```bash
 python -m pytest tests/ -q
-# 期望：全部通过（安装 [dev,report] 后当前 506 passed, 1 skipped；覆盖适配器、
-#       参考实现差分、边界、CLI 开关等；唯一的 skip 需要 python2 与原版 MaxTiC.py）
-# 缺 [report] extras 时，Jinja 渲染护栏会 skip 而不是 fail——条数请以实际输出为准
+# 期望：**0 failed**。条数随环境与 Python 版本浮动——本机（3.10，装了 numpy 与
+#       [dev,report]）是 507 passed, 1 skipped；CI 不装 numpy，numpy 护栏那 3 条改为 skip。
+#       覆盖适配器、参考实现差分、边界、CLI 开关等；必然出现的那条 skip 是需要 python2
+#       与原版 MaxTiC.py 的字节级对比，缺 [report] extras 时 Jinja 渲染护栏也会 skip 而不是 fail
 ```
 
 ## 1.7 卸载
