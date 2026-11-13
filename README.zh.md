@@ -1,12 +1,15 @@
 # MaxTiC-Next
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
+[![concept DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
 [![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
+[![License: CeCILL-2.1](https://img.shields.io/badge/License-CeCILL--2.1-blue.svg)](LICENSE)
+[![ORCID](https://img.shields.io/badge/ORCID-0000--0001--6553--970X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0000-0001-6553-970X)
 [![Python](https://img.shields.io/badge/python-3.9%20%E2%80%93%203.14-3776AB?logo=python&logoColor=white)](https://pypi.org/project/MaxTiC-Next/)
+[![CI](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml)
 
 > 🌐 English version: [README.md](README.md) ｜ 📖 完整多级手册（中英双语）：[docs/manual/README.md](docs/manual/README.md)
 
-`MaxTiC-Next` 是 Python 2 年代发生学工具 **MaxTiC**（Eric Tannier, Inria）的 Python 3 重写与工程化扩展。
+`MaxTiC-Next` 是 Python 2 年代系统发生学工具 **MaxTiC**（Eric Tannier, Inria）的 Python 3 重写与工程化扩展。
 它在受控条件下（固定种子、固定 Python 版本、固定解析器）**功能等价**移植原版排序算法的基础上，
 提供现代 CLI/Python API、面向 **5 个上游工具**（ALE / RANGER-DTLx / ecceTERA / ARTra / AleRax）
 的插件式适配框架、稳健性/敏感性摘要与可选的 MCMC 采样器（初步实现）、交互式 HTML 报告，
@@ -20,12 +23,12 @@
 一个核心设计目标是在受控条件下（固定种子、固定 Python 版本、固定解析器）**功能等价**地移植原版算法：
 
 - `path()` / `value()` / `edgeweights()` / `mix()` / `opt()` / `order_from_graph()` /
-  `optimisation_locale()` 等核心函数均按原版 `MaxTiC.py` 逐行忠实移植；
+  `optimisation_locale()` 这些核心函数均按原版 `MaxTiC.py` 逐行忠实移植；
 - 所有 `dict.keys()/values()/items()` 视图均用 `list()` 包裹后再 `.sort()` / `del`；
   整数除法 `/` → `//`；`print` 改为函数；`cmp` → `functools.cmp_to_key`；
 - 所有随机性统一由单个 `random.Random(seed)` 实例（`maxtic_next.random_.RandomWrapper`）驱动，
   默认 `--seed 42`；
-- `--min-transfer-distance`（原 `d`）**按 phylogenetic distance 列过滤**（保留 `distance > 阈值`），
+- `--min-transfer-distance`（原 `d`）**按系统发育距离（phylogenetic distance）列过滤**（保留 `distance > 阈值`），
   **绝不变更为按权重过滤**；无距离列的约束一律保留（此时该选项被忽略，程序会明确报出）；
 - stdout 摘要与输出文件内容逐行复刻原版 `MaxTiC.py` 的顺序与措辞。
 
@@ -46,15 +49,15 @@
    - **真正的跨实现等价门禁**是 `tests/test_reference_equivalence.py`：按原版
      `MaxTiC.py` 的控制流与公式**独立重写**一份 Python 3 参考实现（不复用被测代码的
      `ReachabilityMatrix` / `EdgeBuilder` / `order_from_graph` / `mix` / `opt` / `value` /
-     `RandomWrapper`），在真实蓝细菌示例上**逐字段差分比对**。核心算法或统计口径一漂移它即失败。
-     它同时**显式断言**已裁定的偏离（ uninformative 分母、 偏序哨兵、 阈值后总权重、
-      哨兵边不可删；并记录零权重边从 informative 文件中排除的做法与原版一致、故不算偏离）。
+     `RandomWrapper`），在真实蓝细菌示例上与 `maxtic_next` **逐字段差分比对**。核心算法或统计口径一漂移它即失败。
+     它同时**显式断言**已裁定的偏离（uninformative 分母、偏序产物哨兵、阈值后总权重、
+     哨兵边不可删；并记录零权重边从 informative 文件中排除的做法与原版一致、故不算偏离）。
      Newick 解析层不在其覆盖范围内（该文件复用本项目的 `Tree`，文件内已注明）。
    - `tests/test_equivalence_stats.py` 里那条“跑原版做对比”的用例需要环境中有 `python2`
      与原版 `MaxTiC.py`；本环境没有则跳过，上面的差分测试照常运行作为兜底。
-   - `tests/test_original_py3_equivalence.py` 用 2to3 直译的原版 `MaxTiC.py` / `script_tree.py`
-     与本品在主合成实例和蓝细菌实例上并排运行，断言输出表逐字节相同、目标值一致；它比独立
-     参考实现更强，但仍不能替代真实的 Python 2.7 运行。
+   - `tests/test_original_py3_equivalence.py` 用仓库内置的 2to3 直译版（原版 `MaxTiC.py` /
+     `script_tree.py`）与本品在主合成实例和蓝细菌实例上并排运行，断言输出表逐字节相同、目标值
+     一致；作为兜底，它比独立参考实现更强，但仍不能替代真实的 Python 2.7 运行。
 
 ## 安装
 
@@ -67,7 +70,7 @@ pip install "MaxTiC-Next[report]"  # 完整安装（含交互式 HTML 报告所�
 
 > **v0.2.1 修订说明。** PyPI 提供 0.1.1、0.2.0 与 0.2.1；安装被评估版本请用
 > `pip install MaxTiC-Next==0.2.1`。随稿仍提供源码归档（`Additional file 6.zip`），
-> v0.2.1 已归档到 Zenodo（DOI `10.5281/zenodo.24133728`）。
+> v0.2.1 已归档到 Zenodo（版本 DOI `10.5281/zenodo.24133728`）。
 
 从源码检出安装（开发用）：
 
@@ -122,12 +125,12 @@ maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42
 |------|------|------|
 | `species_tree` | 物种树（Newick，内部节点标签写在 bootstrap 字段；须**二叉**、内部标签与叶名各自唯一；透明支持 `.gz` / gzip 流与归档） | 必填 |
 | `constraints` | 一个或多个约束文件（空格 `donor receptor [weight] [distance]` 或逗号 `family,donor,receptor,[weight],[distance]`；同样透明支持 `.gz` / 归档，上游官方 `.tgz` 示例可整包喂） | 必填 |
-| `--seed` | 随机种子（驱动 mix 平局与局部搜索） | `42` |
+| `--seed` | 随机种子（驱动 `mix` 平局与局部搜索） | `42` |
 | `--local-search` / `--ls` | 局部搜索**墙钟时长**（秒），0 表示关闭 | `0` |
 | `--local-search-max-iters` | 局部搜索迭代上限（0 = 只受时长约束）；设正数以获得跨机器确定性 | `0` |
 | `--temperature` / `--t` | Metropolis 温度 | `0.001` |
 | `--random-type` / `--r` | 随机化类型，只接受 0/1/2 | `0` |
-| `--min-transfer-distance` / `--d` | 最小转移距离阈值（按 phylogenetic distance 列过滤） | `0` |
+| `--min-transfer-distance` / `--d` | 最小转移距离阈值（按系统发育距离列过滤） | `0` |
 | `--threshold-constraints` / `--ts` | 约束权重阈值比例，取值域 [0, 1] | `0.0` |
 | `--random-trees` / `--rd` | 随机树采样数量（p 值用 (k+1)/(n+1) 校正） | `0` |
 | `--near-optimal-top-k` | 近优解收集容量：稳健性/敏感性摘要最多考察多少个**去重**近优排序（API `top_k`；须 ≥ 1，仅 `--ls > 0` 时有意义） | `50` |
@@ -162,10 +165,12 @@ maxtic-next species.tree alerax_run/     --from alerax
 
 - **ALE 的 `--ale-source` 默认是 `trf`**（转移事件，`parent(donor) -> receptor`），即 ALE 官方
   MaxTiC 集成 `constraints_from_transfers` 规定的口径；`rec`（调和事件）仍可选，但两者产出的
-  约束集规模与量级**不同**，切换等于换掉整个输入。
+  约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,995 条、总权重 5482.98，
+  `trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入。
 - 每次转换在 **stderr** 打印一行诊断（端点约定、权重口径、采样分母、端点命中率与各类**丢弃计数**），
   并写入 `result.run_metadata["adapter_diagnostics"]`；端点命中率为 0 直接报错，低于
-  `--min-endpoint-hit-rate`（默认 0.5）告警。`--quiet-adapters` 只关闭打印。
+  `--min-endpoint-hit-rate`（默认 0.5）告警（ALE 不适用该守卫，它沿用原版的逐条端点校验）。
+  `--quiet-adapters` 只关闭打印。
 
 详见[上游软件配套方案](docs/manual/zh/06_upstream_integration.md)与 [`docs/adapters/`](docs/adapters/README.md) 适配规格。
 
@@ -192,7 +197,7 @@ maxtic-next species.tree alerax_run/     --from alerax
 > 需 `-f/--force`）。
 
 默认还生成交互式 HTML 报告（`--no-html` 关闭；缺 `jinja2`/`plotly` 时降级为基础模板而非报错）；
-stdout 摘要包含内部节点数、约束总权重、uninformative 分项与占比、trivially conflicting、
+stdout 摘要包含内部节点数、约束总权重、uninformative 分项与占比、trivially conflicting 占比、
 各启发式 value、best order、排序树 Newick、与输入树的 Kendall 相似度，并在末尾追加运行期
 `NOTE:` / `WARNING:` / `ERROR:` 口径声明。
 
@@ -206,7 +211,7 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
 | `3` | 产物已存在且未加 `--force` |
 | `4` | 输入不满足算法前置条件（非二叉、标签重复、端点缺失、权重非法、适配器 0 命中、多成员归档被当作一个输入读等） |
 
-## 与原版的有意偏离（Intentional deviations）
+## 与原版的有意偏离
 
 以下偏离**都是刻意的**，每条对应原版的一处缺陷或本版的口径裁定。它们也逐项写在
 `tests/test_reference_equivalence.py` 与 `tests/test_equivalence.py` 的声明里，
@@ -227,15 +232,15 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
 | `uninformative` 百分比分母 | `total_transfers + uninformative`（**双重计入**无信息权重）→ 同例报 `12%` | `total_weight` → 同例报 `13.9%` |
 | 偏序产物的哨兵判定 | 写死 `edge[e] < 100000`（其 `MAX_NUMBER` 为 `1e10`）→ 静默删掉权重 ≥ 1e5 的真实信息性约束 | 以 `MAX_NUMBER` 判定 |
 | `--threshold-constraints` 的总权重口径 | 在删边**之前**求和，分母含被删权重 | 在删边**之后**统计 |
-| 阈值删除集合 | 可把 `MAX_NUMBER` 谱系硬约束一并删掉 → 产出**不受物种树约束**的“合法”排名 | 哨兵边排除在可删除集合之外 |
+| 阈值删除集合 | 可把 `MAX_NUMBER` 谱系硬约束一并删掉 → 产出**不受物种树约束**的“合法”排序 | 哨兵边排除在可删除集合之外 |
 | 局部搜索后的 stdout | 打印的是**搜索前**的值与来源，与交付树矛盾 | 回写 `values` / `best_source` 并补打 `after local search … rejected` / `best found solution …` 两行 |
 | `--random-trees` 的 p 值 | `k/n`，50 次采样的最小非零 p 被压成 `0.0`；且检验的是**搜索前**的序 | `(k+1)/(n+1)` 校正（Phipson & Smyth 2010），且检验**最终交付序** |
-| 未播种/未定义的取值域 | `--r 3`、`--ts 5`、`--ls -5` 等静默通过 | argparse 层强制取值域，非法即退出码 2 |
+| 未校验的选项取值域 | `--r 3`、`--ts 5`、`--ls -5` 等静默通过 | argparse 层强制取值域，非法即退出码 2 |
 | 折行 Newick、BOM、行内 `#` 注释 | 只取首行 / BOM 污染 / `float('#')` 崩 | 整份文件拼接、`utf-8-sig`、支持行内注释；错误含文件名与行号 |
 | 非法权重 | `nan`/`inf`/负值一路带进目标函数 | 解析层即拒绝 |
 | 非二叉物种树 | 无检查（多歧分支被静默丢弃） | 上升为**前置条件**，报错退出码 4 |
 | 重复叶子名 | 无检查（节点标识塌缩） | 报错并指出重复名与父节点 |
-| ALE 约束源默认值 | ALE 官方 MaxTiC 集成规定为 `constraints_from_transfers`（trf） | 默认 **`trf`**（选错口径会静默换掉整个约束集） |
+| ALE 约束源默认值 | ALE 官方 MaxTiC 集成规定为 `constraints_from_transfers`（trf） | 默认 **`trf`**（默认取 `rec` 会静默换掉整个约束集） |
 | ALE 文件级缓存键 | —— | 键含**物种树拓扑指纹**（标签集相同、拓扑不同的树不再互相污染） |
 | 适配器静默丢弃 | —— | 全部丢弃路径**计数上报**（stderr 一行 + `run_metadata`），端点 0 命中直接报错 |
 | 输出覆盖与原子性 | `open(...,"w")` 直接覆盖、可留半截文件 | **默认拒绝覆盖**（`--force` 显式放行）+ 临时文件 + `fsync` + `os.replace` |
@@ -256,7 +261,7 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
 
 ## 许可证
 
-继承原版 **CeCILL 2.1**，保留原作者 Eric Tannier 与引用（Biorxiv doi.org/10.1101/127548）。
+继承原版 **CeCILL 2.1**，保留原作者 Eric Tannier 与引用（bioRxiv doi.org/10.1101/127548）。
 详见 `LICENSE`。
 
 ## 当前能力
@@ -281,17 +286,18 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
   O(1) 查表替代 O(V) 遍历）在**每次排序中都生效**，且已按 400/400 例证明与原版 `path()` 贪婪一致。
   它是**默认开启**的，不是可选开关。
 - **默认已开启的增量打分**：`--incremental`（局部搜索每次区间旋转只算增量 O(b−a)，而非全量
-  O(|E|)）现在是**默认路径**。依据：`--incremental` 与全量重算在 4 组输入 × 5 个种子 ×
+  O(|E|)）现在是**默认路径**。依据：`--incremental` 与 `--no-incremental` 在 4 组输入 × 5 个种子 ×
   {stdout 摘要、ranked newick、best_order、values、三个 TSV} 上**逐字节一致**，实测加速
   3.1–8.2 倍；`--no-incremental` 保留原版全量口径作为逃生门，等价性由
   `tests/test_output_equivalence.py` 长期看守。
 - **默认路径提速**（不改任何数值顺序）：`mix` 动态规划里的前缀成员判定由列表切片改为增量维护的
-  集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（AF2 `scaling_large.csv`；
-  n=1000 / |E|=6000 为 2.506 s）；绝对耗时仍依赖主机。口径为确定性合成树，不是真实生物数据集。
+  集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（在评审主机上；Additional file 2
+  `scaling_large.csv`；n=1000 / |E|=6000 为 2.506 s）；绝对耗时仍依赖主机。所用输入为确定性
+  合成树，不是真实生物数据集。
 - **可选开关**：`--checkpoint`（仅覆盖 `--local-search` 阶段的续跑）、
   ALE 的 `--ale-cache-dir`（解析阶段按家族缓存）。
-- `tree/cache.py` 的 `PathCache` **不在排序热路径上**（保留导出是为了让公开 import 面
-  保持稳定）。它**不能**经 `--incremental` / `--checkpoint` “启用”——那两个开关
+- `tree/cache.py` 的 `PathCache` 属遗留实现，**从未接入排序热路径**（保留导出只是为了让既有外部
+  import 不至于断掉）。它**不能**经 `--incremental` / `--checkpoint` “启用”——那两个开关
   指向的是上面两条真实路径。相关说明已在其模块 docstring 中写明。
 
 ## 未来工作
@@ -301,7 +307,7 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
   （当前由 `tests/test_reference_equivalence.py` 的独立参考实现差分作为门禁）。
 - MCMC 的收敛诊断与自适应温度（在其通过诊断之前，`--mcmc` 保持“初步实现”的口径）。
 
-## 已知限制（Known Limitations）
+## 已知限制
 
 - **`--ls > 0` 不可跨机器复现**（除非同时设 `--local-search-max-iters`）：停止条件是墙钟时长。
 - **`--checkpoint` 仅覆盖局部搜索阶段**：检查点/续跑作用于 `--local-search` 的 Metropolis 搜索；

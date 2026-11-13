@@ -6,17 +6,19 @@ This directory provides **real-format** sample inputs for 5 upstream reconciliat
 transfer-inference tools, demonstrating how to feed their output directly into
 MaxTiC-Next ranking via `--from <tool>` / `--from-auto`.
 The species tree is uniformly `../minitree.tree` (internal node labels are bootstrap
-numbers such as 61/62/67).
+numbers such as 61/62/67); the only exception is `ale/`, which ships its own matching
+`species.tree`.
 
 ## Contents
 
 | Subdirectory / File | Tool | Format |
 |---------------------|------|--------|
+| `ale/rec.uml_rec` + `ale/species.tree` | ALE_undated | `.uml_rec` sampled reconciliations (NHX `T@` / `D@` events; the same files as `tests/data/ale_example/`, used by `--from ale` / `--from-ale`, not demoed by `run_adapters.sh`) |
 | `ranger/FAM1.dtl` | RANGER-DTLx | `Mapping --> / Recipient -->` reconciliation report |
 | `eccetera/FAM1.recphyloxml` | ecceTERA | recPhyloXML (`branchingOut` / `transferBack`) |
 | `artra/FAM1.txt` | ARTra | `Replacing/Additive Transfer` report |
 | `alerax/run/reconciliations/summaries/*_transfers.txt` | AleRax | `donor receptor freq` |
-| `run_adapters.sh` | — | one-command demo of all tools + auto-detection + two-stage |
+| `run_adapters.sh` | — | one-command demo of the four tools other than ALE + auto-detection + two-stage |
 
 ## One-Command Run
 
@@ -27,6 +29,10 @@ micromamba run -n python-3.11 bash examples/adapters/run_adapters.sh
 ## Individual Run Examples
 
 ```bash
+# ALE (ships its own matching species tree; .uml_rec sampled reconciliations)
+maxtic-next examples/adapters/ale/species.tree examples/adapters/ale/rec.uml_rec \
+    --from ale --ale-min-family-size 0
+
 # Explicit tool
 maxtic-next examples/minitree.tree examples/adapters/ranger/FAM1.dtl \
     --from ranger --ale-min-family-size 0
@@ -50,5 +56,7 @@ maxtic-next examples/minitree.tree examples/adapters/ranger/FAM1.dtl \
 
 > Note: these are **small demonstration samples**, hence `--ale-min-family-size 0` is
 > added so that the family-size filter does not drop them; for real data, use the
-> default `5` or adjust as needed. See `docs/adapters/<tool>.md` for each tool's
-> adapter specification and known limitations.
+> default `5` or adjust as needed. See the corresponding `docs/adapters/<tool>.en.md`
+> for each tool's adapter specification and known limitations (the file name follows
+> the tool name; the only exception is `--from ranger`, whose specification is
+> `docs/adapters/ranger_dtlx.en.md`).

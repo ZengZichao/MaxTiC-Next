@@ -5,7 +5,7 @@
 | Item | Requirement |
 |------|-------------|
 | Python | ≥ 3.9 (**3.11 recommended**) |
-| Core algorithm deps | standard library only (`argparse` / `random` / `math` / `functools`), no network |
+| Core algorithm deps | standard library only (`argparse` / `random` / `math` / `functools`, etc.), no network |
 | HTML report (optional) | `jinja2` ≥ 3.0, `plotly` ≥ 5.0 |
 | Pruning / graph operations (optional) | no third-party dependency: `prune.py` uses the standard library only, deliberately no ete3 / networkx |
 | Dev/test (optional) | `pytest` ≥ 8.0 |
@@ -45,7 +45,7 @@ python -m maxtic_next --help
 
 ## 1.4 Option C: micromamba / conda (recommended for this project)
 
-All scripts and tests in this project run and are validated in the micromamba `python-3.11`
+All scripts and tests in this project are run and validated in the micromamba `python-3.11`
 environment.
 
 ```bash
@@ -96,4 +96,4 @@ pip uninstall MaxTiC-Next
 | Report fails but ranking works | the report is optional; failure prints a warning and does not block |
 | Path with spaces / non-ASCII fails | quote the path; prefer running in a space-free directory |
 
-> Prev: [00 · Overview](00_index.md) ｜ Next: [02 · Quickstart](02_quickstart.md)
+> Prev: [00 · Overview](00_index.md) | Next: [02 · Quickstart](02_quickstart.md)

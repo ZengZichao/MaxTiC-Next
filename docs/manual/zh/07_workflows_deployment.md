@@ -49,13 +49,13 @@ docker run --rm -v "$PWD/examples":/data maxtic-next:0.2.1 \
 - **镜像名必须全小写**：`docker build -t MaxTiC-Next .` 会直接报
   `invalid reference format`。统一用 `maxtic-next:0.2.1`。
 - 镜像内已安装 `jinja2` + `plotly`，HTML 报告开箱可用。
-- **`.dockerignore`**（新增）：`Dockerfile` 用 `COPY . /app` 拷入构建上下文，
+- **`.dockerignore`**：`Dockerfile` 用 `COPY . /app` 拷入构建上下文，
   `.dockerignore` 已排除 `.git`、`tests`、`__pycache__`、`.pytest_cache`、`.DS_Store`、
   `benchmarks/datasets`、`docs`。保留的是 `pip install .` 与镜像内冒烟测试真正需要的东西：
   `pyproject.toml`、`src/`、`examples/`、`requirements*.txt`、`LICENSE`、`README.md`。
   因此上面的构建/运行命令不变，只是镜像更小、不带仓库元数据。
-- **挂载目录写产物**：若上次运行已在挂载目录留下产物，CLI 会以**退出码 3** 拒绝覆盖
-  。请加 `-f/--force`，或用 `-p /data/run2` 换前缀。
+- **挂载目录写产物**：若上次运行已在挂载目录留下产物，CLI 会以**退出码 3** 拒绝覆盖。
+  请加 `-f/--force`，或用 `-p /data/run2` 换前缀。
 - 冒烟测试：`docker run --rm maxtic-next:0.2.1 --version` → `MaxTiC-Next 0.2.1`。
 
 ## 7.3 Singularity / Apptainer
@@ -125,8 +125,8 @@ cd workflows && snakemake --configfile config.yaml --cores 4
 - 两条规则都带 `--force`：`outdir` 归流程管理器所有，重跑必须能覆盖上次产物
   （否则 CLI 的覆盖保护会以退出码 3 让任务失败）。
 - `use_conda: true` 时 Snakemake 为每条规则创建 `envs/maxtic_next.yaml` 环境。该环境
-  **现已包含 `jinja2` / `plotly`**——过去只装解释器，于是 HTML 报告静默降级、
-  “流程跑通了但没有报告”。
+  **包含 `jinja2` / `plotly`**，而不只是解释器，因此 HTML 报告在流程内产出，
+  而不是静默降级成“流程跑通了但没有报告”。
 
 > 注：仓库不随附 snakemake 引擎，需自行 `pip install snakemake`。
 
@@ -154,9 +154,11 @@ nextflow -C workflows/nextflow.config run workflows/main.nf \
   `--species_tree`（对应 `main.nf` 的 `params.species_tree`），与 CLI 一一对应透传给
   `maxtic-next`。适合云 / 集群批量。
 - **`--output-style` 默认 `short`（与 CLI 一致）**，且 `RANK` 的 output 声明按
-  `params.output_style` **推导**，不固定长名。`main.nf` 的 params、
-  `workflows/config.yaml` 与 output 声明三处口径必须一致，否则按 CLI 默认运行时会报
-  "output file not found"。改跑 `--output_style legacy` 会得到原版长名产物。
+  `params.output_style` **推导**，不固定长名：声明名与实际写出名同源，**不会再漂移**
+  （旧版 output 恒写长名，而 `params.output_style` 的默认值与 `workflows/config.yaml` 不一致，
+  按 CLI 默认运行时才报 "output file not found"）。如今需保持同一口径的只剩两处默认值——
+  `main.nf` 的 `params` 与 `workflows/config.yaml`（`workflows/main.nf:53`、
+  `workflows/config.yaml:40`，默认均为 `short`）。改跑 `--output_style legacy` 会得到原版长名产物。
 - `RANK` 的产物声明含**可选的第 4 个文件**（`--random-trees > 0` 时才有），用
   `optional: true` 表达，因此 `--random_trees 0` 不会让流程失败。
 - 也带 `--force`（理由同上）。
@@ -168,8 +170,8 @@ DSL2 结构要点：
 - 两个 `process` 都声明在**顶层**，`workflow` 里只用 `if (params.from_ale)` 决定是否调用
   Stage 1。`process` 不能写在 `if` 块里，否则 DSL2 拒绝解析。
 - `GENERATE_CONSTRAINTS` 的输入是 `tuple path(species), path(rec)`，调用处
-  `GENERATE_CONSTRAINTS(species_ch, rec_ch)` **同序传参**：声明为
-  `path species; each path(rec)`，实参一旦对调，任务起步即失败。
+  `GENERATE_CONSTRAINTS(species_ch, rec_ch)` **同序传参**：旧实现声明为
+  `path species; each path(rec)` 却反序传参，实参一旦对调，任务起步即失败。
 - 物种树被两个 Stage 共用，故用 `Channel.value(...)`（可重复订阅并自动广播）而不是
   只能订阅一次的 `Channel.fromPath` 热通道。
 
@@ -177,14 +179,14 @@ DSL2 结构要点：
 
 `workflows/envs/maxtic_next.yaml` 提供 conda 环境定义（名字 `MaxTiC-Next`），供 Snakemake
 的 `conda:` 指令（`use_conda: true`）或手动创建。PyPI 提供 0.1.1、0.2.0 与 0.2.1。
-环境本身只声明解释器与第三方依赖，包需要另行安装：
+环境本身只声明解释器与第三方依赖，包需要另行安装（`<REPO_ROOT>` 指仓库根目录）：
 
 ```bash
 micromamba env create -f workflows/envs/maxtic_next.yaml
 # PyPI 发行版（被评估版本）：
 micromamba run -n MaxTiC-Next pip install MaxTiC-Next==0.2.1
 # 或使用源码检出中的 v0.2.1 修订版：
-micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
+micromamba run -n MaxTiC-Next pip install -e <REPO_ROOT>
 ```
 
 环境内已声明 `jinja2 >=3.0` 与 `plotly >=5.0`（等价于 `pip install "MaxTiC-Next[report]"`）。
@@ -198,13 +200,15 @@ micromamba run -n MaxTiC-Next pip install -e <仓库根目录>
 | 长局部搜索 | 增量打分已默认开启（加速 3.1–8.2×）+ `--checkpoint` 防中断丢失（见 08 章） |
 | 需要跨机器**完全一致**的搜索结果 | `--local-search-max-iters N`（墙钟时长本身不可移植） |
 | 集群可复现 | 固定 `--seed`，锁 Python/依赖版本，容器化并**固定镜像标签**（`:0.2.1` 而非 `:latest`） |
-| 上游输出可疑时 | 先看 `--dry-run`（适配器模式会**真正解析**上游输出，零约束/命中率/解析失败都报 error 并退出 1），再看 stderr 的 `[tool] …` 诊断行 |
-| 上游示例是压缩包 | `.gz` / gzip 流 / 单成员归档**透明解压**；上游官方 `.tgz`（如 ALE 的 `reconciliations.tgz`）可整包喂给 `CONSTRAINTS`，会自动展开为成员输入并记入 `run_metadata["archives_expanded"]`（见 05 章 5.7） |
+| 上游输出可疑时 | 先看 `--dry-run`（适配器模式会**真正解析**上游输出：解析失败 / 零约束 / 端点全不命中都报 **error** 并退出 1，而端点命中率低于 `--min-endpoint-hit-rate` 只是 **warning**），再看 stderr 的 `[tool] …` 诊断行 |
+| 上游示例是压缩包 | `.gz` / gzip 流 / 单成员归档**透明解压**；官方的 `.tgz`（如原版 MaxTiC 自带的 `examples/reconciliations.tgz`）可整包喂给 `CONSTRAINTS`，会自动展开为成员输入并记入 `run_metadata["archives_expanded"]`（见 05 章 5.7） |
 | 需要更宽的近优邻域 | `--near-optimal-top-k K`（默认 50）放大稳健性/敏感性摘要的支持集；内存与 summary 计算随 K·n² 增长（见 03 章 3.6b） |
 | 退出码 | `0` 成功 / `1` 预检 error（含 `--from` 模式下适配器解析失败）/ `2` 参数非法 / `3` 拒绝覆盖（缺 `--force`）/ `4` 前置条件不满足。非 0 可被 Snakemake/Nextflow 正确捕获重试 |
 
-> 桌面端 `maxtic-studio`（独立仓库 `MaxTiC-Next-Studio`）复用同一张退出码表，
-> 其中 **`3`** 另有一义：缺 PySide6 时打印安装指引并以 3 退出（见 03 章 3.10）。
+> 桌面端 `maxtic-studio`（独立仓库 `MaxTiC-Next-Studio`，本仓库不注册该入口点，见
+> `pyproject.toml:55-57`）复用同一张退出码表，其中 **`3`** 另有一义：缺 PySide6 时打印安装指引
+> 并以 3 退出，**而不是抛出 `ModuleNotFoundError`**（与本仓库处理可选依赖的口径一致：
+> `report/html.py:336-344` 捕获 `ImportError` 后先告警再降级渲染，另见 03 章 3.10）。
 > 工作流引擎只调 `maxtic-next`，不受该入口点影响。
 
 ## 7.8 改动后的自检清单

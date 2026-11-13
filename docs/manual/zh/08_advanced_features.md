@@ -52,7 +52,7 @@ maxtic-next species.tree constraints.tsv --ls 180 --near-optimal-top-k 400
 ```python
 r = rank("species.tree", "constraints.tsv", local_search=180, top_k=400)
 r.run_metadata["near_optimal_top_k"]        # 400 —— stdout 之外的机器可读入口
-r.sensitivity_summary["n_orders_retained"]  # 参与统计的去重序数
+r.sensitivity_summary["n_orders_retained"]  # 容量裁剪后实际保留的去重序数
 ```
 
 - **调大 K** 让摘要考察更宽的近优邻域；代价是内存与 `summary()` 计算量按 **K·n²** 增长
@@ -78,7 +78,7 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
 | `--mcmc-iters` | `1000` | 链步数（必须 > 0） |
 | `--mcmc-temperature` | **`auto`** | Boltzmann 温度。`auto` = `max(总权重, 1) / 100`；也可给正数固定 |
 | `--mcmc-burn-in` | `iters` 的 **50%** | burn-in：只推进链、不记录样本 |
-| `--mcmc-thin` | `max(1, iters // 100)` | 抽稀间隔，降低相邻样本自相关 |
+| `--mcmc-thin` | `max(1, iters // 100)` | 抽稀间隔，降低相邻**保留**样本之间的自相关 |
 
 - **温度不再是旧文档写的固定 `0.01`**。旧默认值在真实总权重（数百到数千量级）下会让链
   几乎冻结、只覆盖极少数状态；现在默认 `auto` 按能量尺度自适应，并在 stdout 打印实际生效值：
@@ -86,6 +86,9 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
   ```
   [MCMC] 温度 T=22.184（auto：max(总权重,1)/100）；iters=1000、burn-in=500、thin=10
   ```
+
+  在 Python 里直接实例化采样器时另当别论：`MCMCSampler.__init__` 的默认值仍是
+  `temperature=0.01`，“不再是固定 `0.01`”只对 CLI / API 层成立。
 
 - 结果在 `Result.mcmc_samples`（线性扩展样本列表），并打印样本统计与**收敛诊断**：
 
@@ -98,7 +101,8 @@ maxtic-next species.tree constraints.tsv --mcmc --mcmc-iters 2000
 > 打出的第一行就是 `preliminary; convergence diagnostics not validated`，且实测显示链
 > **未混合**（ESS 远小于样本量、相邻重复率高）。因此**在诊断通过之前，其样本不得用作
 > 不确定性度量**。MCMC 只是唯一在术语上“允许”谈分布的模块，不代表它已经配得上这个资格。
-> **默认关闭**；不开启时与 P0/P1 路径零漂移。
+> **默认关闭**；不开启时 `Ranker.run` 根本不构造采样器、不消耗随机数，也不触碰交付序，
+> 因此与不开 MCMC 的默认路径零漂移。
 > 采样器同样**接受协作式取消**（`MCMCSampler.sample(stop_check=...)`，由 `api.rank` /
 > `Ranker.run` 透传）：在链步之间检查、停止后返回已记录的样本，`run_metadata["mcmc_stopped_early"]`
 > 回传是否真的被打断；若一条链**一个样本都没产出**就被取消，则 `RuntimeError` 而非静默返回空
@@ -117,10 +121,11 @@ maxtic-next species.tree constraints.tsv --target-clade 61 --target-clade-ancest
 ```
 
 - 默认策略：丢弃跨类群约束，**绝不静默引入虚假偏序**。
-- `--target-clade-ancestor-map`：仅当外部端点可判定为类群祖先并落在 donor 侧时，才映射到根；
+- `--target-clade-ancestor-map`：仅当外部端点可判定为类群祖先并落在供体侧时，才映射到根；
   旁支一律丢弃。默认关闭。
 - 本步骤**不修改树拓扑 / 不重根**，只过滤 / 重映射约束端点。
-- `--target-clade` 标签不存在时，`--dry-run` 与正式运行都会**报错**（不再等到深处 `KeyError`）。
+- `--target-clade` 标签不存在时，正式运行**仍会抛出** `KeyError`（`prune.py`），只是由 CLI
+  统一捕获、以**退出码 4** 给出友好错误消息；`--dry-run` 则在预检阶段就提前以 error 拦截。
 - 提醒：被映射到根的约束在任何合法序中恒成立（根位次为 0），只会稀释权重分母、不提供信息。
 
 ## 8.4 预检（dry-run）
@@ -132,7 +137,7 @@ maxtic-next species.tree constraints.tsv --dry-run
 maxtic-next species.tree fam1.uml_rec --from ale --dry-run   # 真正解析上游输出
 ```
 
-检查项（逐条对照 `src/maxtic_next/dry_run.py`）：
+检查项（逐条对照 `src/maxtic_next/dry_run.py`；适配器两行出自 `src/maxtic_next/api.py`）：
 
 | 检查 | 严重度 |
 |------|--------|
@@ -147,7 +152,7 @@ maxtic-next species.tree fam1.uml_rec --from ale --dry-run   # 真正解析上�
 | `--d > 0` 但约束**无** distance 列（选项将被忽略） | **error** |
 | 物种树没有内部节点 | warning |
 | 适配器模式：上游输出解析失败 / 零约束 / 端点全不命中 | error |
-| 适配器模式：端点命中率低于 `--min-endpoint-hit-rate` | warning |
+| 适配器模式：部分（而非全部）约束端点未命中物种树——命中率低于 100% | warning |
 
 输出结构化报告并以 `结论：通过 / 存在致命问题，已中止 （error N, warning N）` 收尾。
 合法输入（`examples/minitree.tree` + `examples/Cyano_CUTConstraints.tsv`）实测：
@@ -175,8 +180,8 @@ maxtic-next species.tree fam1.uml_rec --from ale --dry-run   # 真正解析上�
 XML 因此未闭合：
 
 ```bash
-$ head -c 400 examples/adapters/eccetera/FAM1.recphyloxml > truncated.recphyloxml
-$ maxtic-next examples/adapters/ale/species.tree truncated.recphyloxml \
+$ head -c 400 examples/adapters/eccetera/FAM1.recphyloxml > /tmp/truncated.recphyloxml
+$ maxtic-next examples/adapters/ale/species.tree /tmp/truncated.recphyloxml \
       --from eccetera --dry-run
 === 预检（dry-run）报告 ===
 [error] 上游输出（格式 eccetera）解析失败：UpstreamParseError: /tmp/truncated.recphyloxml：
@@ -214,7 +219,7 @@ maxtic-next species.tree constraints.tsv --ls 600 --local-search-max-iters 20000
 - `--local-search-max-iters 0`（默认）= 只受 `--ls` 墙钟时长约束 → **迭代次数随机器负载而变**，
   同种子在不同机器上可能得到不同结果（程序会在 stdout 末尾打 WARNING 说明这点）。
 - 设为正整数 N → 至多 N 次迭代后停止。随机流消耗确定，因此**固定 `--seed` 即确定**。
-  给出 N 后 `--ls` 退化为“最多 also 这么久”的上界。
+  给出 N 后 `--ls` 退化为“最多也就这么久”的附加上界。
 - 默认路径（`--ls 0`）不涉及此问题，始终可复现。
 
 ## 8.6 检查点 / 断点续跑
@@ -261,7 +266,7 @@ pvalue of the similarity with the input order: 0.0196078431372549 [(k+1)/(n+1) c
    压成 `0.0`，制造出“绝对显著”的假象；现在 50 次采样的最小 p 是 `1/51 ≈ 0.0196`。
    打印里显式标注 `[(k+1)/(n+1) corrected]`。
 2. **检验对象是最终交付序**（局部搜索之后），而不是搜索前的启发式序——旧实现检验的序
-   并不是交付给用户的那棵树。打印里标注 `tested order = delivered best order`。
+   并不是交付给用户的那个序。打印里标注 `tested order = delivered best order`。
 
 分布文件是**第 4 个产物**：`<前缀>.mt.random_dist.tsv`（legacy 风格为
 `<前缀>_distribution_random`），每行 `value similarity`，共 N 行。
@@ -277,9 +282,9 @@ pvalue of the similarity with the input order: 0.0196078431372549 [(k+1)/(n+1) c
 | `1` | 保留节点、随机化方向 |
 | `2` | 完全随机化节点 |
 
-取值域在 argparse 层强制为 `{0,1,2}`：旧实现把 `3`、`-1` 等**静默当作 0**，等于用未随机化的
-数据做对照实验。`--random-type 1/2` 会改变数据本身，因此“与默认路径一致”无从谈起，
-但同种子仍自洽可复现；仅在明确需要对照时使用。
+取值域在 argparse 层强制为 `{0,1,2}`：`3`、`-1` 等非法取值**直接被拒并以退出码 2 退出**，
+因为旧实现把它们**静默当作 0**，等于用未随机化的数据做对照实验。`--random-type 1/2` 会改变
+数据本身，因此“与默认路径一致”无从谈起，但同种子仍自洽可复现；仅在明确需要对照时使用。
 
 ## 8.9 协作式取消（`stop_check`）
 

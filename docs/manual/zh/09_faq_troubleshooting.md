@@ -17,7 +17,7 @@ A：内部节点用**物种树 bootstrap 字段里的标签**（如 `61`），�
 A：分三种情况，别再说成一句“固定 seed 可复现”：
 - **默认路径（`--ls 0`）**：可复现，逐字节一致。约束行乱序、多文件顺序都不影响产物。
 - **`--ls > 0`**：停止条件是**墙钟时长**，迭代次数依机器负载而变 → 同种子在不同机器上
-  **可能不同**（程序会在 stdout 末尾主动打这条 WARNING）。
+  **可能不同**（程序会把这条 WARNING 打在摘要**末尾**；唯一例外：叶子端点的 `WARNING:` 紧跟 `uninformative` 行）。
 - **`--ls > 0` + `--local-search-max-iters N`**：迭代次数确定 → 恢复确定性。
 
 另外，贪婪启发式在**同权重并列**时依赖 `edge` 字典的插入顺序，Newick 解析顺序也参与其中，
@@ -52,8 +52,10 @@ A：ecceTERA 对内部物种节点用其自身数字 ID（叶子用名字），�
 
 **Q8：HTML 报告没生成？**
 A：完整报告需 `jinja2 + plotly`（`pip install "MaxTiC-Next[report]"`）。缺依赖时**不会报错**，
-而是降级为基础模板（无交互图，且降级模板不做 HTML 转义）；生成异常只在 stdout 打一行
-`[警告] HTML 报告生成失败，已跳过：…`。排序与文件输出不受影响。也可 `--no-html` 主动关闭。
+而是降级为基础模板（无交互图，但降级路径同样逐值做 HTML 转义）；生成异常会在 stdout 打
+`[警告] HTML 报告生成失败，已跳过：…` 一行，并把**同一条**以 `WARNING: …` 追加进末尾的告警列表
+（`result.warnings` 由摘要一并打印，所以 stdout 上是**两行**），另在
+`run_metadata["html_report_error"]` 留一份机器可读副本。排序与文件输出不受影响。也可 `--no-html` 主动关闭。
 
 **Q9：可以只生成约束、不排序吗？**
 A：可以。`--from <tool> -o constraints.tsv` 生成统一约束后提前返回（两阶段流程的 Stage 1）。
@@ -77,13 +79,16 @@ A：是。前缀取自 `CONSTRAINTS` 列表的**第一个**文件，其余文件
 
 **Q13：`--ale-source` 到底该用 `rec` 还是 `trf`？**
 A：默认是 **`trf`**（= ALE 官方 MaxTiC 集成规定的 `constraints_from_transfers`）。
-两者产出的约束集**规模与权重量级都不同**，切换等于换掉整个输入。只有在复现以 `rec`
-为默认的旧结果时才显式 `--ale-source rec`。生效口径会打到 stderr。
+两者产出的约束集**条数与总权重都不同**（官方示例规模下 `rec` 只有 13,995 条、总权重
+5482.98，`trf` 总权重 6438.6，权重相差约 17%），切换等于换掉整个输入；完整口径见
+[../../adapters/ale.md](../../adapters/ale.md) §2。只有在复现以 `rec` 为默认的旧结果时
+才显式 `--ale-source rec`。生效口径会打到 stderr。
 
 **Q14：上游示例是 `.tgz`，怎么直接喂给 MaxTiC-Next？**
 A：**不用先解压**。`io/compression.py` 按 gzip 魔数（`1f 8b`）和 `ustar` 魔数判定输入，
-所以 `.gz` / 无扩展名的 gzip 流 / **恰好一个成员**的 `.tar.gz`·`.tgz`·`.tar` 在**任何**入口
-（物种树、文本约束、`--dry-run`、五个适配器、`--from-auto` 的格式嗅探）都是透明解压的；
+所以 `.gz` / 无扩展名的 gzip 流 / **恰好一个成员**的 `.tar.gz`·`.tgz`·`.tar`（改了扩展名的同样算，
+判定只看魔数）在**任何**入口（物种树、文本约束、`--dry-run`、五个适配器、
+`--from-auto` 的格式嗅探）都是透明解压的；
 家族名取自剥掉压缩后缀后的词干，所以 `.gz` 不改变按家族统计的口径。
 
 上游工具的**官方示例包**现在也能直接喂：例如 ALE 官方
@@ -102,8 +107,8 @@ maxtic-next species.tree examples/reconciliations.tgz --from ale
 所以这种输入（典型是把 `.tgz` 放在**物种树**位置，或绕过 CLI 直接调
 `read_constraints_file`）抛的是 `CompressedArchiveError`（CLI 退出码 4、`--dry-run` 记为
 error 级条目），消息里带成员清单与**可直接执行**的解包命令：
-`tar -xzf 归档 -C ./unpacked`（然后喂 `./unpacked/*`），或
-`tar -xzOf 归档 成员 > 文件`（只取一个成员）。Windows 10+ 自带 `tar`。详见 05 章 5.7。
+`tar -xzf <archive> -C ./unpacked`（然后喂 `./unpacked/*`），或
+`tar -xzOf <archive> <member> > <file>`（只取一个成员）。Windows 10+ 自带 `tar`。详见 05 章 5.7。
 
 **Q15：`--near-optimal-top-k` 是干什么的？要调吗？**
 A：它是**稳健性/敏感性摘要的支持集上限**——局部搜索期间为摘要保留多少个**去重**近优排序，
@@ -129,8 +134,9 @@ A：**不是**，那只是**计数**。`donor == receptor`（供体与受体同�
 `to itself` 统计里静默消失。现在**五个适配器 RANGER-DTLx / ecceTERA / ARTra /
 AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按“`--d` 保留无距离列的约束”的
 既有口径通过过滤，所以 `to itself` 不再被 `--d` 吃掉——这与**文本输入路径一直的行为一致**
-（3 列空格/4 列逗号本就没有距离列）。ALE 是最后一个对齐的：`--from ale` 的自环现在同样保留，
-实测 `to itself` 非零（`1.0 uninformative ( … 1.0 to itself 50.0%)`，见 03 章 3.2.3 的实测二，
+（3 列空格/4 列逗号本就没有距离列）。ALE 是最后一个对齐的：`--from ale` 的自环**在默认 `--d 0`
+下也保留**，并出现在摘要里——实测用的 `.uml_rec` 中，`T@62->65` 在默认 `trf` 口径下就是自环，
+`to itself` 非零（`1.0 uninformative ( … 1.0 to itself 50.0%)`，见 03 章 3.2.3 的实测二，
 回归测试 `tests/test_ale_selfloop.py`）。只有你在文本输入里**自己**写了距离 0（或人为把
 `None` 改成 `0.0`）时它才会被删，此时 stdout 会打 `NOTE: --min-transfer-distance=… 丢弃 …` 与
 `NOTE: 上述丢弃中有 N 条是**自环约束**…` 如实说明。见 03 章 3.2.3、05 章 5.2.5。
@@ -144,23 +150,35 @@ AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按
 | `错误：物种树不是二叉树：内部节点 '1' 有 3 个子节点。` | 4 | 多歧分支 | 二叉解析或重新定根 |
 | `错误：物种树存在重复的叶子名（共 1 个名字重复）：'A' 出现在父节点 ['9', '8']` | 4 | 叶名不唯一，节点标识塌缩 | 检查是否误把基因树/带编号拷贝当物种树 |
 | `错误：物种树内部节点标签不唯一（重复标签：[…]）` | 4 | bootstrap 标签重复 | 修正物种树使内部标签唯一 |
-| `约束文件 <f> 第 N 行的约束权重为负：'-3.0'` | 4 | 负权重使目标函数与百分比失去意义 | 校正权重（权重须为有限实数且 ≥ 0） |
-| `约束文件 <f> 第 N 行的约束权重不是有限实数：'nan'` | 4 | `nan`/`inf` 会污染统计 | 用真实数值；缺失行请删除 |
+| `错误：约束文件 <f> 第 N 行的约束权重为负：'-3.0'` | 4 | 负权重使目标函数与百分比失去意义 | 校正权重（权重须为有限实数且 ≥ 0） |
+| `错误：约束文件 <f> 第 N 行的约束权重不是有限实数：'nan'` | 4 | `nan`/`inf` 会污染统计 | 用真实数值；缺失行请删除 |
 | `输出文件已存在：<path>` + “请改用 -p… 或加 --force” | 3 | 覆盖保护（默认拒绝） | `-f/--force` 或换 `-p` 前缀 |
-| `argument --threshold-constraints/--ts: 约束权重阈值比例 是比例，取值域 [0.0, 1.0]，收到 5.0` | 2 | `--ts` 越界（必须是 [0,1] 比例） | 用 0–1 之间的比例 |
-| `argument --random-type/--r: invalid choice: '3' (choose from '0', '1', '2')` | 2 | 非法随机化类型 | 用 0/1/2 |
-| `ERROR: --min-transfer-distance=… 被忽略（N/N 条约束不含 phylogenetic distance 列…）` | 0（`--dry-run` 为 1） | 无距离列却设了 `--d>0` | 去掉 `--d` 或提供 4/5 列输入 |
+| `argument --threshold-constraints/--ts: 约束权重阈值比例 是比例，取值域 [0.0, 1.0]，收到 5.0` | 2 | `--ts` 越界（必须是 [0,1] 比例；旧版曾静默接受） | 用 0–1 之间的比例 |
+| `argument --random-type/--r: invalid choice: 3 (choose from 0, 1, 2)` | 2 | 非法随机化类型（`choices` 是 int，实跑输出不带引号；具体引号形态随 Python 版本略有差异） | 用 0/1/2 |
+| `ERROR: --min-transfer-distance=… 被忽略（N/N 条约束不含 phylogenetic distance 列…）` | 0（`--dry-run` 为 1）※ | 无距离列却设了 `--d>0` | 去掉 `--d` 或提供 4/5 列输入 |
 | `[tool] 错误：…` / `LabelMismatchError`（适配器端点 0 命中） | 4 | 上游命名与物种树不一致 | 对齐命名，或降低 `--min-endpoint-hit-rate`（0 命中仍报错） |
-| `[error] 上游输出（格式 ranger）未产出任何约束：…` | 1（dry-run） | 上游格式误标 / 家族阈值过高 / 命名不一致 | 先看 stderr 诊断行；`--dry-run` 定位 |
-| `[error] 上游输出（格式 eccetera）解析失败：UpstreamParseError: …recPhyloXML 解析失败（文件损坏 / 被截断 / 非 XML）…` | 1（`--dry-run`） | 上游输出本身读不出（截断 / 非 XML / 编码错） | 预检**必定**判失败并退出 1；重新导出或解压上游输出 |
-| `错误：输入文件是一个含 N 个文件成员的 tar 归档（gzip）：<path>` + `tar -xzf` / `tar -xzOf` 命令 | 4（`--dry-run` 记 error 级条目） | 多成员归档被当作**一个**输入读（典型：放在物种树位置） | 按提示解包后喂 `./unpacked/*`；或 `tar -xzOf 归档 成员 > 文件` 只取一个。作为约束/上游输入时归档会自动展开（05 章 5.7） |
+| `[error] 上游输出（格式 ranger）未产出任何约束：…` | 1（dry-run）※ | 上游格式误标 / 家族阈值过高 / 命名不一致 | 先看 stderr 诊断行；`--dry-run` 定位 |
+| `[error] 上游输出（格式 eccetera）解析失败：UpstreamParseError: …recPhyloXML 解析失败（文件损坏 / 被截断 / 非 XML）…` | 1（`--dry-run`）※ | 上游输出本身读不出（截断 / 非 XML / 编码错） | 预检**必定**判失败并退出 1；重新导出或解压上游输出 |
+| `错误：输入文件是一个含 N 个文件成员的 tar 归档（gzip）：<path>` + `tar -xzf` / `tar -xzOf` 命令 | 4（`--dry-run` 记 error 级条目） | 多成员归档被当作**一个**输入读（典型：放在物种树位置） | 按提示解包后喂 `./unpacked/*`；或 `tar -xzOf <archive> <member> > <file>` 只取一个。作为约束/上游输入时归档会自动展开（05 章 5.7） |
 | `argument --near-optimal-top-k: 近优解收集容量 必须 > 0，收到 0` | 2 | 摘要支持集上限越界（须为 ≥ 1 的整数） | 用 ≥ 1 的整数；Python 侧同判据为 `ValueError` |
-| `MaxTiC-Next Studio 需要 GUI 依赖 PySide6（以及 matplotlib）。请在 Studio 仓库根目录执行：pip install -e .` | 3 | 未装 GUI 依赖就运行 `maxtic-studio` | 在 Studio 仓库执行 `pip install -e .`；或改用 `maxtic-next`（CLI 不受影响） |
+| `MaxTiC-Next Studio 需要 GUI 依赖 PySide6（以及 matplotlib）。请在 Studio 仓库根目录执行：pip install -e .` | 3 | 未装 GUI 依赖就运行 `maxtic-studio`（本条消息与退出码 3 **由 Studio 仓库定义**，不在本仓库 `src/` 内；本仓库 `pyproject.toml` 注明 GUI 位于独立的 MaxTiC-Next-Studio 仓库） | 在 Studio 仓库执行 `pip install -e .`；或改用 `maxtic-next`（CLI 不受影响） |
 | `WARNING: 输入约束集为空（0 条时间约束）。…` | 0 | 数据或阈值导致无约束 | **别把 0.0 的 value 读成“完美一致”** |
 | `WARNING: --local-search > 0 以墙钟时长为停止条件…` | 0 | 不可跨机器复现 | 加 `--local-search-max-iters` |
-| `--target-clade 指定的节点 … 不在物种树中` | 4（dry-run 报 error） | 类群标签写错 | 用物种树内部 bootstrap 标签 |
+| `错误："--target-clade 指定的节点 … 不在物种树中"` | 4（dry-run 报 error） | 类群标签写错（`prune.py` 抛的是 `KeyError`，故 CLI 的 `错误：` 前缀之外还会多出一对引号——那是 `KeyError.__str__` 对消息做的 `repr`） | 用物种树内部 bootstrap 标签 |
 | `maxtic-next: command not found` | — | 未 pip 安装 | `pip install -e .`，或用 `PYTHONPATH=src python3 -m maxtic_next` |
 | HTML 报告“跑通了但很朴素” | 0 | 未装 jinja2/plotly → 静默降级 | `pip install "MaxTiC-Next[report]"` |
+
+> ※ 注：表中带 ※ 的三行，**退出码那一列属于 `--dry-run`**，而预检复述的是**同一语义、不同字面**的
+> 条目——`dry_run.format_dry_run` 把结构化报告渲染成 `[error] …` / `[warning] …` 行，不会照抄正式
+> 排序的字面。以 `--d` 行为例：正式排序打的是「`ERROR:` + 被忽略（N/N 条约束不含 phylogenetic distance
+> 列…）」并照常**退出 0**，`--dry-run` 打的是「`[error]` + 将被忽略：约束文件 <f> 不含 phylogenetic
+> distance 列（4 列空格 / 5 列 ALE 格式）…」并**退出 1**。
+> 「上游输出未产出任何约束」「上游输出解析失败」两行同理：正式排序分别走 0 约束告警（退出 0）与
+> `错误：…recPhyloXML 解析失败…`（退出 4），表中给出的是 dry-run 侧字面。
+>
+> 另：`错误：` 是 CLI 对**所有** `ValueError`/`KeyError` 统一加的前缀（随后退出 4），
+> 因此表里凡带该前缀者即来自这条路径；唯一的例外是覆盖保护的 `FileExistsError`，它**不加前缀**、
+> 退出 3。
 
 ## 9.3 复现性核对清单
 
@@ -176,7 +194,7 @@ AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按
 - [ ] 报告稳健性/敏感性摘要时写明 `--near-optimal-top-k` 的生效值（默认 50）——
       它是这些频率的支持集上限，见 03 章 3.6b
 - [ ] 若上游输入是压缩包：`.gz` 与归档可直接喂，但**产物前缀**与临时解包位置会变
-      （见 `run_metadata["archives_expanded"]`）；要按成员分别留存产物请显式 `-p`
+      （见 `run_metadata["archives_expanded"]`）；要按成员分别留存产物请显式 `-p`（05 章 5.7）
 
 ## 9.4 性能建议
 
@@ -192,6 +210,6 @@ AleRax / ALE** 对自环一律写 `distance = None`（= 无距离信息），按
 
 - 手册总览：[../README.md](../README.md)
 - 适配框架：[../../adapters/README.md](../../adapters/README.md)
-- 原始工具作者：Eric Tannier（eric.tannier@inria.fr）；引用 MaxTiC, Biorxiv doi.org/10.1101/127548
+- 原始工具作者：Eric Tannier（eric.tannier@inria.fr）；引用 MaxTiC, bioRxiv doi.org/10.1101/127548
 
 > 上一章：[08 · 进阶功能](08_advanced_features.md) ｜ 返回：[手册总览](../README.md)

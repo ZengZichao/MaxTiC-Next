@@ -7,7 +7,7 @@ Python 2 phylogenetics tool **MaxTiC** (Eric Tannier, Inria). It solves one well
 problem:
 
 > Given a **rooted species tree** and a set of **weighted time constraints** inferred from
-> lateral/horizontal gene transfers (HGT) — each of the form "node A is not younger than
+> lateral/horizontal gene transfers (HGT) — each of the form "node A is not later than
 > node B" — find an **ordering (relative chronology)** of the tree's internal nodes that
 > **maximizes the cumulative weight of satisfied constraints** (equivalently, minimizes the
 > weight of the Feedback Arc Set, FAS).
@@ -20,9 +20,9 @@ nodes of a species tree a maximally self-consistent temporal order.**
 | Term | Meaning |
 |------|---------|
 | **Species tree** | Rooted Newick tree with **internal node labels stored in the bootstrap field** (e.g. `...)61:2,...`, `61` is the label) |
-| **Constraint** | Directed weighted edge `donor → receptor`, meaning "donor no later than receptor" |
+| **Constraint** | Directed weighted edge `donor → receptor`, meaning "donor not later than receptor" |
 | **Donor / receptor** | Species-tree nodes for the source / target branch of a transfer |
-| **Weight** | Confidence score of a constraint (e.g. sampling support, posterior frequency) |
+| **Weight** | Support score of a constraint, summed as the objective's cumulative weight (e.g. sampling support, integer count; 03 §3.2.2) — not a confidence score |
 | **MTC** | Maximum Time Consistency: maximize weight of non-conflicting constraints |
 | **FAS** | Feedback Arc Set: the violated constraints; MTC ≡ minimize FAS weight |
 | **Informative constraint** | Neither a tree ancestor-descendant relation nor a trivial cycle; both endpoints internal |
@@ -31,7 +31,7 @@ nodes of a species tree a maximally self-consistent temporal order.**
 
 ## 0.3 Three ranking heuristics
 
-MaxTiC-Next runs three heuristics on the same problem and keeps the best:
+MaxTiC-Next runs all three heuristics on the same problem at once and keeps the best:
 
 1. **Greedy (`order_from_graph`)**: add constraints by descending weight while avoiding cycles, then topologically sort.
 2. **Mixing (`opt`/`mix`)**: bottom-up dynamic programming that merges the in-orders of left/right subtrees.
@@ -39,14 +39,14 @@ MaxTiC-Next runs three heuristics on the same problem and keeps the best:
 
 ## 0.4 Capability snapshot
 
-- **Algorithmic equivalence**: core algorithm ported function-by-function. **The default path
+- **Algorithmic equivalence**: core algorithm faithfully ported function by function. **The default path
   (`--ls 0`) is byte-for-byte reproducible under a fixed `--seed`**; with `--ls > 0` the stop
   condition is wall-clock time, so the iteration count follows machine load and
   `--local-search-max-iters` is also needed for cross-machine reproducibility
   (see 03 §3.8).
 - **Dual input formats**: space `donor receptor [weight] [distance]` and comma `family,donor,receptor,[weight],[distance]`.
 - **Five upstream adapters**: ALE, RANGER-DTLx, ecceTERA, ARTra, AleRax — one-shot `--from <tool>` or `--from-auto` detection.
-- **Interactive HTML report**: on by default; weight distribution, conflict ratio, node-position robustness, ranked-tree view.
+- **Interactive HTML report**: on by default; weight distribution, conflict ratio, node-position robustness, ranked-tree visualization.
 - **Robustness / sensitivity analysis**: local search collects near-optimal orders; node-position and pairwise-order statistics.
 - **MCMC sampler** (optional, **preliminary**): reversible Metropolis–Hastings sampling over
   topology-compatible linear extensions; convergence diagnostics are **not** validated, so its
@@ -65,7 +65,7 @@ MaxTiC-Next/                  # repository root (https://github.com/ZengZichao/M
 │   ├── constraints/           # data model, dual-format parsing, 5 adapters
 │   │   └── adapters/          # ale/ranger_dtl/eccetera/artra/alerax + registry
 │   ├── ranking/               # 3 heuristics + main Ranker
-│   ├── robustness/            # sensitivity summary + MCMC
+│   ├── robustness/            # robustness/sensitivity summary + MCMC
 │   ├── io/  report/           # 3-file output / HTML report
 │   └── benchmarks/            # benchmark suite
 ├── docs/                      # this manual + adapter specs (the desktop guide lives in the Studio repo)
@@ -76,7 +76,7 @@ MaxTiC-Next/                  # repository root (https://github.com/ZengZichao/M
 └── pyproject.toml
 ```
 
-## 0.6 Naming convention (three layers)
+## 0.6 Naming convention (four layers)
 
 | Layer | Value |
 |-------|-------|

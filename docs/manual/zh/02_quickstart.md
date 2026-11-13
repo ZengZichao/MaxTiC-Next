@@ -2,12 +2,13 @@
 
 本章用仓库自带的示例数据（蓝细菌小数据集）在 5 分钟内跑通一次完整排序。
 
-> 本章所有 stdout / 文件清单均为**实际运行捕获**（Python 3.14 本机，命令逐字照抄即可复现）。
+> 本章所有 stdout / 文件清单均为**实际运行捕获**（Python 3.14 本机，命令逐字照抄即可复现），
+> 并与程序当前输出逐行核对一致。
 
 ## 2.1 输入数据
 
 - 物种树：`examples/minitree.tree`（13 个内部节点，Newick，内部标签在 bootstrap 字段，**单行**）
-- 约束：`examples/Cyano_CUTConstraints.tsv`（空格格式 `donor receptor weight`，**123 行**，
+- 约束：`examples/Cyano_CUTConstraints.tsv`（空白符分隔格式 `donor receptor weight`，**123 行**，
   即原版随包分发的那份蓝细菌约束集）
 
 物种树片段（内部节点标签为数字 `42/59/61/...`）：
@@ -16,7 +17,7 @@
 (((((CYAP8:1,CYAP0:1)42:7,(CYAA5:7,UCYNA:7)41:1)59:2,...)69;
 ```
 
-约束片段（`donor receptor weight`，制表符分隔）：
+约束片段（`donor receptor weight`，空白符分隔；该文件实测用制表符）：
 
 ```
 61	62	15.04
@@ -47,12 +48,12 @@ PYTHONPATH=src python3 -m maxtic_next examples/minitree.tree \
 ```
 examples/Cyano_CUTConstraints.tsv
 tree with  13 internal nodes
-2218.4 total weight of constraints from transfers
+2218.3999999999996 total weight of constraints from transfers
 307.45000000000005 uninformative (  307.45000000000005 to a descendant, 0.0 to a leaf 0.0 to an ancestor 0.0 to itself 13.9%)
 676.0400000000001 trivially conflicting constraints (30%) (descendant to ancestor or trivial cycle)
-value of the order given by the input tree 755.8800000000005 (34.0732059141724%)
-value of the greedy heuristic 755.8800000000005 (34.0732059141724%)
-value of the mixing heuristic: 755.8800000000005 (34.0732059141724%)
+value of the order given by the input tree 755.8800000000005 (34.073205914172405%)
+value of the greedy heuristic 755.8800000000005 (34.073205914172405%)
+value of the mixing heuristic: 755.8800000000005 (34.073205914172405%)
 best order is the greedy heuristic
 (((((CYAP8:1,CYAP0:1)42:7,(CYAA5:7,UCYNA:7)41:1)59:2,(MICAN:9,(CYAP2:3,CYAP7:3)43:6)45:1)61:2,(SYNY3:11,SYNP2:11)56:1)65:1,(TRIEI:6,(NOSA0:5,(NOSP7:4,(NOSS1:2,ANAVT:2)40:2)46:1)62:1)67:7)69;
 Similarity of the best order compared with the input order 1.0
@@ -67,8 +68,8 @@ NOTE: 12 条约束与物种树谱系边同向（权重合计 63.55），已被�
 |----|------|
 | `examples/Cyano_CUTConstraints.tsv` | 本次产物前缀 = **第一个**约束文件的路径 |
 | `tree with  13 internal nodes` | 待排序的内部节点数（两个空格为原版排版） |
-| `2218.4 total weight of constraints from transfers` | 所有转移约束的权重之和（分母） |
-| `uninformative (...)` | 被判为无信息（到后代 / 到叶子 / 到祖先 / 自环）的权重及占比；**百分比 = uninformative ÷ total_weight**（，原版分母把该项双重计入而报 `12%`，本版本报 `13.9%`） |
+| `2218.3999999999996 total weight of constraints from transfers` | 所有转移约束的权重之和（分母） |
+| `uninformative (...)` | 被判为无信息（到后代 / 到叶子 / 到祖先 / 自环）的权重及占比；**百分比 = uninformative ÷ total_weight**（原版分母把该项双重计入而报 `12%`，本版本报 `13.9%`） |
 | `trivially conflicting` | 平凡冲突（后代→祖先或平凡环）权重及占比 |
 | `value of the ... heuristic` | 三种排序各自“被违反约束权重”（越小越好）及占 total_weight 的百分比 |
 | `best order is the greedy heuristic` | 最终选用的启发式；开局部搜索且确有改进时变为 `... + local search` |
@@ -76,9 +77,9 @@ NOTE: 12 条约束与物种树谱系边同向（权重合计 63.55），已被�
 | 一行 Newick | **排序树**：分支长度按排序位置重写 |
 | `Similarity ...` / `constraints in agreement ...` | 与输入树排序的 Kendall 相似度（∈[0,1]，1 为完全一致）等 |
 | `values from N random orders ...` 等 4 行 | **仅 `--random-trees > 0`** 时追加（见 08 章 8.7） |
-| `NOTE: N 条约束与物种树谱系边同向…` / `WARNING: …` | 运行期口径声明与告警，恒打在摘要**末尾** |
+| `NOTE: N 条约束与物种树谱系边同向…` / `WARNING: …` | 运行期口径声明与告警，都打在摘要**末尾**（唯一例外：叶子端点的 `WARNING:` 紧跟 `uninformative` 行） |
 
-> 末行的 NOTE 是**本版新增**（原版 `MaxTiC.py:444` 的逐条命中打印在其执行路径上不可达）。
+> 末行的 NOTE 是**本版新增**（原版 `tests/data/original_maxitc/MaxTiC.py:447` 的逐条命中打印在其执行路径上不可达）。
 > 它说明有 12 条约束与物种树本身的父子边同向，已被置为不可违反的拓扑硬约束。
 
 ## 2.4 生成的输出文件
@@ -111,8 +112,8 @@ open examples/Cyano_CUTConstraints.tsv.html
 xdg-open examples/Cyano_CUTConstraints.tsv.html
 ```
 
-报告为**纯静态**页面（内联/CDN 引入 Plotly），无需后端，可离线打开。
-未安装 `jinja2` / `plotly` 时不会报错，而是**降级**为基础模板（见 09 章 FAQ）。
+报告为**纯静态**页面（Plotly 内联，不引用 CDN），无需后端，可离线打开。
+未安装 `jinja2` / `plotly` 时不会报错，而是显式告警后**降级**为基础模板（见 09 章 FAQ）。
 
 ## 2.6 加一点“味道”
 
@@ -135,8 +136,8 @@ maxtic-next examples/minitree.tree examples/adapters/eccetera/FAM1.recphyloxml \
 maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --dry-run
 ```
 
-适配器模式会先向 **stderr** 打印一行口径声明与一行诊断摘要（；
-不进 stdout，以免污染与原版对齐的摘要）：
+适配器模式会先向 **stderr** 打印一行口径声明（口径不合时改为口径告警）与一行诊断摘要
+（不进 stdout，以免污染与原版对齐的摘要）：
 
 ```
 [ranger] 警告：报告未声明样本数（无 ``Total number of optimal solutions: N`` 行）且只有 1 个调和块：权重按**整数计数**输出，min_support 阈值不具 [0,1] 支持度语义。

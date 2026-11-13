@@ -1,13 +1,13 @@
 # MaxTiC-Next
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
+[![concept DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23053050.svg)](https://doi.org/10.5281/zenodo.23053050)
 [![PyPI](https://img.shields.io/pypi/v/MaxTiC-Next)](https://pypi.org/project/MaxTiC-Next/)
 [![License: CeCILL-2.1](https://img.shields.io/badge/License-CeCILL--2.1-blue.svg)](LICENSE)
 [![ORCID](https://img.shields.io/badge/ORCID-0000--0001--6553--970X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0000-0001-6553-970X)
 [![Python](https://img.shields.io/badge/python-3.9%20%E2%80%93%203.14-3776AB?logo=python&logoColor=white)](https://pypi.org/project/MaxTiC-Next/)
 [![CI](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/ZengZichao/MaxTiC-Next/actions/workflows/ci.yml)
 
-> 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full bilingual manual: [docs/manual/README.md](docs/manual/README.md)
+> 🇨🇳 Chinese version: [README.zh.md](README.zh.md) | 📖 Full multi-level bilingual manual: [docs/manual/README.md](docs/manual/README.md)
 
 `MaxTiC-Next` is a Python 3 rewrite and engineering extension of **MaxTiC**
 (Eric Tannier, Inria), a phylogenetics tool from the Python 2 era. On top of a
@@ -41,9 +41,9 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
 
 ### The **exact boundary** of equivalence (do not quote this as "byte-for-byte")
 
-1. **Accounting fixes**: this version deliberately fixes several statistical/accounting
-   defects of the original (see "Intentional deviations" below), so stdout and the products are
-   **not** identical to the original's. Any "byte-for-byte equivalent" claim must be qualified
+1. **Convention fixes**: this version deliberately fixes several statistical/convention
+   defects of the original (see "Intentional deviations" below), so stdout and the output files
+   are **not** identical to the original's. Any "byte-for-byte equivalent" claim must be qualified
    as *"byte-for-byte equivalent except for the documented deviations"*.
 2. **Reproducibility**: **the default path (`--local-search 0`) is byte-for-byte reproducible
    under a fixed `--seed`**. With `--ls > 0` the stop condition is **wall-clock time**, so the
@@ -53,7 +53,7 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
    `edge` dict insertion order **when weights tie**, so "reproducible" is always qualified as
    "fixed seed + same parser + same Python version".
 3. **Two different kinds of evidence** (do not conflate them):
-   - `tests/baselines/` (a `stdout.txt` snapshot plus the three product files) are the
+   - `tests/baselines/` (a `stdout.txt` snapshot plus the three output files) are the
      **self-produced deterministic output snapshots of this port at `seed=42`**. Their role is
      **regression prevention** — the same code must produce the same snapshot. They are **not**
      original MaxTiC output and they do **not** prove cross-implementation equivalence;
@@ -69,7 +69,8 @@ controlled conditions (fixed seed, fixed Python version, fixed parser):
      original and is therefore *not* a deviation). Newick parsing
      is out of its scope (that file reuses this project's `Tree`, as noted in it).
    - The "run the original and compare" case in `tests/test_equivalence_stats.py` needs both
-     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent.
+     `python2` and the original `MaxTiC.py` in the environment; it skips when they are absent, and
+     the field-by-field differential test above keeps running as the fallback.
    - `tests/test_original_py3_equivalence.py` runs a vendored 2to3 translation of the original
      `MaxTiC.py` / `script_tree.py` side by side with this package on the main synthetic and
      cyanobacterial instances and asserts byte-identical output tables and identical objective
@@ -86,8 +87,9 @@ pip install "MaxTiC-Next[report]"  # full install (adds jinja2/plotly for the in
 ```
 
 > **Revision note (v0.2.1).** PyPI serves 0.1.1, 0.2.0 and 0.2.1. Install the evaluated revision
-> with `pip install MaxTiC-Next==0.2.1`; the source archive is also supplied with the manuscript,
-> and v0.2.1 is archived on Zenodo (DOI 10.5281/zenodo.24133728).
+> with `pip install MaxTiC-Next==0.2.1`; the source archive (`Additional file 6.zip`) is also
+> supplied with the manuscript, and v0.2.1 is archived on Zenodo (version DOI
+> 10.5281/zenodo.24133728).
 
 From a source checkout (development):
 
@@ -120,7 +122,7 @@ An install-free macOS bundle, `MaxTiC-Next-Studio.app` (frozen with PyInstaller 
 double-click), is produced by that repository's `packaging/build_studio_app.sh` into its
 `release/` directory; its usage manual is `docs/studio.en.md` there. Both repositories share the
 same algorithm: Studio calls this repository's `maxtic_next.api.rank` in-process and rewrites
-no computation.
+or forks no computation.
 
 Offline / without installing, from the repository root:
 
@@ -157,7 +159,7 @@ maxtic-next examples/minitree.tree examples/Cyano_CUTConstraints.tsv --seed 42
 | `--near-optimal-top-k` | Near-optimal collector capacity: how many **deduplicated** near-optimal orders the robustness/sensitivity summary may consider (API `top_k`; must be ≥ 1; only meaningful with `--ls > 0`) | `50` |
 | `--help-en` | Print an English summary of the options and exit (does not require the positionals) | off |
 | `--lang` | HTML report language: `zh` (default) or `en`; affects report text only | `zh` |
-| `-f` / `--force` | Allow overwriting existing products (default: refuse, exit code 3) | off |
+| `-f` / `--force` | Allow overwriting existing output files (default: refuse, exit code 3) | off |
 
 > For the complete set (upstream adaptation via `--from` and `--min-endpoint-hit-rate`, clade
 > pruning, `--dry-run`, `--mcmc*` including `--mcmc-burn-in` / `--mcmc-thin` / `auto`
@@ -187,16 +189,19 @@ maxtic-next species.tree alerax_run/     --from alerax
 
 - **ALE's `--ale-source` defaults to `trf`** (transfer events, `parent(donor) -> receptor`), i.e.
   the convention of ALE's own MaxTiC integration (`constraints_from_transfers`). `rec`
-  (reconciliation events) remains selectable, but the two produce constraint sets of different
-  size and scale, so switching replaces the entire input.
+  (reconciliation events) remains selectable, but the two produce constraint sets that differ
+  in **both constraint count and total weight** (on the official example `rec` yields only
+  13,995 constraints with a total weight of 5482.98, vs 6438.6 for `trf` — about 17% apart),
+  so switching replaces the entire input.
 - Every conversion prints one diagnostic line to **stderr** (endpoint convention, weight
-  semantics, sample denominator, endpoint hit rate and **per-reason drop counters**) and records
+  convention, sample denominator, endpoint hit rate and **per-reason drop counters**) and records
   it in `result.run_metadata["adapter_diagnostics"]`; a 0% endpoint hit rate is a hard error, and
-  anything below `--min-endpoint-hit-rate` (default 0.5) warns. `--quiet-adapters` suppresses the
+  anything below `--min-endpoint-hit-rate` (default 0.5) warns (this guard does not apply to ALE,
+  which keeps the original's per-constraint endpoint check). `--quiet-adapters` suppresses the
   printing only.
 
 See the [upstream integration manual](docs/manual/en/06_upstream_integration.md) and the
-[`docs/adapters/`](docs/adapters/README.md) specifications.
+[`docs/adapters/`](docs/adapters/README.en.md) specifications.
 
 ## Output
 
@@ -207,7 +212,7 @@ this on stderr; override with `-p`). Default **short** naming (concise, with `.t
 - `<constraints>.mt.conflicts.tsv` — constraints conflicting with the best order
 - `<constraints>.mt.partial_order.tsv` — partial order (with black/green flags)
 - `<constraints>.mt.random_dist.tsv` — the `value similarity` distribution of the random orders,
-  written **only with `--random-trees > 0`** (the 4th data product)
+  written **only with `--random-trees > 0`** (the 4th data output file)
 
 `--output-style legacy` switches back to original MaxTiC long names (handy when comparing by
 filename):
@@ -219,7 +224,7 @@ filename):
 
 > Under both styles the **contents are byte-for-byte identical**; only names differ, and stdout is
 > unaffected by the style.
-> Products are written **atomically** (temporary file + `os.replace`) and overwriting existing
+> Output files are written **atomically** (temporary file + `os.replace`) and overwriting existing
 > files is **refused by default** (exit code 3; needs `-f/--force`).
 
 An interactive HTML report is produced by default (`--no-html` disables it; without
@@ -241,8 +246,8 @@ statements of convention.
 
 ## Intentional deviations from the original MaxTiC
 
-Every deviation below is **deliberate** and answers a specific defect of the original or an
-accounting decision of this version. They are also spelled out in the declarations of
+Every deviation below is **deliberate** and answers a specific defect of the original or a
+convention decision of this version. They are also spelled out in the declarations of
 `tests/test_reference_equivalence.py` and `tests/test_equivalence.py`, where they are asserted
 item by item rather than hidden inside an "everything is equal" assertion.
 
@@ -260,7 +265,7 @@ item by item rather than hidden inside an "everything is equal" assertion.
 | Cross-source auto-detection | not available | added; mixed input is grouped per tool and warned about, never silently summed |
 | `uninformative` percentage denominator | `total_transfers + uninformative` (**double-counts** the uninformative weight) → prints `12%` on the example | `total_weight` → prints `13.9%` |
 | Partial-order sentinel test | hard-coded `edge[e] < 100000` (its `MAX_NUMBER` is `1e10`) → silently deletes real informative constraints with weight ≥ 1e5 | tests against `MAX_NUMBER` |
-| `--threshold-constraints` total-weight basis | summed **before** removing edges, so deleted weight stayed in the denominator | computed **after** removal |
+| `--threshold-constraints` total-weight convention | summed **before** removing edges, so deleted weight stayed in the denominator | computed **after** removal |
 | Threshold deletion set | could delete the `MAX_NUMBER` phylogenetic hard constraints too → produced a "legal" ranking no longer constrained by the species tree | sentinel edges are excluded from the deletable set |
 | stdout after local search | printed the **pre-search** value and source, contradicting the delivered tree | writes back `values` / `best_source` and adds the `after local search … rejected` / `best found solution …` lines |
 | `--random-trees` p-value | `k/n`, squeezing the smallest non-zero p to `0.0` at n=50; and it tested the **pre-search** order | `(k+1)/(n+1)` correction (Phipson & Smyth 2010), testing the **final delivered order** |
@@ -273,9 +278,9 @@ item by item rather than hidden inside an "everything is equal" assertion.
 | ALE file-level cache key | — | key includes a **species-tree topology fingerprint** (two trees with the same labels but different topology cannot contaminate each other) |
 | Silent adapter drops | — | every drop path is **counted and reported** (one stderr line + `run_metadata`); a 0% endpoint hit rate is a hard error |
 | Output overwrite and atomicity | `open(...,"w")` clobbers, can leave half-written files | **refuses to overwrite by default** (`--force` opts in) + temporary file + `fsync` + `os.replace` |
-| Self-loop events (donor == receptor) removed by the distance filter | their topological distance is always 0, so `d` ate them and `to itself` silently under-counted | **all five adapters — RANGER-DTLx, ecceTERA, ARTra, AleRax and ALE — write `distance = None`** for self-loops, so the "distance-less constraints are kept" rule lets them through and `to itself` is not eaten by `--d`; the text-input path has always behaved this way. All five adapters share this convention: regression test `tests/test_ale_selfloop.py`, measurement in manual 03 §3.2.3 |
+| Self-loop events (donor == receptor) removed by the distance filter | their topological distance is always 0, so `d` ate them and `to itself` silently under-counted | **all five adapters — RANGER-DTLx, ecceTERA, ARTra, AleRax and ALE — write `distance = None`** for self-loops, so the "distance-less constraints are kept" rule lets them through and `to itself` is not eaten by `--d`; the text-input path has always behaved this way. All five adapters now share this convention (ALE was the last one to be aligned, so this defect is closed): regression test `tests/test_ale_selfloop.py`, measurement in manual 03 §3.2.3 |
 | Compressed input | plain text only | `.gz` / gzip streams decompressed by magic number and single-member tar archives by the `ustar` magic; official upstream `.tgz` example bundles can be fed whole (expanded into their members). A multi-member archive is **never** concatenated into "one" input — it raises with runnable `tar -xzf` / `tar -xzOf` commands |
-| `--dry-run` on upstream output | — (the original has no preflight) | the preflight **actually parses** it: corrupt/truncated XML, zero constraints and 0% endpoint hits are all error-level, so the CLI **exits 1** |
+| `--dry-run` on upstream output | — (the original has no preflight) | the preflight **actually parses** it: corrupt/truncated XML, zero constraints and 0% endpoint hits are all error-level, so the CLI **exits 1** (the previous implementation reported a pass on this path and exited 0) |
 | Cancelling the GUI front end | — (the original has no GUI) | the Cancel button interrupts at an **iteration boundary** via `stop_check` and delivers the best order so far; it does not mean "wait for the run to finish, then discard it" |
 
 ### Terminology discipline (not a deviation, but you must know it)
@@ -283,10 +288,10 @@ item by item rather than hidden inside an "everything is equal" assertion.
 - Local-search output is called **only** a "robustness/sensitivity summary over solutions visited
   by the local search"; "confidence interval / posterior probability" is never used.
 - That summary is a **deduplicated view of the local search's visit set**
-  (`is_resampling_robustness` is always `False`), and its support is capped by
+  (`is_resampling_robustness` is always `False`), and its support set is capped by
   `--near-optimal-top-k` (API `top_k`, default **50**): it considers at most the 50 best
   deduplicated near-optimal orders even though the chain visited far more distinct ones. Raising
-  K widens the support, it does **not** make this a posterior; whenever you report those
+  K widens the support set, it does **not** make this a posterior; whenever you report those
   frequencies you **must** state the effective K
   (`run_metadata["near_optimal_top_k"]`).
 - `--mcmc` is a **preliminary implementation**: convergence diagnostics are not validated
@@ -296,12 +301,12 @@ item by item rather than hidden inside an "everything is equal" assertion.
 ## License
 
 Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier and the citation
-(Biorxiv doi.org/10.1101/127548). See `LICENSE`.
+(bioRxiv doi.org/10.1101/127548). See `LICENSE`.
 
 ## Current capabilities
 
 - **Core rewrite**: faithful port of the ranking algorithm (greedy / mixing / local search), with
-  the accounting defects fixed and a differential test as the gate.
+  the convention defects fixed and a differential test as the gate.
 - **Interfaces**: the `maxtic-next` command line and the `maxtic_next` Python API (the desktop
   front end is the separate [`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio) repository, built on the same API).
 - **Upstream adapters**: ALE / RANGER-DTLx / ecceTERA / ARTra / AleRax via plugin registry +
@@ -326,14 +331,14 @@ Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier an
   was shown to agree with the original `path()` greedy on 400/400 cases. It is **on by default**,
   not an optional switch.
 - **Incremental scoring on by default**: `--incremental` (each interval rotation in the
-  local search costs O(b−a) instead of a full O(|E|) recompute). It is the default because the
-  incremental and full paths are verified **byte-for-byte identical** over 4 inputs × 5 seeds ×
-  {stdout summary, ranked newick, best_order, values, the three TSVs}, while being 3.1–8.2×
-  faster; `--no-incremental` keeps the original full-recompute semantics as an escape hatch and
-  the equivalence is guarded long-term by `tests/test_output_equivalence.py`.
+  local search costs O(b−a) instead of a full O(|E|) recompute). It is the default because
+  `--incremental` and `--no-incremental` are verified **byte-for-byte identical** over 4 inputs ×
+  5 seeds × {stdout summary, ranked newick, best_order, values, the three TSVs}, while being
+  3.1–8.2× faster; `--no-incremental` keeps the original full-recompute convention as an escape
+  hatch and the equivalence is guarded long-term by `tests/test_output_equivalence.py`.
 - **Faster default path** (no change to summation order): prefix membership tests in the `mix`
   dynamic program use incrementally maintained sets instead of list slices. The end-to-end
-  deterministic path at n=3199, |E|=12796 is **25.461 s CPU** on the review host (AF2
+  deterministic path at n=3199, |E|=12796 is **25.461 s CPU** on the review host (Additional file 2
   `scaling_large.csv`; n=1000/|E|=6000: 2.506 s); absolute timings remain host-dependent. The
   input is a deterministic synthetic tree, not a real biological dataset.
 - **Optional switches**: `--checkpoint` (resumption covering the `--local-search` stage only), and
@@ -351,7 +356,7 @@ Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier an
   verification (Python 2 original vs this version) in CI — currently the independent
   reference implementation in `tests/test_reference_equivalence.py` serves as that gate.
 - Convergence diagnostics and adaptive temperature for MCMC (until those pass, `--mcmc` keeps its
-  "preliminary" qualification).
+  "preliminary" convention).
 
 ## Known limitations
 
@@ -359,11 +364,11 @@ Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier an
   set): its stop condition is wall-clock time.
 - **`--checkpoint` covers only the local-search stage**: checkpointing applies to the Metropolis
   search driven by `--local-search`; the ALE parsing stage has its own per-gene-family file-level
-  cache and is not subject to this limitation.
+  cache (resumable) and is not subject to this limitation.
 - **The species tree must be binary and uniquely labelled**: this version does not generalize
   `opt`/`maximum_distance`/`random_order` to multifurcating trees; it enforces binarity as a
   precondition instead (see "Intentional deviations").
-- **Weight scales across adapters are not commensurable**: ALE gives [0,1] support; RANGER-DTLx /
+- **Weight conventions across adapters are not commensurable**: ALE gives [0,1] support; RANGER-DTLx /
   ARTra give **integer counts** when the report declares no sample count; AleRax gives
   upstream-preaggregated posterior frequencies. When mixing them, `--ale-min-support` changes
   meaning accordingly, and the diagnostic line tells you which case you are in.

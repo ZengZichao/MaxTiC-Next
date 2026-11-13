@@ -12,7 +12,7 @@
 统一约定：所有适配器最终产出统一 ``ConstraintSet``（``Constraint(donor, receptor,
 weight, metadata)``），下游排序器与文本约束完全同构，实现"一次检测、统一管道"。
 
-两个不可通约的口径（，机器可读）：每个 ``ConstraintSet.diagnostics``
+两个不可通约的口径（机器可读）：每个 ``ConstraintSet.diagnostics``
 都带 ``donor_endpoint_convention``（ALE = ``parent_of_donor``，其余四工具 =
 ``donor_itself``，同一事件相差一个物种层级）与 ``weight_semantics``
 （``support_over_declared_samples`` / ``support_over_replicate_blocks`` /
@@ -323,7 +323,7 @@ def detect_format(path: str) -> Optional[str]:
 def _sniff_chunks(path: str):
     """按块产出**解压后**的文件内容用于嗅探；总扫描量不超过 ``_SNIFF_SCAN_LIMIT``。
 
-    块间有少量重叠（保留上一块尾部 64 字节），保证跨块边界的标记不被截断。
+    块间有少量重叠（保留上一块尾部 64 个**字符**），保证跨块边界的标记不被截断。
     读失败时不产出任何内容。
 
     ：走 :func:`maxtic_next.io.compression.iter_text_chunks`，故

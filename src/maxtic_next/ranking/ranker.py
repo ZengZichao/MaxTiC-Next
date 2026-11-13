@@ -3,16 +3,16 @@
 本模块的主体流程移植自原版 ``MaxTiC.py`` 主流程（解析、建边、分类、三启发式、选优、
 输出），并保持了原版的演化顺序与 ``dict.keys()`` 视图处理习惯。
 
-**相对原版"逐字节等价"的已记录偏离**（；等价性测试须按此偏离比对）：
+**相对原版"逐字节等价"的已记录偏离**（等价性测试须按此偏离比对）：
 
 * ``Ranker.run()`` 增加**无条件前置守卫**：物种树必须是
   二叉树（本项目**不支持**非二叉物种树）、内部标签唯一、叶名唯一、约束端点存在、
   约束权重有限且非负、``--random-type ∈ {0,1,2}``、``0 <= --ts <= 1`` 等；
 * ``run()`` **幂等**：内部在物种树副本与约束集副本上工作，不改写调用方
   的 ``Tree`` / ``ConstraintSet``，同一实例两次 ``run()`` 输出逐字节相同；
-* ``uninformative`` 百分比分母为 ``total_weight``（；原版把无信息权重双重计入）；
-* 偏序产物的哨兵边判定用 ``MAX_NUMBER``（；原版写死 ``100000``）；
-* 信息性文件在"删除 0 权重边"**之后**写出（；与原版执行顺序一致）；
+* ``uninformative`` 百分比分母为 ``total_weight``（原版把无信息权重双重计入）；
+* 偏序产物的哨兵边判定用 ``MAX_NUMBER``（原版写死 ``100000``）；
+* 信息性文件在"删除 0 权重边"**之后**写出（与原版执行顺序一致）；
 * ``--threshold-constraints`` 的统计口径在过滤**之后**，且哨兵边不可删除
   ；
 * 局部搜索改进后回写 ``Result.values["local_search"]`` / ``["best"]`` 与 ``best_source``
@@ -24,7 +24,7 @@
   ``run_metadata["near_optimal_top_k"]``。
 * ``run(stop_check=...)``：**协作式取消**透传给局部搜索与 MCMC 链，在迭代边界停止并
   交付"截至取消点"的最优序，是否真的打断由 ``run_metadata["cancelled"]`` 回传
-  （；默认 ``None`` 时所有输出与基线逐字节一致）。
+  （默认 ``None`` 时所有输出与基线逐字节一致）。
 
 **行为等价的实现层改动**（不改变任何输出字节）：树上遍历 ``Tree.get_leaves`` /
 ``Tree._write`` / ``opt`` / ``maximum_distance`` / ``random_order`` 由递归改为**显式栈
@@ -431,7 +431,7 @@ class Ranker:
         self.incremental = incremental
         self.checkpoint_path = checkpoint_path
         self.checkpoint_interval = checkpoint_interval
-        # 是否允许覆盖既有产物（，对应 CLI --force）
+        # 是否允许覆盖既有产物（对应 CLI --force）
         self.force = force
         # HTML 报告语言（只影响报告文案，不影响计算/输出表/数值）
         if lang not in ("zh", "en"):

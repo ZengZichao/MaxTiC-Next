@@ -19,7 +19,7 @@
 到达的谱系），产出统一的 ``(donor, receptor)`` 有向约束（donor 应早于/不晚于
 receptor）。
 
-**供体端点层级约定（，机器可读于诊断的**
+**供体端点层级约定（机器可读于诊断的**
 ``donor_endpoint_convention = "donor_itself"``）**：本模块取"供体本身"
 （``Mapping -->`` 给出的那个谱系）为约束 donor；而 ALE 路径取"供体的父"
 （``parent(donnor)``，见 ``adapters/ale.py`` 与原版
@@ -156,8 +156,8 @@ def parse_reconciliation_report_detailed(
     Args:
         lines: 文件的所有行。
         valid_labels: 物种树中所有合法标签（叶子名 + 内部节点 bootstrap）。
-        numeric_map: 可选的 ``数字ID -> 标签`` 反查表（；
-            RANGER/ARTra 原生写真实标签，故默认 ``None``）。
+        numeric_map: 可选的 ``数字ID -> 标签`` 反查表（RANGER-DTLx / ARTra
+            原生写真实标签，故默认 ``None``）。
 
     Returns:
         ``(transfers, blocks, family_size, stats)``：
