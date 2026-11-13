@@ -338,7 +338,9 @@ r.values["best"]                         # 截至取消点的最优值，照常�
 实测（同一份蓝细菌样例，`--ls 30`、`--t 60`、谓词在第 51 次检查转真）：
 `cancelled=True`、迭代数 51、耗时远小于 30 秒、结果照常写出。
 
-**Studio 的「取消 ■」按钮就绑在这条路径上**（Studio 仓库的 `maxtic_studio/cancellation.py`）：按钮 →
+**Studio 的「取消 ■」按钮就绑在这条路径上**（`maxtic_studio/cancellation.py`、`gui/i18n.py`
+都在桌面端仓库 [`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio) 里，
+本仓库不含这些代码，下述接线以该仓库为准）：按钮 →
 `RunEngine.cancel()` → `StopToken.cancel()`；令牌由 `cancellation_hook` 探测形参名后
 以 `stop_check=token.should_stop` 注入 `api.rank`，因此取消会在迭代边界**真正打断计算**，
 而不是过去那样“等跑完再丢弃结果”。若下层某天不再接受该形参，日志面板会显式打出

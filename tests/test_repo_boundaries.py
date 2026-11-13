@@ -71,6 +71,19 @@ def test_readme_links_the_desktop_repository():
         assert STUDIO_REPO_URL in text, f"{rel} 没给出桌面端仓库地址"
 
 
+# 描述另一个仓库的**代码**时，光给文件名等于读者无处可查；地址必须同行段出现。
+_STUDIO_CODE_MARKERS = ("maxtic_studio/", "gui/i18n.py")
+
+
+def test_docs_citing_studio_code_link_the_desktop_repository():
+    offenders = []
+    for path in sorted((ROOT / "docs").rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        if any(m in text for m in _STUDIO_CODE_MARKERS) and STUDIO_REPO_URL not in text:
+            offenders.append(str(path.relative_to(ROOT)))
+    assert not offenders, f"引用了桌面端仓库的代码却没给出它的地址：{offenders}"
+
+
 def test_this_repository_holds_no_gui_code_or_dependency():
     """边界是双向的：核心仓库既不含 GUI 代码，也不声明 GUI 依赖。
 

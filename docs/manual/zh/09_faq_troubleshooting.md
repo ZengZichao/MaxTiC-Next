@@ -124,7 +124,9 @@ A：能。`api.rank(..., stop_check=...)` / `Ranker.run(..., stop_check=...)` �
 `()`→`bool` 谓词，它在局部搜索主循环与 MCMC 链步之间被检查，于是取消发生在**迭代边界**：
 程序**返回**截至当下的历史最优序、照常写产物，不抛异常也不毁掉解；是否真的打断看
 `run_metadata["cancelled"]`（局部搜索 `stats_out["cancelled"]` 或 `mcmc_stopped_early`）。
-Studio 的「取消 ■」按钮已经绑在这条路径上（Studio 仓库 `maxtic_studio/cancellation.py` 的 `StopToken`）——
+Studio 的「取消 ■」按钮已经绑在这条路径上（桌面端仓库
+[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio) 的
+`maxtic_studio/cancellation.py` 里的 `StopToken`；本仓库不含该文件）——
 过去那个按钮只是“等跑完再丢弃结果”。**唯一例外**：一条一个样本都没产出的 MCMC 链被取消时
 会 `RuntimeError`，因为没有样本就没有可交付的量。详见 08 章 8.9。
 

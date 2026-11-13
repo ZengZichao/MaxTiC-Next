@@ -418,7 +418,10 @@ r.values["best"]                                # best as of that point, deliver
 Measured (same cyanobacterial instance, `--ls 30`, `--t 60`, predicate turning true at the
 51st check): `cancelled=True`, 51 iterations, elapsed far below 30 s, results written.
 
-**Studio's "Cancel ■" button is wired to exactly this path** (Studio's `maxtic_studio/cancellation.py`): button →
+**Studio's "Cancel ■" button is wired to exactly this path** (`maxtic_studio/cancellation.py` and
+`gui/i18n.py` live in the separate desktop repository
+[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio); this repository contains
+neither file, so that repository is authoritative for the wiring described below): button →
 `RunEngine.cancel()` → `StopToken.cancel()`; `cancellation_hook` inspects the callee's parameter
 names and injects `stop_check=token.should_stop` into `api.rank`, so cancellation really
 interrupts the computation at an iteration boundary instead of the previous behaviour of "wait

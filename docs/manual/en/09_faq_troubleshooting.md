@@ -165,9 +165,10 @@ steps, so cancellation happens at an **iteration boundary**: the program **retur
 order as of that point and writes the output files, raising nothing. Whether it really interrupted
 is in `run_metadata["cancelled"]` (the local search's `stats_out["cancelled"]` or
 `mcmc_stopped_early`). **Studio's "Cancel ■" button is bound to this path**
-(the `StopToken` in Studio's `maxtic_studio/cancellation.py`) — the semantics are "deliver the
-best order as of the cancellation point", not "wait for the run to finish,
-then discard the result". **The one exception**: an MCMC chain cancelled before producing any
+(the `StopToken` in `maxtic_studio/cancellation.py` — a file of the separate desktop repository
+[`MaxTiC-Next-Studio`](https://github.com/ZengZichao/MaxTiC-Next-Studio), not of this one) — the
+semantics are "deliver the best order as of the cancellation point", not "wait for the run to
+finish, then discard the result". **The one exception**: an MCMC chain cancelled before producing any
 sample raises `RuntimeError`, because zero samples is nothing to report. Details in 08 §8.9.
 
 **Q17: Does `自环=N` (*self-loops*) in the adapter diagnostic line mean "N constraints dropped"?**
