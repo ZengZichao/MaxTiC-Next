@@ -210,9 +210,16 @@ Python 侧判定用 `result.run_metadata["dry_run_ok"]` / `dry_run_n_errors`，�
 maxtic-next species.tree constraints.tsv --ls 600 --incremental
 ```
 
-> **默认已开启**：增量与全量在 4 组输入 × 5 个种子 × 7 个产物字段上逐字节一致
-> （由 `tests/test_output_equivalence.py` 看守），实测提速 3.1–8.2 倍。它只影响**性能**，
-> 不改变搜索轨迹与结果；需要原版全量口径时用 `--no-incremental`。
+> **默认已开启**：增量与全量的**打分口径相同**——一次 4 组输入 × 5 个种子的扫描
+> （`examples/minitree.tree` 加三组合成输入，`--ls 10`、迭代上限 20000、Python 3.10）里，
+> `values`、`uninformative` 与三个 TSV 产物在 20/20 组配置上逐项一致；CI 侧由
+> `tests/test_output_equivalence.py` 的成对用例（`pair_ls_full` / `pair_ls_incremental`，
+> 浮点末位归一到 12 位有效数字后比对）与 `tests/test_delivery_guards.py` 看守。
+> **但交付序不保证唯一**：同一扫描有 5/20 组配置给出**不同的 `best_order`**——它们与全量
+> 路径同分，且翻转的物种对**一个都不在约束集里**（120 叶那组翻到 243 对，其中被约束的是
+> 0 对）。所以增量改的是**搜索轨迹**，不改数据能够决定的那部分结果；把两条路径的交付序
+> 当作必须逐字节相同来验收，会误报成回归。本机该扫描实测提速 5.5–9.7 倍；
+> 需要原版全量口径时用 `--no-incremental`。
 
 ## 8.5b 让局部搜索跨机器可复现
 

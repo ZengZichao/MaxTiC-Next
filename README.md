@@ -331,11 +331,14 @@ Inherits the original **CeCILL 2.1**, retaining author credit to Eric Tannier an
   was shown to agree with the original `path()` greedy on 400/400 cases. It is **on by default**,
   not an optional switch.
 - **Incremental scoring on by default**: `--incremental` (each interval rotation in the
-  local search costs O(b−a) instead of a full O(|E|) recompute). It is the default because
-  `--incremental` and `--no-incremental` are verified **byte-for-byte identical** over 4 inputs ×
-  5 seeds × {stdout summary, ranked newick, best_order, values, the three TSVs}, while being
-  3.1–8.2× faster; `--no-incremental` keeps the original full-recompute convention as an escape
-  hatch and the equivalence is guarded long-term by `tests/test_output_equivalence.py`.
+  local search costs O(b−a) instead of a full O(|E|) recompute). It is the default because a
+  sweep of 4 inputs × 5 seeds reproduces `values`, `uninformative` and all three TSV artifacts
+  exactly as `--no-incremental` does (5.5–9.7× on this machine), guarded long-term by the paired
+  case in `tests/test_output_equivalence.py`. **The delivered order is not unique**, though: the
+  same sweep returned a `best_order` that is *tied but different* in 5 of 20 configurations, with
+  every flipped pair outside the constraint set — byte-identical orders across the two paths are
+  not a promise to test against (convention and measurements: chapter 08 §8.5 of the manual).
+  `--no-incremental` keeps the original full-recompute convention as an escape hatch.
 - **Faster default path** (no change to summation order): prefix membership tests in the `mix`
   dynamic program use incrementally maintained sets instead of list slices. The end-to-end
   deterministic path at n=3199, |E|=12796 is **25.461 s CPU** on the review host (Additional file 2

@@ -271,11 +271,19 @@ results:
 maxtic-next species.tree constraints.tsv --ls 600 --incremental
 ```
 
-> **On by default**: the incremental and full paths are verified byte-for-byte identical
-> over 4 inputs × 5 seeds × 7 output-file fields (guarded by `tests/test_output_equivalence.py`),
-> and the incremental path is 3.1–8.2× faster. It affects **performance only** and changes
-> neither the search trajectory nor the result; use `--no-incremental` to fall back to the
-> original full recompute.
+> **On by default**: the incremental and full paths **score identically**. In a sweep of
+> 4 inputs × 5 seeds (`examples/minitree.tree` plus three synthetic inputs, `--ls 10`, iteration
+> cap 20000, Python 3.10), `values`, `uninformative` and all three TSV artifacts agreed in
+> 20/20 configurations; on the CI side the paired case in `tests/test_output_equivalence.py`
+> (`pair_ls_full` / `pair_ls_incremental`, compared after rounding floats to 12 significant
+> digits) plus `tests/test_delivery_guards.py` guard that. **The delivered order is not unique,
+> though**: the same sweep returned a **different `best_order`** in 5 of 20 configurations — tied
+> with the full path, and none of the flipped species pairs is one the constraint set mentions
+> (the 120-leaf case flips 243 pairs, 0 of them constrained). Incremental scoring therefore does
+> change the **search trajectory**; what it does not change is the part of the result the data
+> decides. Accepting the two paths only when their delivered orders match byte-for-byte would
+> report a regression that is not one. The same sweep measured 5.5–9.7× on this machine; use
+> `--no-incremental` to fall back to the original full recompute.
 
 ## 8.5b Making the local search reproducible across machines
 

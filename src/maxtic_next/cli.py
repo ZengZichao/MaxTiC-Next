@@ -387,9 +387,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # ---- 增量 scoring（默认开启）与检查点续跑（默认关闭）----
-    # 增量与全量在 4 组输入 × 5 个种子 ×
-    # {stdout, ranked newick, best_order, values, 三个 TSV} 上**逐字节一致**，
-    # 实测提速 3.1-8.2 倍；`--no-incremental` 保留原版全量口径作为逃生门。
+    # 增量与全量的**打分口径**一致（values、uninformative、三个 TSV 在 4 组输入 × 5 个种子的
+    # 扫描里逐项相同），本机该扫描实测提速 5.5-9.7 倍；**交付序同分可不同**（翻转的物种对
+    # 都不在约束集里），所以不要拿"两条路径顺序逐字节相同"当验收条件。口径见手册 08 章 8.5。
+    # `--no-incremental` 保留原版全量口径作为逃生门。
     parser.add_argument(
         "--incremental",
         dest="incremental",
@@ -402,7 +403,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-incremental",
         dest="incremental",
         action="store_false",
-        help="退回原版的全量重算口径（逐次比较更保守，但慢 3-8 倍）",
+        help="退回原版的全量重算口径（逐次比较更保守，但慢数倍；实测口径见手册 08 章 8.5）",
     )
     parser.add_argument(
         "--checkpoint",

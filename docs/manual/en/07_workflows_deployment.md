@@ -222,7 +222,7 @@ The environment already declares `jinja2 >=3.0` and `plotly >=5.0`
 |----------|----------------|
 | Thousands of gene families → constraints | In Stage 1 use `--ale-cache-dir` (resumable) and `--ale-parallel process` (multi-core) |
 | Retuning ranking parameters | Freeze the Stage 1 output `constraints.tsv` and rerun only Stage 2 |
-| Long local search | Incremental scoring is on by default (3.1–8.2× faster) + `--checkpoint` against interruption (see chapter 08) |
+| Long local search | Incremental scoring is on by default (5.5–9.7× on this machine; convention in 08 §8.5) + `--checkpoint` against interruption (see chapter 08) |
 | Search results that must match across machines | `--local-search-max-iters N` (a wall-clock budget is not portable) |
 | Cluster reproducibility | Fix `--seed`, pin the Python/dependency versions, containerize and **pin the image tag** (`:0.2.1`, not `:latest`) |
 | Suspicious upstream output | Run `--dry-run` first (in adapter mode it genuinely parses the output, so a parse failure, zero constraints, or no endpoint hits at all comes out as an **error** and exits 1, while an endpoint hit rate below `--min-endpoint-hit-rate` is only a **warning**), then read the `[tool] …` diagnostic line on stderr (emitted in Chinese; its fields are glossed in 03 §3.2.2) |

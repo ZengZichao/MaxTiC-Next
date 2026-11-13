@@ -359,7 +359,7 @@ accumulated over K orders of length n).
 
 | Option | Type / domain | Default | Notes |
 |--------|---------------|---------|-------|
-| `--incremental` / `--no-incremental` | — | **on** | Incremental scoring: each interval rotation in the local search costs O(b−a) instead of a full O(\|E\|) recompute. On by default (byte-identical to the full path, measured 3.1–8.2× faster); `--no-incremental` falls back to the original full recompute |
+| `--incremental` / `--no-incremental` | — | **on** | Incremental scoring: each interval rotation in the local search costs O(b−a) instead of a full O(\|E\|) recompute. On by default (`values` and the three TSVs match the full path item for item, 5.5–9.7× on this machine; **the delivered order can differ while tied** — convention in 08 §8.5); `--no-incremental` falls back to the original full recompute |
 | `--checkpoint <path>` | str | none | Checkpoint file; a search interrupted midway can be resumed (only effective with `--local-search>0`) |
 | `--checkpoint-interval` | float > 0 | `60.0` | Automatic checkpoint save interval in seconds |
 | `--local-search-max-iters` | int ≥ 0 | `0` | **Iteration cap for the local search** (0 = bounded by `--ls` only). Setting a positive number makes the fixed-`--seed` local-search path **reproducible across machines** |

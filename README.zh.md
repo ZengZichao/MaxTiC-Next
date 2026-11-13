@@ -286,10 +286,12 @@ stdout 摘要包含内部节点数、约束总权重、uninformative 分项与�
   O(1) 查表替代 O(V) 遍历）在**每次排序中都生效**，且已按 400/400 例证明与原版 `path()` 贪婪一致。
   它是**默认开启**的，不是可选开关。
 - **默认已开启的增量打分**：`--incremental`（局部搜索每次区间旋转只算增量 O(b−a)，而非全量
-  O(|E|)）现在是**默认路径**。依据：`--incremental` 与 `--no-incremental` 在 4 组输入 × 5 个种子 ×
-  {stdout 摘要、ranked newick、best_order、values、三个 TSV} 上**逐字节一致**，实测加速
-  3.1–8.2 倍；`--no-incremental` 保留原版全量口径作为逃生门，等价性由
-  `tests/test_output_equivalence.py` 长期看守。
+  O(|E|)）现在是**默认路径**。依据：4 组输入 × 5 个种子的扫描里，`values`、`uninformative`
+  与三个 TSV 产物与 `--no-incremental` **逐项一致**（本机实测提速 5.5–9.7 倍），CI 由
+  `tests/test_output_equivalence.py` 的成对用例长期看守。**注意交付序不唯一**：同一次扫描有
+  5/20 组配置给出**同分但不同**的 `best_order`，翻转的物种对全都不在约束集里——两条路径的
+  顺序逐字节相同不是可验收的承诺（口径与实测见手册 08 章 8.5）；`--no-incremental`
+  保留原版全量口径作为逃生门。
 - **默认路径提速**（不改任何数值顺序）：`mix` 动态规划里的前缀成员判定由列表切片改为增量维护的
   集合。端到端确定性路径在 n=3199 / |E|=12796 上为 **25.461 s CPU**（在评审主机上；Additional file 2
   `scaling_large.csv`；n=1000 / |E|=6000 为 2.506 s）；绝对耗时仍依赖主机。所用输入为确定性
