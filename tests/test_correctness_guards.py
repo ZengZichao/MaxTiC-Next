@@ -462,7 +462,7 @@ class TestReportingMetrics:
 # ======================================================================
 #  局部搜索后回写
 # ======================================================================
-class TestM4LocalSearchWriteback:
+class TestLocalSearchWriteback:
     def _improving_case(self, tmp_path):
         """构造 LS 必然改进的实例：初始贪婪序有可旋转消除的违反。"""
         tree_path = _write(
@@ -542,7 +542,7 @@ class TestM4LocalSearchWriteback:
 # ======================================================================
 #  / ：CLI 取值域与哨兵边保护
 # ======================================================================
-class TestM6M25ArgumentValidation:
+class TestArgumentValidation:
     @pytest.mark.parametrize(
         "argv,bad_flag",
         [
@@ -607,7 +607,7 @@ class TestM6M25ArgumentValidation:
 # ======================================================================
 #  置换检验
 # ======================================================================
-class TestM14PermutationPValue:
+class TestPermutationPValue:
     def test_pvalue_uses_plus_one_correction_and_delivered_order(self, tmp_path):
         res = api.rank(
             TREE,
@@ -646,7 +646,7 @@ class TestM14PermutationPValue:
 # ======================================================================
 #  覆盖保护与原子写
 # ======================================================================
-class TestM17OutputSafety:
+class TestOutputOverwriteSafety:
     def test_existing_outputs_are_not_overwritten(self, tmp_path):
         prefix = tmp_path / "prot"
         (prefix.with_name("protect")).mkdir()
@@ -723,7 +723,7 @@ class TestM17OutputSafety:
 # ======================================================================
 #  适配器模式预检
 # ======================================================================
-class TestM16AdapterDryRun:
+class TestAdapterDryRun:
     def test_garbage_dtl_input_is_not_reported_as_passing(self, tmp_path):
         tree = _write(str(tmp_path / "sp.tree"), "((A:1,B:1)1:1,C:1)2;")
         junk = _write(str(tmp_path / "junk.dtl"), "this is not a reconciliation report\nat all\n")
