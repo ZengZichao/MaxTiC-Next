@@ -1,2 +1,4 @@
-# 测试与开发依赖
-pytest>=8.0
+# 开发期工具链（pytest、pytest-cov、coverage、ruff、mypy、tomli）。
+# 版本约束以 pyproject.toml 的 [project.optional-dependencies].dev 为唯一来源，
+# 此处只做入口，避免两份清单漂移。
+-e .[dev]

@@ -83,7 +83,7 @@ def _write(path, text):
 # ======================================================================
 #  —— ALE 默认 source = trf（+ stderr 口径声明）
 # ======================================================================
-class TestM20AleDefaultSource:
+class TestAleDefaultSource:
     def test_default_source_is_trf(self):
         sp = _tree(os.path.join(ALE_DIR, "species.tree"))
         assert DEFAULT_SOURCE == "trf"
@@ -122,7 +122,7 @@ class TestM20AleDefaultSource:
 # ======================================================================
 #  /  —— 声明样本数是分母；不可确立时是整数计数
 # ======================================================================
-class TestM21SampleDenominator:
+class TestSampleDenominator:
     def test_declared_optimal_solution_count_is_denominator(self):
         """真实形状：声明 24 个最优解、只打印 1 个 => 分母 24、权重 1/24。"""
         sp = _tree(os.path.join(ARTRA_DECL, "species.tree"))
@@ -229,7 +229,7 @@ class TestM21SampleDenominator:
 # ======================================================================
 #  /  —— ecceTERA 数字节点 ID、命中率守卫、家族规模探测失败
 # ======================================================================
-class TestM22EcceTERALabels:
+class TestEcceTERALabels:
     def test_numeric_internal_species_ids_resolve(self):
         """真实 ecceTERA 输出：内部物种节点写 ``getId()`` —— 必须能反解。"""
         sp = _tree(os.path.join(ECCE_NUM, "species.tree"))
@@ -341,7 +341,7 @@ class TestM22EcceTERALabels:
 # ======================================================================
 #  —— 缓存键必须含物种树拓扑指纹
 # ======================================================================
-class TestM23TopologyAwareCache:
+class TestTopologyAwareCache:
     def test_cache_identity_distinguishes_same_labels_different_topology(self):
         a = _tree(os.path.join(ALE_TOPO, "species_a.tree"))
         b = _tree(os.path.join(ALE_TOPO, "species_b.tree"))
@@ -404,7 +404,7 @@ class TestM23TopologyAwareCache:
 # ======================================================================
 #  /  —— 距离列缺失与未知标签距离
 # ======================================================================
-class TestM24AndM10Distance:
+class TestDistanceFromLabelsAndFilter:
     def test_distance_from_unknown_label_is_none_not_zero(self):
         sp = _tree(os.path.join(RANGER, "species.tree"))
         assert distance_from(sp, "61", "62") == 2.0
@@ -452,7 +452,7 @@ class TestM24AndM10Distance:
 # ======================================================================
 #  —— XML 解析失败不再被吞成"无约束"
 # ======================================================================
-class TestM25XmlErrors:
+class TestXmlErrors:
     def test_convert_raises_parse_error_with_file_and_position(self, tmp_path):
         sp = _tree(os.path.join(ECCE_NUM, "species.tree"))
         bad = _write(tmp_path / "broken.recphyloxml", "<recPhylo><recGeneTree><clade>\n")
@@ -485,7 +485,7 @@ class TestM25XmlErrors:
 # ======================================================================
 #  /  —— 每一次静默 continue 都被计数
 # ======================================================================
-class TestM11DropAccounting:
+class TestDropAccounting:
     def test_ranger_diagnostics_count_every_drop(self, tmp_path):
         sp = _tree(os.path.join(RANGER, "species.tree"))
         f = _write(
@@ -546,7 +546,7 @@ class TestM11DropAccounting:
 # ======================================================================
 #  / --from-auto —— 端点约定机器可读 + 混用告警
 # ======================================================================
-class TestM10Conventions:
+class TestEndpointConventions:
     def test_registry_exposes_native_conventions(self):
         assert registry.endpoint_convention("ale") == CONVENTION_PARENT_OF_DONOR
         for tool in ("ranger", "artra", "eccetera", "alerax"):
