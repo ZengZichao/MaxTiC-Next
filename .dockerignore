@@ -1,4 +1,4 @@
-# MaxTiC-Next 镜像构建上下文排除清单（审阅 M18）
+# MaxTiC-Next 镜像构建上下文排除清单
 #
 # Dockerfile 用 `COPY . /app` 把构建上下文整体拷入镜像。没有本文件时，
 # `.git`（含全部历史）、`tests/`、`__pycache__/`、`.pytest_cache/`、
@@ -50,6 +50,6 @@ Singularity.def
 *.sif
 
 # --- 流程封装（由宿主机调度器使用，不需要进镜像） ---
-# 修复（架构质量评审 R-15）：此行原先被注释掉，导致 workflows/ 仍被复制进镜像，
-# 与本文件头部声明的排除意图相反。若需在镜像内调试 Nextflow/Snakemake，再注释掉它。
+# 注释掉下一行会让 workflows/ 被复制进镜像，与本文件头部声明的排除意图相反；
+# 若需在镜像内调试 Nextflow/Snakemake，再临时注释掉它。
 workflows

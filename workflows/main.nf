@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// MaxTiC-Next 两阶段流程（P2-WF / T16）
+// MaxTiC-Next 两阶段流程
 //
 //   Stage 1（from_ale=true）：把 ALE .uml_rec 文件经适配器转为约束文件；
 //   Stage 2：对约束做 MaxTiC 排序，产出三输出文件 + 交互式 HTML 报告。
@@ -15,7 +15,7 @@
 //       --species_tree examples/adapters/ale/species.tree --from_ale \
 //       --ale_rec_files 'examples/adapters/ale/rec.uml_rec'
 //
-// 本文件相对旧版的修正（审阅 M18）：
+// 相对旧版的关键修正：
 //   1. DSL2 不允许 `process` 写在 `if` 块里（报 "process declaration appears
 //      inside a control flow block"）—— 两个 process 现均声明在顶层，
 //      条件分支只留在 workflow 里决定是否**调用** Stage 1；
@@ -28,7 +28,7 @@
 //      声明的输出文件不存在，流程报 "output file not found"。
 //      现输出名由 params.output_style **推导**，两侧不可能漂移；
 //   4. Stage 2 加 `-f/--force`：Nextflow 在 --resume 命中缓存或任务目录复用时，
-//      产物可能已存在，而 CLI 自审阅 M17 起默认以退出码 3 拒绝覆盖。
+//      产物可能已存在，而 CLI 默认以退出码 3 拒绝覆盖。
 //      任务工作目录归流程管理器所有，此处覆盖是安全的。
 //
 // 说明：
@@ -63,7 +63,7 @@ params {
 
 // ---------------------------------------------------------------------------
 // 输出名按 params.output_style 推导 —— 与 src/maxtic_next/config.py 的
-// OUTPUT_SUFFIXES 一一对应，避免声明与实际产物漂移（审阅 M18 第 3 点）。
+// OUTPUT_SUFFIXES 一一对应，避免声明与实际产物漂移。
 // ---------------------------------------------------------------------------
 def outputSuffixes(String style) {
     if (style == 'legacy') {
@@ -124,7 +124,7 @@ process RANK {
         path("${constr.getName()}${outputSuffixes(params.output_style).informative}")
         path("${constr.getName()}${outputSuffixes(params.output_style).conflicting}")
         path("${constr.getName()}.html")
-        // 第 4 个产物：仅在 --random-trees > 0 时存在（审阅 m13）
+        // 第 4 个产物：仅在 --random-trees > 0 时存在
         path("${constr.getName()}${outputSuffixes(params.output_style).random_dist}"), optional: true
 
     script:
